@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	chrm "github.com/leonjza/gowitness/chrome"
-	"github.com/leonjza/gowitness/utils"
+	chrm "github.com/sensepost/gowitness/chrome"
+	"github.com/sensepost/gowitness/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

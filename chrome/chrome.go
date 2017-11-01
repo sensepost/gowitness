@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"os/exec"
@@ -108,6 +109,8 @@ func (chrome *Chrome) checkVersion() {
 func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
 	screenshotLocation := filepath.Join(chrome.screenshotPath, destination)
+	log.WithFields(log.Fields{"url": targetURL, "full-destination": screenshotLocation}).
+		Debug("Full path to screenshot save")
 
 	// Start with the basic headless arguments
 	var chromeArguments = []string{
@@ -168,11 +171,13 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
 	log.WithFields(log.Fields{"arguments": chromeArguments}).Debug("Google Chrome arguments")
 
-	// Prepare the command to run...
-	cmd := exec.Command(chrome.path, chromeArguments...)
+	// get a context to run the command in
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
 
-	log.WithFields(log.Fields{"url": targetURL, "full-destination": screenshotLocation}).
-		Debug("Full path to screenshot save")
+	// Prepare the command to run...
+	cmd := exec.CommandContext(ctx, chrome.path, chromeArguments...)
+
 	log.WithFields(log.Fields{"url": targetURL, "destination": destination}).Info("Taking screenshot")
 
 	// ... and run it!
@@ -181,10 +186,15 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		log.Fatal(err)
 	}
 
-	// Wait for the screenshot to finish
+	// Wait for the screenshot to finish and handle the error that may occur.
 	if err := cmd.Wait(); err != nil {
 
-		// TODO: Add timeout!
+		// If if this error was as a result of a timeout
+		if ctx.Err() == context.DeadlineExceeded {
+			log.WithFields(log.Fields{"url": targetURL, "destination": destination, "err": err}).
+				Error("Timeout reached while waiting for screenshot to finish")
+			return
+		}
 
 		log.WithFields(log.Fields{"url": targetURL, "destination": destination, "err": err}).
 			Error("Screenshot failed")

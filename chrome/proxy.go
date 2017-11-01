@@ -60,11 +60,12 @@ func (proxy *forwardingProxy) start() error {
 
 		if err := http.Serve(proxy.listener, httpServer); err != nil {
 
-			// Probably a better way to handle this case. Meh.
+			// Probably a better way to handle these cases. Meh.
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return
 			}
 
+			// Looks like something is actually wrong
 			log.WithFields(log.Fields{"err": err}).Error("Shitty forwarding proxy broke")
 		}
 
