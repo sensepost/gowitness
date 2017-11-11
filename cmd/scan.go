@@ -37,7 +37,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		validateScanCmdArguments()
+		validateScanCmdFlags()
 
 		ports, _ := utils.Ports(scanPorts)
 		log.WithField("ports", ports).Debug("Using ports")
@@ -100,7 +100,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 }
 
 // Validates that the arguments received for scanCmd is valid.
-func validateScanCmdArguments() {
+func validateScanCmdFlags() {
 
 	// Ensure we have at least a CIDR
 	if scanCidr == "" {

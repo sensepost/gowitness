@@ -62,7 +62,7 @@ var RootCmd = &cobra.Command{
 	Short: "A commandline web screenshot and information gathering tool by @leonjza",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		initLogging()
-		validateArguments()
+		validateFlags()
 
 		// Init Google Chrome
 		chrome = chrm.Chrome{
@@ -183,7 +183,7 @@ func initLogging() {
 }
 
 // Checks if some of the globally provided arguments are valid.
-func validateArguments() {
+func validateFlags() {
 
 	// Check screenresolution argument values
 	parsedResolution := strings.Split(resolution, ",")
