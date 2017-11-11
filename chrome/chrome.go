@@ -19,25 +19,28 @@ import (
 // Chrome contains information about a Google Chrome
 // instance, with methods to run on it.
 type Chrome struct {
+	Resolution string
+
 	path           string
 	screenshotPath string
 }
 
-// InitChrome configures a Chrome struct with the path
+// Setup configures a Chrome struct with the path
 // specified to what is available on this system.
-func InitChrome() Chrome {
+func (chrome *Chrome) Setup() {
 
-	chrome := Chrome{}
+	// Ensure we have a resolution set
+	if chrome.Resolution == "" {
+		chrome.Resolution = "1440,900"
+	}
 
-	chrome.ChromeLocator()
+	chrome.chromeLocator()
 	chrome.checkVersion()
-
-	return chrome
 }
 
 // ChromeLocator looks for an installation of Google Chrome
 // and returns the path to where the installation was found
-func (chrome *Chrome) ChromeLocator() {
+func (chrome *Chrome) chromeLocator() {
 
 	// Possible paths for Google Chrome or chromium to be at.
 	paths := []string{
@@ -57,24 +60,6 @@ func (chrome *Chrome) ChromeLocator() {
 		log.WithField("chrome-path", path).Debug("Google Chrome path")
 		chrome.path = path
 	}
-}
-
-// ScreenshotPath sets the path for screenshots
-func (chrome *Chrome) ScreenshotPath(p string) error {
-
-	p, err := filepath.Abs(p)
-	if err != nil {
-		return err
-	}
-
-	if _, err := os.Stat(p); os.IsNotExist(err) {
-		return errors.New("Destination path does not exist")
-	}
-
-	log.WithField("screenshot-path", p).Debug("Screenshot path")
-	chrome.screenshotPath = p
-
-	return nil
 }
 
 // testVersion gets the version of Google Chrome that we have
@@ -105,6 +90,24 @@ func (chrome *Chrome) checkVersion() {
 	log.WithField("version", version).Debug("Chrome version")
 }
 
+// ScreenshotPath sets the path for screenshots
+func (chrome *Chrome) ScreenshotPath(p string) error {
+
+	p, err := filepath.Abs(p)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return errors.New("Destination path does not exist")
+	}
+
+	log.WithField("screenshot-path", p).Debug("Screenshot path")
+	chrome.screenshotPath = p
+
+	return nil
+}
+
 // ScreenshotURL takes a screenshot of a URL
 func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
@@ -118,7 +121,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		"--disable-crash-reporter",
 		"--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " +
 			"(KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'",
-		"--window-size=1440,900", "--screenshot=" + screenshotLocation,
+		"--window-size=" + chrome.Resolution, "--screenshot=" + screenshotLocation,
 	}
 
 	// When we are running as root, chromiun will flag the 'cant
@@ -172,7 +175,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 	log.WithFields(log.Fields{"arguments": chromeArguments}).Debug("Google Chrome arguments")
 
 	// get a context to run the command in
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 
 	// Prepare the command to run...

@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/remeh/sizedwaitgroup" // <3
-	chrm "github.com/sensepost/gowitness/chrome"
-	"github.com/sensepost/gowitness/utils"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/remeh/sizedwaitgroup" // <3
+	"github.com/sensepost/gowitness/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,9 +42,7 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 		// read each line and populate the channel used to
 		// start screenshotting
 		scanner := bufio.NewScanner(file)
-
 		swg := sizedwaitgroup.New(maxThreads)
-		chrome := chrm.InitChrome()
 
 		for scanner.Scan() {
 
@@ -64,7 +62,7 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, waitTimeout)
+				utils.ProcessURL(url, &chrome, &db, waitTimeout)
 
 			}(u)
 		}

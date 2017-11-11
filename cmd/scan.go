@@ -4,10 +4,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/remeh/sizedwaitgroup" // <3
-	chrm "github.com/sensepost/gowitness/chrome"
-	"github.com/sensepost/gowitness/utils"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/remeh/sizedwaitgroup" // <3
+	"github.com/sensepost/gowitness/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,6 @@ $ gowitness scan --cidr 192.168.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.1/32 --no-https
 $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --cidr 192.168.0.0/30
-
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -73,14 +72,6 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 		// Start processing the calculated permutations
 		log.WithField("thread-count", maxThreads).Debug("Maximum threads")
 		swg := sizedwaitgroup.New(maxThreads)
-		chrome := chrm.InitChrome()
-
-		// Set the screenshot path the user set.
-		if err := chrome.ScreenshotPath(screenshotDestination); err != nil {
-
-			log.WithFields(log.Fields{"error": err}).Fatal("Failed to set destination path")
-			return
-		}
 
 		for _, permutation := range permutations {
 
@@ -98,13 +89,13 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, waitTimeout)
+				utils.ProcessURL(url, &chrome, &db, waitTimeout)
 			}(u)
 		}
 
 		swg.Wait()
-		log.WithFields(log.Fields{"run-time": time.Since(startTime)}).Info("Complete")
-
+		log.WithFields(log.Fields{"run-time": time.Since(startTime), "permutation-count": len(permutations)}).
+			Info("Complete")
 	},
 }
 
@@ -127,10 +118,9 @@ func init() {
 	RootCmd.AddCommand(scanCmd)
 
 	scanCmd.Flags().StringVarP(&scanCidr, "cidr", "c", "", "The CIDR to scan")
-	scanCmd.Flags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
-	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8008,8080", "Ports to scan")
+	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")
 	scanCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	scanCmd.Flags().BoolVarP(&randomPermutations, "random", "r", false, "Randomize generated permutations")
 }

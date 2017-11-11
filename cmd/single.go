@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"net/url"
-	"strings"
 	"time"
 
-	chrm "github.com/sensepost/gowitness/chrome"
-	"github.com/sensepost/gowitness/utils"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/sensepost/gowitness/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -30,23 +29,11 @@ $ gowitness single -u https://twitter.com`,
 
 		u, err := url.ParseRequestURI(screenshotURL)
 		if err != nil {
-
 			log.WithField("url", screenshotURL).Fatal("Invalid URL specified")
 		}
 
-		if screenshotDestination == "" {
-			screenshotDestination = utils.SafeFileName(u.String())
-			log.WithField("destination", screenshotDestination).Debug("Generated filename for screenshot")
-		}
-
-		if !strings.HasSuffix(screenshotDestination, ".png") {
-
-			log.WithField("destination", screenshotDestination).Debug("Adding .png suffix to destination")
-			screenshotDestination = screenshotDestination + ".png"
-		}
-
-		chrome := chrm.InitChrome()
-		utils.ProcessURL(u, &chrome, waitTimeout)
+		// Process this URL
+		utils.ProcessURL(u, &chrome, &db, waitTimeout)
 
 		log.WithFields(log.Fields{"run-time": time.Since(startTime)}).Info("Complete")
 	},
@@ -56,6 +43,4 @@ func init() {
 	RootCmd.AddCommand(singleCmd)
 
 	singleCmd.Flags().StringVarP(&screenshotURL, "url", "u", "", "The URL to screenshot")
-	singleCmd.Flags().StringVarP(&screenshotDestination,
-		"destination", "d", "", "The destination filename of the screenshot")
 }

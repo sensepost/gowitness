@@ -6,9 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/parnurzeal/gorequest"
 	chrm "github.com/sensepost/gowitness/chrome"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/parnurzeal/gorequest"
+	"github.com/sensepost/gowitness/storage"
 )
 
 const (
@@ -19,8 +21,12 @@ const (
 )
 
 // ProcessURL processes a URL
-func ProcessURL(url *url.URL, chrome *chrm.Chrome, timeout int) {
+func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout int) {
 
+	// prepare some storage for this URL
+	HTTPResponseStorage := storage.HTTResponse{URL: url.String()}
+
+	// prepare a storage instance for this URL
 	log.WithField("url", url).Debug("Processing URL")
 
 	request := gorequest.New().Timeout(time.Duration(timeout)*time.Second).
@@ -34,17 +40,38 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, timeout int) {
 		return
 	}
 
+	// update the response code
+	HTTPResponseStorage.ResponseCode = resp.StatusCode
+	HTTPResponseStorage.ResponseCodeString = resp.Status
 	log.WithFields(log.Fields{"url": url, "status": resp.Status}).Info("Response code")
 
 	finalURL := resp.Request.URL
+	HTTPResponseStorage.FinalURL = resp.Request.URL.String()
 	log.WithFields(log.Fields{"url": url, "final-url": finalURL}).Info("Final URL after redirects")
 
+	// process response headers
 	for k, v := range resp.Header {
-		log.WithFields(log.Fields{"url": url, k: strings.Join(v, ", ")}).Info("Response header")
+		headerValue := strings.Join(v, ", ")
+		storageHeader := storage.HTTPHeader{Key: k, Value: headerValue}
+		HTTPResponseStorage.Headers = append(HTTPResponseStorage.Headers, storageHeader)
+
+		log.WithFields(log.Fields{"url": url, k: headerValue}).Info("Response header")
 	}
 
+	// Parse any TLS information
 	if resp.TLS != nil {
+
+		// storage for the TLS information
+		SSLCertificate := storage.SSLCertificate{}
+
 		for _, c := range resp.TLS.PeerCertificates {
+
+			SSLCertificateAttributes := storage.SSLCertificateAttributes{
+				SubjectCommonName:  c.Subject.CommonName,
+				IssuerCommonName:   c.Issuer.CommonName,
+				SignatureAlgorithm: c.SignatureAlgorithm.String(),
+			}
+
 			log.WithFields(log.Fields{"url": url, "common_name": c.Subject.CommonName}).Info("Certificate chain common name")
 			log.WithFields(log.Fields{"url": url, "signature-alg": c.SignatureAlgorithm}).Info("Signature algorithm")
 			log.WithFields(log.Fields{"url": url, "pubkey-alg": c.PublicKeyAlgorithm}).Info("Public key algorithm")
@@ -52,14 +79,24 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, timeout int) {
 
 			for _, d := range c.DNSNames {
 
+				SSLCertificateAttributes.DNSNames = append(SSLCertificateAttributes.DNSNames, d)
 				log.WithFields(log.Fields{"url": url, "dns-names": d}).Info("DNS Name")
 			}
+
+			SSLCertificate.PeerCertificates = append(SSLCertificate.PeerCertificates, SSLCertificateAttributes)
 		}
+
+		SSLCertificate.CipherSuite = resp.TLS.CipherSuite
+		HTTPResponseStorage.SSL = SSLCertificate
 		log.WithFields(log.Fields{"url": url, "cipher-suite": resp.TLS.CipherSuite}).Info("Cipher suite in use")
 	}
 
 	dst := SafeFileName(url.String()) + ".png"
+	HTTPResponseStorage.ScreenshotFile = dst
 	log.WithFields(log.Fields{"url": url, "destination": dst}).Debug("Generated filename for screenshot")
 
 	chrome.ScreenshotURL(finalURL, dst)
+
+	// Update the database with this entry
+	db.SetHTTPData(&HTTPResponseStorage)
 }

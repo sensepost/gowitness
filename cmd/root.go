@@ -8,13 +8,19 @@ import (
 	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
+	chrm "github.com/sensepost/gowitness/chrome"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/sensepost/gowitness/storage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	cfgFile string
+	cfgFile    string
+	chrome     chrm.Chrome
+	db         storage.Storage
+	dbLocation string
 
 	// logging
 	logLevel  string
@@ -39,6 +45,9 @@ var (
 	skipHTTPS          bool
 	randomPermutations bool
 
+	// generate command
+	reportFileName string
+
 	// execution time
 	startTime time.Time = time.Now()
 )
@@ -46,10 +55,23 @@ var (
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "gowitness",
-	Short: "A commandline web screenshotting tool",
+	Short: "A commandline web screenshot and information gathering tool by @leonjza",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		initLogging()
 		validateArguments()
+
+		// Init Google Chrome
+		chrome = chrm.Chrome{Resolution: resolution}
+		chrome.Setup()
+
+		// Setup the destination directory
+		if err := chrome.ScreenshotPath(screenshotDestination); err != nil {
+			log.WithField("error", err).Fatal("Error in setting destination screenshot path.")
+		}
+
+		// open the database
+		db = storage.Storage{}
+		db.Open(dbLocation)
 	},
 }
 
@@ -69,12 +91,12 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "one of debug, info, warn, error, or fatal")
 	RootCmd.PersistentFlags().StringVar(&logFormat, "log-format", "text", "specify output (text or json)")
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// Global flags
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gowitness.yaml)")
-	RootCmd.PersistentFlags().IntVarP(&waitTimeout, "timeout", "T", 3, "Time in seconds to wait for a connection")
+	RootCmd.PersistentFlags().IntVarP(&waitTimeout, "timeout", "T", 3, "Time in seconds to wait for a HTTP connection")
 	RootCmd.PersistentFlags().StringVarP(&resolution, "resolution", "R", "1440,900", "screenshot resolution")
+	RootCmd.PersistentFlags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
+	RootCmd.PersistentFlags().StringVarP(&dbLocation, "db", "D", "gowitness.db", "Destination for the gowitness database")
 }
 
 // initConfig reads in config file and ENV variables if set.
