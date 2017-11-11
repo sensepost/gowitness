@@ -27,8 +27,9 @@ var (
 	logFormat string
 
 	// 'global' flags
-	waitTimeout int
-	resolution  string
+	waitTimeout   int
+	resolution    string
+	chromeTimeout int
 
 	// screenshot command flags
 	screenshotURL         string
@@ -61,7 +62,10 @@ var RootCmd = &cobra.Command{
 		validateArguments()
 
 		// Init Google Chrome
-		chrome = chrm.Chrome{Resolution: resolution}
+		chrome = chrm.Chrome{
+			Resolution:    resolution,
+			ChromeTimeout: chromeTimeout,
+		}
 		chrome.Setup()
 
 		// Setup the destination directory
@@ -94,6 +98,7 @@ func init() {
 	// Global flags
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gowitness.yaml)")
 	RootCmd.PersistentFlags().IntVarP(&waitTimeout, "timeout", "T", 3, "Time in seconds to wait for a HTTP connection")
+	RootCmd.PersistentFlags().IntVarP(&chromeTimeout, "chrome-timeout", "", 90, "Time in seconds to wait for Google Chrome to finish a screenshot")
 	RootCmd.PersistentFlags().StringVarP(&resolution, "resolution", "R", "1440,900", "screenshot resolution")
 	RootCmd.PersistentFlags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
 	RootCmd.PersistentFlags().StringVarP(&dbLocation, "db", "D", "gowitness.db", "Destination for the gowitness database")

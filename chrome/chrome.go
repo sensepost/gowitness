@@ -19,7 +19,8 @@ import (
 // Chrome contains information about a Google Chrome
 // instance, with methods to run on it.
 type Chrome struct {
-	Resolution string
+	Resolution    string
+	ChromeTimeout int
 
 	path           string
 	screenshotPath string
@@ -28,11 +29,6 @@ type Chrome struct {
 // Setup configures a Chrome struct with the path
 // specified to what is available on this system.
 func (chrome *Chrome) Setup() {
-
-	// Ensure we have a resolution set
-	if chrome.Resolution == "" {
-		chrome.Resolution = "1440,900"
-	}
 
 	chrome.chromeLocator()
 	chrome.checkVersion()
@@ -175,7 +171,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 	log.WithFields(log.Fields{"arguments": chromeArguments}).Debug("Google Chrome arguments")
 
 	// get a context to run the command in
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(chrome.ChromeTimeout)*time.Second)
 	defer cancel()
 
 	// Prepare the command to run...
