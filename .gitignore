@@ -7,6 +7,9 @@
 # dep vendor/
 vendor/
 
+# build artifacts
+build/
+
 # Test binary, build with `go test -c`
 *.test
 
