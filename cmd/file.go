@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"net/url"
 	"os"
+	"sync/atomic"
+	"text/template"
 	"time"
 
+	"github.com/reconquest/barely"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/remeh/sizedwaitgroup" // <3
@@ -44,6 +47,20 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 		scanner := bufio.NewScanner(file)
 		swg := sizedwaitgroup.New(maxThreads)
 
+		// Prepare the progress bar to use.
+		format, err := template.New("status-bar").
+			Parse("  > Processing file: {{if .Updated}}{{end}}{{.Done}}")
+		if err != nil {
+			log.WithField("err", err).Fatal("Unable to prepare progress bar to use.")
+		}
+		bar := barely.NewStatusBar(format)
+		status := &struct {
+			Done    int64
+			Updated int64
+		}{}
+		bar.SetStatus(status)
+		bar.Render(os.Stdout)
+
 		for scanner.Scan() {
 
 			candidate := scanner.Text()
@@ -64,10 +81,17 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 				utils.ProcessURL(url, &chrome, &db, waitTimeout)
 
+				// update the progress bar
+				atomic.AddInt64(&status.Done, 1)
+				atomic.AddInt64(&status.Updated, 1)
+				bar.Render(os.Stdout)
+
 			}(u)
 		}
 
 		swg.Wait()
+		bar.Clear(os.Stdout)
+
 		log.WithFields(log.Fields{"run-time": time.Since(startTime)}).Info("Complete")
 
 	},

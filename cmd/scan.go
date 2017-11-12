@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"net/url"
+	"os"
+	"sync/atomic"
+	"text/template"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/reconquest/barely"
 	"github.com/remeh/sizedwaitgroup" // <3
 	"github.com/sensepost/gowitness/utils"
 	"github.com/spf13/cobra"
@@ -73,6 +77,23 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 		log.WithField("thread-count", maxThreads).Debug("Maximum threads")
 		swg := sizedwaitgroup.New(maxThreads)
 
+		// Prepare the progress bar to use.
+		format, err := template.New("status-bar").
+			Parse("  > Processing range: {{if .Updated}}{{end}}{{.Done}}/{{.Total}}")
+		if err != nil {
+			log.WithField("err", err).Fatal("Unable to prepare progress bar to use.")
+		}
+		bar := barely.NewStatusBar(format)
+		status := &struct {
+			Total   int
+			Done    int64
+			Updated int64
+		}{
+			Total: len(permutations),
+		}
+		bar.SetStatus(status)
+		bar.Render(os.Stdout)
+
 		for _, permutation := range permutations {
 
 			u, err := url.ParseRequestURI(permutation)
@@ -90,10 +111,17 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 				defer swg.Done()
 
 				utils.ProcessURL(url, &chrome, &db, waitTimeout)
+
+				// update the progress bar
+				atomic.AddInt64(&status.Done, 1)
+				atomic.AddInt64(&status.Updated, 1)
+				bar.Render(os.Stdout)
 			}(u)
 		}
 
 		swg.Wait()
+		bar.Clear(os.Stdout)
+
 		log.WithFields(log.Fields{"run-time": time.Since(startTime), "permutation-count": len(permutations)}).
 			Info("Complete")
 	},

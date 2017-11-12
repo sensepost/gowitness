@@ -69,6 +69,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/reconquest/barely"
+  packages = ["."]
+  revision = "0f12e3bb2e13b4cdba2a41b604187163a861e087"
+
+[[projects]]
+  branch = "master"
   name = "github.com/remeh/sizedwaitgroup"
   packages = ["."]
   revision = "4b44541c93591ee0e73747d6081e61bd8c58b5c7"
@@ -184,6 +190,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a885e610c6bd2742f7ed35c0052265e7d8168ecfe40c61d2e0d83180a261bdc"
+  inputs-digest = "736f146585941e66e39cb60bcd707791ac76ca16c5c08def853d1085933f9fb8"
   solver-name = "gps-cdcl"
   solver-version = 1
