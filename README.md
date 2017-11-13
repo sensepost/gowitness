@@ -10,13 +10,15 @@
 <br>
 
 ## introduction
-`gowitness` is a website screenshotting tool written in Golang, that used Chrome Headless to capture screenshots of web sites using a commandline interface. Both Linux and macOS is supported, with Windows support 'partially working'.
+`gowitness` is a website screenshotting tool written in Golang, that used Chrome Headless to capture screenshots of web sites using a command line interface. Both Linux and macOS is supported, with Windows support 'partially working'.
+
+Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTruncer/EyeWitness). If you are looking for something with lots of extra features, be sure to check it it out.
 
 ## features
-Scan single URL's, CIDR ranges, or URL's scpecified in a file and optionally generate an HTML report of the results.
+Scan single URL's, CIDR ranges, or URL's specified in a file and optionally generate an HTML report of the results.
 
 ## installation
-Download one of the prebuild binaries found in the releases page, or build from source!
+Download one of the prebuilt binaries found in the releases page, or build from source!
 
 ## usage
 ```
