@@ -18,7 +18,14 @@ Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTrun
 Scan single URL's, CIDR ranges, or URL's specified in a file and optionally generate an HTML report of the results.
 
 ## installation
-Download one of the prebuilt binaries found in the releases page, or build from source!
+Binaries are available for download from the [releases](https://github.com/sensepost/gowitness/releases) page as part of tagged releases.
+
+To build from source, follow the following steps:
+
+* Ensure you have [dep](https://github.com/golang/dep) installed (`go get -v -u github.com/golang/dep/cmd/dep`)
+* Clone this repository to your `$GOPATH`'s `src/` directory so that it is in `sensepost/gowitness`
+* Run `dep ensure` to resolve dependencies
+* Use the `go` build tools, or run `make` to build the binaries in the `build/` directory
 
 ## usage
 ```
