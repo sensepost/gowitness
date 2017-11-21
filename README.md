@@ -15,9 +15,9 @@
 Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTruncer/EyeWitness). If you are looking for something with lots of extra features, be sure to check it out along with these [other](https://github.com/afxdub/http-screenshot-html) [projects](https://github.com/breenmachine/httpscreenshot).
 
 ## installation
-Binaries are available for download from the [releases](https://github.com/sensepost/gowitness/releases) page as part of tagged releases.
+All you would need is an installation of the latest Google Chrome or Chromium and `gowitness` itself. Binaries are available for download from the [releases](https://github.com/sensepost/gowitness/releases) page as part of tagged releases.
 
-To build from source, follow the following steps:
+To build `gowitness` from source, follow the following steps:
 
 * Ensure you have [dep](https://github.com/golang/dep) installed (`go get -v -u github.com/golang/dep/cmd/dep`)
 * Clone this repository to your `$GOPATH`'s `src/` directory so that it is in `sensepost/gowitness`
