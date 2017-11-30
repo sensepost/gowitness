@@ -21,8 +21,8 @@ import (
 type Chrome struct {
 	Resolution    string
 	ChromeTimeout int
+	Path          string
 
-	path           string
 	screenshotPath string
 }
 
@@ -38,9 +38,22 @@ func (chrome *Chrome) Setup() {
 // and returns the path to where the installation was found
 func (chrome *Chrome) chromeLocator() {
 
+	// if we already have a path to chrome (say from a cli flag),
+	// check that it exists. If not, continue with the finder logic.
+	if _, err := os.Stat(chrome.Path); os.IsNotExist(err) {
+
+		log.Debug("Chrome path not set or invalid. Performing search")
+	} else {
+
+		log.Debug("Chrome path exists, skipping search")
+		return
+	}
+
 	// Possible paths for Google Chrome or chromium to be at.
 	paths := []string{
 		"/usr/bin/chromium",
+		"/usr/bin/google-chrome-stable",
+		"/usr/bin/google-chrome",
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
 		"/Applications/Chromium.app/Contents/MacOS/Chromium",
@@ -54,14 +67,19 @@ func (chrome *Chrome) chromeLocator() {
 		}
 
 		log.WithField("chrome-path", path).Debug("Google Chrome path")
-		chrome.path = path
+		chrome.Path = path
+	}
+
+	// final check to ensure we actually found chrome
+	if chrome.Path == "" {
+		log.Fatal("Unable to locate an installation of Chrome. Try specifying its location with --chrome-path")
 	}
 }
 
 // testVersion gets the version of Google Chrome that we have
 func (chrome *Chrome) checkVersion() {
 
-	out, err := exec.Command(chrome.path, "-version").Output()
+	out, err := exec.Command(chrome.Path, "-version").Output()
 	if err != nil {
 		log.WithField("err", err).Fatal("An error occured while trying to get the Chrome version")
 	}
@@ -175,7 +193,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 	defer cancel()
 
 	// Prepare the command to run...
-	cmd := exec.CommandContext(ctx, chrome.path, chromeArguments...)
+	cmd := exec.CommandContext(ctx, chrome.Path, chromeArguments...)
 
 	log.WithFields(log.Fields{"url": targetURL, "destination": destination}).Info("Taking screenshot")
 
