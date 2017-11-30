@@ -35,7 +35,7 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 
 	resp, _, errs := request.Get(url.String()).End()
 	if errs != nil {
-		log.WithFields(log.Fields{"url": url, "error": errs}).Debug("Failed to query url")
+		log.WithFields(log.Fields{"url": url, "error": errs}).Error("Failed to query url")
 
 		return
 	}
