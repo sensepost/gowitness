@@ -22,7 +22,7 @@ var fileCmd = &cobra.Command{
 	Short: "Screenshot URLs sourced from a file",
 	Long: `
 Screenshot URLs sourced from a file. URLs in the source file should be
-newline seperated. Invalid URLs are simply logged and ignored.
+newline separated. Invalid URLs are simply logged and ignored.
 
 For Example:
 
