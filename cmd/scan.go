@@ -35,6 +35,7 @@ This may be useful in cases where too many ports specified by the
 For example:
 
 $ gowitness scan --cidr 192.168.0.0/24
+$ gowitness scan --cidr 192.168.0.0/24 --cidr 10.10.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.1/32 --no-https
 $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --cidr 192.168.0.0/30
@@ -157,7 +158,7 @@ func validateScanCmdFlags() {
 func init() {
 	RootCmd.AddCommand(scanCmd)
 
-	scanCmd.Flags().StringSliceVarP(&scanCidr, "cidr", "c", []string{}, "The CIDR to scan")
+	scanCmd.Flags().StringSliceVarP(&scanCidr, "cidr", "c", []string{}, "The CIDR to scan (Can specify more than one --cidr)")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")
