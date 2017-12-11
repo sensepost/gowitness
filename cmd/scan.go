@@ -51,13 +51,25 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 			return
 		}
 
-		ips, err := utils.Hosts(scanCidr)
-		log.WithField("cidr", scanCidr).Debug("Using CIDR")
+		var ips []string
+		log.WithField("cidr", scanCidr).Debug("Using CIDR ranges")
 
-		if err != nil {
-			log.WithFields(log.Fields{"cidr": scanCidr, "error": err}).Fatal("Failed to parse CIDR")
-			return
+		// loop and parse the --cidr flags we got
+		for _, cidr := range scanCidr {
+
+			// parse the cidr
+			cidrIps, err := utils.Hosts(cidr)
+			if err != nil {
+				log.WithFields(log.Fields{"cidr": scanCidr, "error": err}).Fatal("Failed to parse CIDR")
+				return
+			}
+
+			// append the ips from the current cidr
+			log.WithFields(log.Fields{"cidr": cidr, "cidr-ips": len(cidrIps)}).Debug("Appending cidr")
+			ips = append(ips, cidrIps...)
 		}
+
+		log.WithFields(log.Fields{"total-ips": len(ips)}).Debug("Finished parsing CIDR ranges")
 
 		permutations, err := utils.Permutations(ips, ports, skipHTTP, skipHTTPS)
 
@@ -131,7 +143,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 func validateScanCmdFlags() {
 
 	// Ensure we have at least a CIDR
-	if scanCidr == "" {
+	if len(scanCidr) == 0 {
 		log.WithField("cidr", scanCidr).Fatal("Please provide a CIDR scan")
 	}
 
@@ -145,7 +157,7 @@ func validateScanCmdFlags() {
 func init() {
 	RootCmd.AddCommand(scanCmd)
 
-	scanCmd.Flags().StringVarP(&scanCidr, "cidr", "c", "", "The CIDR to scan")
+	scanCmd.Flags().StringSliceVarP(&scanCidr, "cidr", "c", []string{}, "The CIDR to scan")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")

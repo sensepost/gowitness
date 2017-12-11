@@ -41,7 +41,7 @@ var (
 	maxThreads int
 
 	// range scanner command flags
-	scanCidr           string
+	scanCidr           []string
 	scanPorts          string
 	skipHTTP           bool
 	skipHTTPS          bool
