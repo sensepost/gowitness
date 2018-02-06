@@ -54,7 +54,7 @@ var (
 	startTime time.Time = time.Now()
 
 	// version
-	version = "1.0.2"
+	version = "1.0.3"
 )
 
 // RootCmd represents the base command when called without any subcommands
