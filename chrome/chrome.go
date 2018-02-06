@@ -42,7 +42,8 @@ func (chrome *Chrome) chromeLocator() {
 	// check that it exists. If not, continue with the finder logic.
 	if _, err := os.Stat(chrome.Path); os.IsNotExist(err) {
 
-		log.Debug("Chrome path not set or invalid. Performing search")
+		log.WithFields(log.Fields{"user-path": chrome.Path, "error": err}).
+			Debug("Chrome path not set or invalid. Performing search")
 	} else {
 
 		log.Debug("Chrome path exists, skipping search")
