@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bufio"
 	"net/url"
 	"os"
+	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -25,6 +27,10 @@ This command takes a CIDR, ports and flag arguments to specify wether
 it is nessesary to connect via HTTP and or HTTPS to urls. The
 combination of these flags are used to generate permutations that
 are iterated over and processed.
+
+At least one --cidr flag or the --cidr-file flag (or both) should be specified.
+If the subnet is omitted, it will be assumed that this is a /32. Multiple --cidr
+flags are accepted.
 
 When specifying the --random/-r flag, the ip:port permutations that are
 generated will go through a shuffling phase so that the resultant
@@ -53,15 +59,21 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 		}
 
 		var ips []string
-		log.WithField("cidr", scanCidr).Debug("Using CIDR ranges")
+		cidrs := readCidrs()
+		log.WithField("cidr-count", len(cidrs)).Debug("Using CIDR ranges")
 
 		// loop and parse the --cidr flags we got
-		for _, cidr := range scanCidr {
+		for _, cidr := range cidrs {
+
+			if !strings.Contains(cidr, "/") {
+				log.WithFields(log.Fields{"cidr": cidr}).Warning("CIDR does not have a subnet, assuming /32")
+				cidr = cidr + "/32"
+			}
 
 			// parse the cidr
 			cidrIps, err := utils.Hosts(cidr)
 			if err != nil {
-				log.WithFields(log.Fields{"cidr": scanCidr, "error": err}).Fatal("Failed to parse CIDR")
+				log.WithFields(log.Fields{"cidr": cidr, "error": err}).Fatal("Failed to parse CIDR")
 				return
 			}
 
@@ -75,7 +87,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 		permutations, err := utils.Permutations(ips, ports, skipHTTP, skipHTTPS)
 
 		if randomPermutations {
-			log.WithFields(log.Fields{"cidr": scanCidr}).Info("Randomizing permutations")
+			log.WithFields(log.Fields{"cidr-count": len(cidrs)}).Info("Randomizing permutations")
 			permutations = utils.ShufflePermutations(permutations)
 		}
 
@@ -140,18 +152,51 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 	},
 }
 
+// populate the cidrs we are expecting from both the --cidr
+// flags as well as when attempting to read a file from
+// --file-cidr
+func readCidrs() []string {
+
+	var cidrs []string
+
+	// read all of the --cidr flags
+	for _, cidr := range scanCidr {
+		cidrs = append(cidrs, cidr)
+	}
+
+	// read a file if one was specified
+	if scanFileCidr != "" {
+
+		file, err := os.Open(scanFileCidr)
+		if err != nil {
+			log.WithFields(log.Fields{"file": scanFileCidr, "err": err}).Fatal("Error reading CIDR file")
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+
+		for scanner.Scan() {
+			cidrs = append(cidrs, strings.TrimSpace(scanner.Text()))
+		}
+	}
+
+	return cidrs
+}
+
 // Validates that the arguments received for scanCmd is valid.
 func validateScanCmdFlags() {
 
 	// Ensure we have at least a CIDR
-	if len(scanCidr) == 0 {
-		log.WithField("cidr", scanCidr).Fatal("Please provide a CIDR scan")
+	if len(scanCidr) == 0 && scanFileCidr == "" {
+		log.WithFields(log.Fields{"cidr": scanCidr, "file-cidr": scanFileCidr}).
+			Fatal("At least one --cidr or the --file-cidr flag is required")
 	}
 
+	// We need to have at least one protocol
 	if skipHTTP && skipHTTPS {
 		log.WithFields(log.Fields{"skip-http": skipHTTP, "skip-https": skipHTTPS}).
 			Fatal("Both HTTP and HTTPS cannot be skipped")
-
 	}
 }
 
@@ -159,6 +204,7 @@ func init() {
 	RootCmd.AddCommand(scanCmd)
 
 	scanCmd.Flags().StringSliceVarP(&scanCidr, "cidr", "c", []string{}, "The CIDR to scan (Can specify more than one --cidr)")
+	scanCmd.Flags().StringVarP(&scanFileCidr, "file-cidr", "f", "", "A file containing newline seperated CIDRs to scan")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")

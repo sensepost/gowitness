@@ -42,6 +42,7 @@ var (
 
 	// range scanner command flags
 	scanCidr           []string
+	scanFileCidr       string
 	scanPorts          string
 	skipHTTP           bool
 	skipHTTPS          bool
@@ -51,7 +52,7 @@ var (
 	reportFileName string
 
 	// execution time
-	startTime time.Time = time.Now()
+	startTime = time.Now()
 
 	// version
 	version = "1.0.3"
