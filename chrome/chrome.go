@@ -31,7 +31,6 @@ type Chrome struct {
 func (chrome *Chrome) Setup() {
 
 	chrome.chromeLocator()
-	chrome.checkVersion()
 }
 
 // ChromeLocator looks for an installation of Google Chrome
@@ -46,7 +45,7 @@ func (chrome *Chrome) chromeLocator() {
 			Debug("Chrome path not set or invalid. Performing search")
 	} else {
 
-		log.Debug("Chrome path exists, skipping search")
+		log.Debug("Chrome path exists, skipping search and version check")
 		return
 	}
 
@@ -69,20 +68,31 @@ func (chrome *Chrome) chromeLocator() {
 
 		log.WithField("chrome-path", path).Debug("Google Chrome path")
 		chrome.Path = path
+
+		// check the version for this chrome instance. if the current
+		// path is a version that is old enough, use that.
+		if chrome.checkVersion("60") {
+			break
+		}
 	}
 
 	// final check to ensure we actually found chrome
 	if chrome.Path == "" {
-		log.Fatal("Unable to locate an installation of Chrome. Try specifying its location with --chrome-path")
+		log.Fatal("Unable to locate a valid installation of Chrome to use. gowitness needs at least Chrome/" +
+			"Chrome Canary v60+. Either install Google Chrome or try specifying a valid location with " +
+			"the --chrome-path flag")
 	}
 }
 
-// testVersion gets the version of Google Chrome that we have
-func (chrome *Chrome) checkVersion() {
+// checkVersion checks if the version at the chrome.Path is at
+// least the lowest version
+func (chrome *Chrome) checkVersion(lowestVersion string) bool {
 
 	out, err := exec.Command(chrome.Path, "-version").Output()
 	if err != nil {
-		log.WithField("err", err).Fatal("An error occured while trying to get the Chrome version")
+		log.WithFields(log.Fields{"chrome-path": chrome.Path, "err": err}).
+			Error("An error occured while trying to get the Chrome version")
+		return false
 	}
 
 	// Convert the output to a simple string
@@ -91,18 +101,23 @@ func (chrome *Chrome) checkVersion() {
 	re := regexp.MustCompile(`\d+(\.\d+)+`)
 	match := re.FindStringSubmatch(version)
 	if len(match) <= 0 {
-		log.Warn("Unable to determine Chrome version.")
-		return
+		log.WithField("chrome-path", chrome.Path).Debug("Unable to determine Chrome version.")
+
+		return false
 	}
 
 	// grab the first match in the version extraction
 	version = match[0]
 
-	if gover.Compare(version, "60", "<") {
-		log.WithField("chromeversion", version).Fatal("Chrome version is older than v60")
+	if gover.Compare(version, lowestVersion, "<") {
+		log.WithFields(log.Fields{"chrome-path": chrome.Path, "chromeversion": version}).
+			Warn("Chrome version is older than v" + lowestVersion)
+
+		return false
 	}
 
-	log.WithField("version", version).Debug("Chrome version")
+	log.WithFields(log.Fields{"chrome-path": chrome.Path, "chromeversion": version}).Debug("Chrome version")
+	return true
 }
 
 // ScreenshotPath sets the path for screenshots
