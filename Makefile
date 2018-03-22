@@ -2,7 +2,7 @@
 LD_FLAGS := -s -w
 BIN_DIR := build
 
-default: darwin linux windows
+default: clean darwin linux windows
 
 clean:
 	$(RM) $(BIN_DIR)/gowitness*
