@@ -23,7 +23,7 @@ type Chrome struct {
 	ChromeTimeout int
 	Path          string
 
-	screenshotPath string
+	ScreenshotPath string
 }
 
 // Setup configures a Chrome struct with the path
@@ -120,8 +120,8 @@ func (chrome *Chrome) checkVersion(lowestVersion string) bool {
 	return true
 }
 
-// ScreenshotPath sets the path for screenshots
-func (chrome *Chrome) ScreenshotPath(p string) error {
+// SetScreenshotPath sets the path for screenshots
+func (chrome *Chrome) SetScreenshotPath(p string) error {
 
 	p, err := filepath.Abs(p)
 	if err != nil {
@@ -133,7 +133,7 @@ func (chrome *Chrome) ScreenshotPath(p string) error {
 	}
 
 	log.WithField("screenshot-path", p).Debug("Screenshot path")
-	chrome.screenshotPath = p
+	chrome.ScreenshotPath = p
 
 	return nil
 }
@@ -141,9 +141,8 @@ func (chrome *Chrome) ScreenshotPath(p string) error {
 // ScreenshotURL takes a screenshot of a URL
 func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
-	screenshotLocation := filepath.Join(chrome.screenshotPath, destination)
-	log.WithFields(log.Fields{"url": targetURL, "full-destination": screenshotLocation}).
-		Debug("Full path to screenshot save")
+	log.WithFields(log.Fields{"url": targetURL, "full-destination": destination}).
+		Debug("Full path to screenshot save using Chrome")
 
 	// Start with the basic headless arguments
 	var chromeArguments = []string{
@@ -151,7 +150,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		"--disable-crash-reporter",
 		"--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " +
 			"(KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'",
-		"--window-size=" + chrome.Resolution, "--screenshot=" + screenshotLocation,
+		"--window-size=" + chrome.Resolution, "--screenshot=" + destination,
 	}
 
 	// When we are running as root, chromiun will flag the 'cant

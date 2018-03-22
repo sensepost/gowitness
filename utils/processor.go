@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -91,10 +92,17 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 		log.WithFields(log.Fields{"url": url, "cipher-suite": resp.TLS.CipherSuite}).Info("Cipher suite in use")
 	}
 
-	dst := SafeFileName(url.String()) + ".png"
-	HTTPResponseStorage.ScreenshotFile = dst
-	log.WithFields(log.Fields{"url": url, "destination": dst}).Debug("Generated filename for screenshot")
+	// Generate a safe filename to use
+	fname := SafeFileName(url.String()) + ".png"
 
+	// Get the tull path where we will be saving the screenshot to
+	dst := filepath.Join(chrome.ScreenshotPath, fname)
+
+	HTTPResponseStorage.ScreenshotFile = dst
+	log.WithFields(log.Fields{"url": url, "file-name": fname, "destination": dst}).
+		Debug("Generated filename for screenshot")
+
+	// Screenshot the URL
 	chrome.ScreenshotURL(finalURL, dst)
 
 	// Update the database with this entry

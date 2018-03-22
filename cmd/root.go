@@ -75,7 +75,7 @@ var RootCmd = &cobra.Command{
 		chrome.Setup()
 
 		// Setup the destination directory
-		if err := chrome.ScreenshotPath(screenshotDestination); err != nil {
+		if err := chrome.SetScreenshotPath(screenshotDestination); err != nil {
 			log.WithField("error", err).Fatal("Error in setting destination screenshot path.")
 		}
 
