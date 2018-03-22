@@ -24,9 +24,7 @@ Generate an HTML report of the screenshot information found in a gowitness.db fi
 
 For example:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+$ gowitness generate`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Populate a variable with the data the template will
