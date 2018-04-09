@@ -32,7 +32,7 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 
 	request := gorequest.New().Timeout(time.Duration(timeout)*time.Second).
 		TLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
-		Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36")
+		Set("User-Agent", chrome.UserAgent)
 
 	resp, _, errs := request.Get(url.String()).End()
 	if errs != nil {

@@ -22,6 +22,7 @@ type Chrome struct {
 	Resolution    string
 	ChromeTimeout int
 	Path          string
+	UserAgent     string
 
 	ScreenshotPath string
 }
@@ -148,8 +149,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 	var chromeArguments = []string{
 		"--headless", "--disable-gpu", "--hide-scrollbars",
 		"--disable-crash-reporter",
-		"--user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " +
-			"(KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36'",
+		"--user-agent=" + chrome.UserAgent,
 		"--window-size=" + chrome.Resolution, "--screenshot=" + destination,
 	}
 
