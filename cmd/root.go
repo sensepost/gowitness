@@ -31,6 +31,7 @@ var (
 	resolution    string
 	chromeTimeout int
 	chromePath    string
+	userAgent     string
 
 	// screenshot command flags
 	screenshotURL         string
@@ -71,6 +72,7 @@ var RootCmd = &cobra.Command{
 			Resolution:    resolution,
 			ChromeTimeout: chromeTimeout,
 			Path:          chromePath,
+			UserAgent:     userAgent,
 		}
 		chrome.Setup()
 
@@ -106,6 +108,7 @@ func init() {
 	RootCmd.PersistentFlags().IntVarP(&waitTimeout, "timeout", "T", 3, "Time in seconds to wait for a HTTP connection")
 	RootCmd.PersistentFlags().IntVarP(&chromeTimeout, "chrome-timeout", "", 90, "Time in seconds to wait for Google Chrome to finish a screenshot")
 	RootCmd.PersistentFlags().StringVarP(&chromePath, "chrome-path", "", "", "Full path to the Chrome executable to use. By default, gowitness will search for Google Chrome")
+	RootCmd.PersistentFlags().StringVarP(&userAgent, "user-agent", "", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36", "Alernate UserAgent string to use for Google Chrome")
 	RootCmd.PersistentFlags().StringVarP(&resolution, "resolution", "R", "1440,900", "screenshot resolution")
 	RootCmd.PersistentFlags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
 	RootCmd.PersistentFlags().StringVarP(&dbLocation, "db", "D", "gowitness.db", "Destination for the gowitness database")
