@@ -10,10 +10,12 @@ import (
 	"github.com/tidwall/buntdb"
 )
 
+// Storage handles the pointer to a buntdb instance
 type Storage struct {
 	Db *buntdb.DB
 }
 
+// Open creates a new connection to a buntdb database
 func (storage *Storage) Open(path string) error {
 
 	log.WithField("database-location", path).Debug("Opening buntdb")
@@ -31,6 +33,7 @@ func (storage *Storage) Open(path string) error {
 	return nil
 }
 
+// SetHTTPData stores HTTP information about a URL
 func (storage *Storage) SetHTTPData(data *HTTResponse) {
 
 	// marshal the data
@@ -58,6 +61,7 @@ func (storage *Storage) SetHTTPData(data *HTTResponse) {
 	}
 }
 
+// Close closes the connection to a buntdb connection
 func (storage *Storage) Close() {
 
 	log.Debug("Closing buntdb")

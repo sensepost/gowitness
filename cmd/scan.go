@@ -204,7 +204,7 @@ func init() {
 	RootCmd.AddCommand(scanCmd)
 
 	scanCmd.Flags().StringSliceVarP(&scanCidr, "cidr", "c", []string{}, "The CIDR to scan (Can specify more than one --cidr)")
-	scanCmd.Flags().StringVarP(&scanFileCidr, "file-cidr", "f", "", "A file containing newline seperated CIDRs to scan")
+	scanCmd.Flags().StringVarP(&scanFileCidr, "file-cidr", "f", "", "A file containing newline separated CIDRs to scan")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")

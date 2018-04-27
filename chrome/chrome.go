@@ -92,7 +92,7 @@ func (chrome *Chrome) checkVersion(lowestVersion string) bool {
 	out, err := exec.Command(chrome.Path, "-version").Output()
 	if err != nil {
 		log.WithFields(log.Fields{"chrome-path": chrome.Path, "err": err}).
-			Error("An error occured while trying to get the Chrome version")
+			Error("An error occurred while trying to get the Chrome version")
 		return false
 	}
 
