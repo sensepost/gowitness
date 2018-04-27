@@ -33,7 +33,7 @@ To build `gowitness` from source, follow the following steps:
 
 ```txt
 ~ » gowitness -h
-A commandline web screenshot and information gathering tool.
+A commandline web screenshot and information gathering tool by @leonjza
 
 Usage:
   gowitness [command]
@@ -47,6 +47,7 @@ Available Commands:
   version     Prints the version of gowitness
 
 Flags:
+      --chrome-path string   Full path to the Chrome executable to use. By default, gowitness will search for Google Chrome
       --chrome-timeout int   Time in seconds to wait for Google Chrome to finish a screenshot (default 90)
       --config string        config file (default is $HOME/.gowitness.yaml)
   -D, --db string            Destination for the gowitness database (default "gowitness.db")
@@ -56,6 +57,7 @@ Flags:
       --log-level string     one of debug, info, warn, error, or fatal (default "info")
   -R, --resolution string    screenshot resolution (default "1440,900")
   -T, --timeout int          Time in seconds to wait for a HTTP connection (default 3)
+      --user-agent string    Alernate UserAgent string to use for Google Chrome (default "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36")
 
 Use "gowitness [command] --help" for more information about a command.
 ```
