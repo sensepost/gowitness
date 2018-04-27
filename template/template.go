@@ -1,6 +1,6 @@
 package template
 
-// HTMLContents is the base template used for gowitness reports
+// HTMLContent is the base template used for gowitness reports
 var HTMLContent = `
 <!doctype html>
 <html lang="en">
