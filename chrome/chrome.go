@@ -168,7 +168,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		// Chrome headless... you suck. Proxy to the target
 		// so that we can ignore SSL certificate issues.
 		// proxy := shittyProxy{targetURL: targetURL}
-		originalPath := targetURL.path
+		originalPath := targetURL.Path
 		proxy := forwardingProxy{targetURL: targetURL}
 
 		// Give the shitty proxy a few moments to start up.
