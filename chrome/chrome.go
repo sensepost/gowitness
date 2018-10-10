@@ -168,6 +168,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		// Chrome headless... you suck. Proxy to the target
 		// so that we can ignore SSL certificate issues.
 		// proxy := shittyProxy{targetURL: targetURL}
+		originalPath := targetURL.Path
 		proxy := forwardingProxy{targetURL: targetURL}
 
 		// Give the shitty proxy a few moments to start up.
@@ -183,7 +184,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
 		// Update the URL scheme back to http, the proxy will handle the SSL
 		proxyURL, _ := url.Parse("http://localhost:" + strconv.Itoa(proxy.port) + "/")
-		proxyURL.Path = targetURL.Path
+		proxyURL.Path = originalPath
 
 		// I am not 100% sure if this does anything, but lets add --allow-insecure-localhost
 		// anyways.
