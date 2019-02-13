@@ -3,10 +3,13 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"image/png"
 	"io/ioutil"
 	"os"
+	"sort"
 	"text/template"
 
+	"github.com/corona10/goimagehash"
 	gwtmpl "github.com/sensepost/gowitness/template"
 	log "github.com/sirupsen/logrus"
 
@@ -30,6 +33,7 @@ $ gowitness generate`,
 		// Populate a variable with the data the template will
 		// want to parse
 		var screenshotEntries []storage.HTTResponse
+		var hash uint64 = 0
 		err := db.Db.View(func(tx *buntdb.Tx) error {
 
 			tx.Ascend("", func(key, value string) bool {
@@ -48,11 +52,31 @@ $ gowitness generate`,
 					data.ScreenshotFile = gwtmpl.PlaceHolderImage
 				}
 
+				// calculate image hash
+				if reportSort {
+					file, _ := os.Open(data.ScreenshotFile)
+					defer file.Close()
+
+					img, err := png.Decode(file)
+					if err == nil {
+						computation, _ := goimagehash.PerceptionHash(img)
+						hash = computation.GetHash()
+					}
+				}
+				data.Hash = hash
+
 				log.WithField("url", data.FinalURL).Debug("Generating screenshot entry")
 				screenshotEntries = append(screenshotEntries, data)
 
 				return true
 			})
+
+			// Sort by Hashes
+			if reportSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					return screenshotEntries[i].Hash < screenshotEntries[j].Hash
+				})
+			}
 
 			return nil
 		})
@@ -92,4 +116,5 @@ func init() {
 	RootCmd.AddCommand(generateCmd)
 
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
+	generateCmd.Flags().BoolVarP(&reportSort, "sort", "s", false, "Sort screenshots with perception hashing")
 }
