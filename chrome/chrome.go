@@ -151,6 +151,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		"--disable-crash-reporter",
 		"--user-agent=" + chrome.UserAgent,
 		"--window-size=" + chrome.Resolution, "--screenshot=" + destination,
+		"--virtual-time-budget=10000",
 	}
 
 	// When we are running as root, chromiun will flag the 'cant
