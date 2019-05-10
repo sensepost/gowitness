@@ -19,10 +19,11 @@ import (
 // Chrome contains information about a Google Chrome
 // instance, with methods to run on it.
 type Chrome struct {
-	Resolution    string
-	ChromeTimeout int
-	Path          string
-	UserAgent     string
+	Resolution       string
+	ChromeTimeout    int
+	ChromeTimeBudget string
+	Path             string
+	UserAgent        string
 
 	ScreenshotPath string
 }
@@ -151,7 +152,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		"--disable-crash-reporter",
 		"--user-agent=" + chrome.UserAgent,
 		"--window-size=" + chrome.Resolution, "--screenshot=" + destination,
-		"--virtual-time-budget=10000",
+		"--virtual-time-budget=" + chrome.ChromeTimeBudget,
 	}
 
 	// When we are running as root, chromiun will flag the 'cant
