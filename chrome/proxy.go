@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -24,9 +25,27 @@ func (proxy *forwardingProxy) start() error {
 
 	log.WithFields(log.Fields{"target-url": proxy.targetURL}).Debug("Initializing shitty forwarding proxy")
 
-	// *Dont* verify remote certificates.
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	var transport *http.Transport
+	var err error
+
+	proxyUrl := os.Getenv(`HTTP_PROXY`)
+
+	if proxyUrl != "" {
+		// get proxy from environment, because this just didn't work for me
+		u, err := url.Parse(proxyUrl)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// *Dont* verify remote certificates.
+		transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy:           http.ProxyURL(u),
+		}
+	} else {
+		transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
 	}
 
 	// Start the proxy and assign our custom Transport
@@ -35,7 +54,6 @@ func (proxy *forwardingProxy) start() error {
 	proxy.server.Transport = transport
 
 	// Get an open port for this proxy instance to run on.
-	var err error
 	proxy.listener, err = net.Listen("tcp", listeningURL+":0")
 	if err != nil {
 		return err
