@@ -25,8 +25,9 @@ All you would need is an installation of the latest Google Chrome or Chromium an
 
 To build `gowitness` from source, follow the following steps:
 
-* Ensure you have [dep](https://github.com/golang/dep) installed (`go get -v -u github.com/golang/dep/cmd/dep`)
-* Clone this repository to your `$GOPATH`'s `src/` directory so that it is in `sensepost/gowitness`
+* Ensure you have [dep](https://github.com/golang/dep) installed `go get -v -u github.com/golang/dep/cmd/dep`
+* Clone this repository to your `$GOPATH`'s `src/` directory `go get github.com/sensepost/gowitness`
+* cd $GOPATH/src/github.com/sensepost/gowitness
 * Run `dep ensure` to resolve dependencies
 * Use the `go` build tools, or run `make` to build the binaries in the `build/` directory
 
