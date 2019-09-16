@@ -21,7 +21,7 @@ import (
 type Chrome struct {
 	Resolution       string
 	ChromeTimeout    int
-	ChromeTimeBudget string
+	ChromeTimeBudget int
 	Path             string
 	UserAgent        string
 
@@ -152,7 +152,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		"--disable-crash-reporter",
 		"--user-agent=" + chrome.UserAgent,
 		"--window-size=" + chrome.Resolution, "--screenshot=" + destination,
-		"--virtual-time-budget=" + chrome.ChromeTimeBudget,
+		"--virtual-time-budget=" + strconv.Itoa(chrome.ChromeTimeBudget*1000),
 	}
 
 	// When we are running as root, chromiun will flag the 'cant

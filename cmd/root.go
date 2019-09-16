@@ -30,7 +30,7 @@ var (
 	waitTimeout      int
 	resolution       string
 	chromeTimeout    int
-	chromeTimeBudget string
+	chromeTimeBudget int
 	chromePath       string
 	userAgent        string
 
@@ -110,7 +110,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gowitness.yaml)")
 	RootCmd.PersistentFlags().IntVarP(&waitTimeout, "timeout", "T", 3, "Time in seconds to wait for a HTTP connection")
 	RootCmd.PersistentFlags().IntVarP(&chromeTimeout, "chrome-timeout", "", 90, "Time in seconds to wait for Google Chrome to finish a screenshot")
-	RootCmd.PersistentFlags().StringVarP(&chromeTimeBudget, "chrome-time-budget", "", "500", "Time in milliseconds to wait for pending network requests when loading a page in Google Chrome")
+	RootCmd.PersistentFlags().IntVarP(&chromeTimeBudget, "chrome-time-budget", "", 2, "Time in seconds to wait for pending network requests when loading a page in Google Chrome")
 	RootCmd.PersistentFlags().StringVarP(&chromePath, "chrome-path", "", "", "Full path to the Chrome executable to use. By default, gowitness will search for Google Chrome")
 	RootCmd.PersistentFlags().StringVarP(&userAgent, "user-agent", "", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36", "Alernate UserAgent string to use for Google Chrome")
 	RootCmd.PersistentFlags().StringVarP(&resolution, "resolution", "R", "1440,900", "screenshot resolution")
