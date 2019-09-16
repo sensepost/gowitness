@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/corona10/goimagehash"
+  packages = [".","etcs","transforms"]
+  revision = "6392b0bac9bf3b0a5ff2ff0413aae3c87ae1b6df"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
@@ -48,6 +54,12 @@
   name = "github.com/moul/http2curl"
   packages = ["."]
   revision = "9ac6cf4d929b2fa8fd2d2e6dec5bb0feb4f4911d"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/nfnt/resize"
+  packages = ["."]
+  revision = "83c6a9932646f83e3267f353373d47347b6036b2"
 
 [[projects]]
   name = "github.com/parnurzeal/gorequest"
@@ -190,6 +202,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "736f146585941e66e39cb60bcd707791ac76ca16c5c08def853d1085933f9fb8"
+  inputs-digest = "4263af6e995245f20b20cc5bc6559841c97bd6c80298b54dc34643c3978e5f2f"
   solver-name = "gps-cdcl"
   solver-version = 1
