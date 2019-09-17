@@ -12,11 +12,17 @@ import (
 
 // Storage handles the pointer to a buntdb instance
 type Storage struct {
-	Db *buntdb.DB
+	Db      *buntdb.DB
+	Enabled bool
 }
 
 // Open creates a new connection to a buntdb database
 func (storage *Storage) Open(path string) error {
+
+	if !storage.Enabled {
+		log.Fatalf("Tried to open db when it was disabled via flag")
+		return nil
+	}
 
 	log.WithField("database-location", path).Debug("Opening buntdb")
 
@@ -35,6 +41,11 @@ func (storage *Storage) Open(path string) error {
 
 // SetHTTPData stores HTTP information about a URL
 func (storage *Storage) SetHTTPData(data *HTTResponse) {
+
+	// do nothing if storage was disabled
+	if !storage.Enabled {
+		return
+	}
 
 	// marshal the data
 	jsonData, err := json.Marshal(data)
@@ -63,6 +74,10 @@ func (storage *Storage) SetHTTPData(data *HTTResponse) {
 
 // Close closes the connection to a buntdb connection
 func (storage *Storage) Close() {
+
+	if !storage.Enabled {
+		return
+	}
 
 	log.Debug("Closing buntdb")
 	storage.Db.Close()

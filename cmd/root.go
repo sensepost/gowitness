@@ -33,6 +33,7 @@ var (
 	chromeTimeBudget int
 	chromePath       string
 	userAgent        string
+	disableDb        bool
 
 	// screenshot command flags
 	screenshotURL         string
@@ -84,9 +85,14 @@ var RootCmd = &cobra.Command{
 			log.WithField("error", err).Fatal("Error in setting destination screenshot path.")
 		}
 
-		// open the database
 		db = storage.Storage{}
-		db.Open(dbLocation)
+
+		if disableDb {
+			db.Enabled = false
+		} else {
+			db.Enabled = true
+			db.Open(dbLocation)
+		}
 	},
 }
 
@@ -115,6 +121,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&userAgent, "user-agent", "", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36", "Alernate UserAgent string to use for Google Chrome")
 	RootCmd.PersistentFlags().StringVarP(&resolution, "resolution", "R", "1440,900", "screenshot resolution")
 	RootCmd.PersistentFlags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
+	RootCmd.PersistentFlags().BoolVarP(&disableDb, "disable-db", "", false, "Disable database features (wont write a gowitness.db)")
 	RootCmd.PersistentFlags().StringVarP(&dbLocation, "db", "D", "gowitness.db", "Destination for the gowitness database")
 }
 
