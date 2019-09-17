@@ -21,47 +21,41 @@ Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTrun
 
 ## installation
 
-All you would need is an installation of the latest Google Chrome or Chromium and `gowitness` itself. Binaries are available for download from the [releases](https://github.com/sensepost/gowitness/releases) page as part of tagged releases.
+All you would need is an installation of the latest Google Chrome or Chromium and `gowitness` itself. `gowitness` can be downloaded using `go get -u github.com/sensepost/gowitness` or using the
+binaries available for download from the [releases](https://github.com/sensepost/gowitness/releases) page.
+
+## build from source
 
 To build `gowitness` from source, follow the following steps:
 
-* Ensure you have [dep](https://github.com/golang/dep) installed (`go get -v -u github.com/golang/dep/cmd/dep`)
-* Clone this repository to your `$GOPATH`'s `src/` directory so that it is in `sensepost/gowitness`
-* Run `dep ensure` to resolve dependencies
-* Use the `go` build tools, or run `make` to build the binaries in the `build/` directory
+* Ensure that you have at least golang version 1.11.
+* Clone this repository and `cd` into it.
+* Run `go build` to get the `gowitness` binary for the current machine.
+* Or, `make` to build for all targets. Binaries will be in the `build/` diretory.
 
-## usage
+## usage examples
 
-```txt
-~ » gowitness -h
-A commandline web screenshot and information gathering tool by @leonjza
+### screenshot a single website
 
-Usage:
-  gowitness [command]
+`$ gowitness single --url=https://www.google.com/`
 
-Available Commands:
-  file        Screenshot URLs sourced from a file
-  generate    Generate an HTML report from a database file
-  help        Help about any command
-  scan        Scan a CIDR range and take screenshots along the way
-  single      Take a screenshot of a single URL
-  version     Prints the version of gowitness
+This should result in a file being created called: `https-www.google.com.png`
 
-Flags:
-      --chrome-path string   Full path to the Chrome executable to use. By default, gowitness will search for Google Chrome
-      --chrome-timeout int   Time in seconds to wait for Google Chrome to finish a screenshot (default 90)
-      --config string        config file (default is $HOME/.gowitness.yaml)
-  -D, --db string            Destination for the gowitness database (default "gowitness.db")
-  -d, --destination string   Destination directory for screenshots (default ".")
-  -h, --help                 help for gowitness
-      --log-format string    specify output (text or json) (default "text")
-      --log-level string     one of debug, info, warn, error, or fatal (default "info")
-  -R, --resolution string    screenshot resolution (default "1440,900")
-  -T, --timeout int          Time in seconds to wait for a HTTP connection (default 3)
-      --user-agent string    Alernate UserAgent string to use for Google Chrome (default "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36")
+### screenshot a cidr
 
-Use "gowitness [command] --help" for more information about a command.
-```
+`$ gowitness scan --cidr 192.168.0.0/24 --threads 20`
+
+This should result in many `.png` images in the current directory when complete. This can would also use `20` threads and not the default of `4`.
+
+### generate a report
+
+`$ gowitness generate`
+
+This should result in an `report.html` file with a screenshot report.
+
+`$ gowitness generate --sort`
+
+This should result in an `report.html` file with a screenshot report where screenshots are sorted using perception hashing.
 
 ## license
 
