@@ -15,7 +15,7 @@ var HTMLContent = `
   <title>gowitness - report</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet">
+  <style> ` + bootstrapCSS + ` </style>
 
   <!-- Custom styles for this template -->
   <style>
@@ -203,12 +203,10 @@ var HTMLContent = `
     </div>
   </footer>
 
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/unveil/1.3.0/jquery.unveil.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
-    crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+  <script>` + jquery + `</script>
+  <script>` + unveil + `</script>
+  <script>` + popper + `</script>
+  <script>` + bootstrap + `</script>
 </body>
 
 </html>
