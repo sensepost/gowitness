@@ -29,6 +29,7 @@ For example:
 
 $ gowitness generate`,
 	Run: func(cmd *cobra.Command, args []string) {
+		validateGenerateFlags()
 
 		// Populate a variable with the data the template will
 		// want to parse
@@ -53,7 +54,7 @@ $ gowitness generate`,
 				}
 
 				// calculate image hash
-				if reportSort {
+				if perceptionSort {
 					file, _ := os.Open(data.ScreenshotFile)
 					defer file.Close()
 
@@ -71,10 +72,17 @@ $ gowitness generate`,
 				return true
 			})
 
-			// Sort by Hashes
-			if reportSort {
+			// Sort by Image Perception Hashes
+			if perceptionSort {
 				sort.Slice(screenshotEntries, func(i, j int) bool {
 					return screenshotEntries[i].Hash < screenshotEntries[j].Hash
+				})
+			}
+
+			// Sort by Status Codes
+			if statusCodeSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					return screenshotEntries[i].ResponseCode < screenshotEntries[j].ResponseCode
 				})
 			}
 
@@ -113,8 +121,15 @@ $ gowitness generate`,
 }
 
 func init() {
-	RootCmd.AddCommand(generateCmd)
+	reportCmd.AddCommand(generateCmd)
 
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
-	generateCmd.Flags().BoolVarP(&reportSort, "sort", "s", false, "Sort screenshots with perception hashing")
+	generateCmd.Flags().BoolVarP(&perceptionSort, "perception-sort", "P", false, "Sort screenshots with perception hashing")
+	generateCmd.Flags().BoolVarP(&statusCodeSort, "status-code-sort", "S", false, "Sort screenshots by HTTP status codes")
+}
+
+func validateGenerateFlags() {
+	if perceptionSort && statusCodeSort {
+		log.Fatal("Either --perception-sort or --status-code-sort can be set. Not both.")
+	}
 }

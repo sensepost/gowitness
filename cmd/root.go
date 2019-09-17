@@ -53,7 +53,8 @@ var (
 
 	// generate command
 	reportFileName string
-	reportSort     bool
+	perceptionSort bool
+	statusCodeSort bool
 
 	// execution time
 	startTime = time.Now()
