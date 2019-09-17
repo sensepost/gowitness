@@ -40,8 +40,10 @@ var (
 	screenshotDestination string
 
 	// file scanner command flags
-	sourceFile string
-	maxThreads int
+	sourceFile  string
+	maxThreads  int
+	prefixHTTP  bool
+	prefixHTTPS bool
 
 	// range scanner command flags
 	scanCidr           []string

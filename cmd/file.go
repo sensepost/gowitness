@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -65,6 +67,16 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 			candidate := scanner.Text()
 
+			if !strings.HasPrefix(candidate, `htt`) && (prefixHTTP || prefixHTTPS) {
+				if prefixHTTP {
+					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with http://")
+					candidate = fmt.Sprintf(`%s%s`, `http://`, candidate)
+				} else if prefixHTTPS {
+					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with https://")
+					candidate = fmt.Sprintf(`%s%s`, `https://`, candidate)
+				} // TODO: Refactor this a bit to support adding both
+			}
+
 			u, err := url.ParseRequestURI(candidate)
 			if err != nil {
 
@@ -102,4 +114,6 @@ func init() {
 
 	fileCmd.Flags().StringVarP(&sourceFile, "source", "s", "", "The source file containing urls")
 	fileCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
+	fileCmd.Flags().BoolVarP(&prefixHTTP, "prefix-http", "", false, "Prefix file entries with http:// that have none")
+	fileCmd.Flags().BoolVarP(&prefixHTTPS, "prefix-https", "", false, "Prefix file entries with https:// that have none")
 }
