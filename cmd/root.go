@@ -54,9 +54,10 @@ var (
 	randomPermutations bool
 
 	// generate command
-	reportFileName string
-	perceptionSort bool
-	statusCodeSort bool
+	reportFileName    string
+	perceptionSort    bool
+	statusCodeSort    bool
+	filterStatusCodes []int
 
 	// execution time
 	startTime = time.Now()

@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/sensepost/gowitness/storage"
+	"github.com/sensepost/gowitness/utils"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/buntdb"
 )
@@ -67,7 +68,17 @@ $ gowitness generate`,
 				data.Hash = hash
 
 				log.WithField("url", data.FinalURL).Debug("Generating screenshot entry")
-				screenshotEntries = append(screenshotEntries, data)
+
+				// filters – http status codes
+				if len(filterStatusCodes) > 0 {
+
+					if utils.SliceContainsInt(filterStatusCodes, data.ResponseCode) {
+						screenshotEntries = append(screenshotEntries, data)
+					}
+
+				} else {
+					screenshotEntries = append(screenshotEntries, data)
+				}
 
 				return true
 			})
@@ -126,6 +137,7 @@ func init() {
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
 	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
 	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
+	generateCmd.Flags().IntSliceVarP(&filterStatusCodes, "filter-code", "C", []int{}, "The HTTP status code to filter on (Can specify more than one --filter-status-codes)")
 }
 
 func validateGenerateFlags() {
