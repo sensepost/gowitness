@@ -140,6 +140,8 @@ var HTMLContent = `
                       <h4 class="card-title">
                         <a href="{{ $screenshot.FinalURL }}" target="_blank" rel="noopener noreferrer">{{ $screenshot.URL}}</a>
                         <small>{{ $screenshot.ResponseCodeString }}</small>
+                        <br>
+                        <small class="text-muted">Title: {{ $screenshot.Title }}</small>
                       </h4>
                       <p class="card-text">
 
