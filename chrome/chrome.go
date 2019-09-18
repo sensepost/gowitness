@@ -54,6 +54,7 @@ func (chrome *Chrome) chromeLocator() {
 	// Possible paths for Google Chrome or chromium to be at.
 	paths := []string{
 		"/usr/bin/chromium",
+		"/usr/bin/chromium-browser",
 		"/usr/bin/google-chrome-stable",
 		"/usr/bin/google-chrome",
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
