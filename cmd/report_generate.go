@@ -124,12 +124,12 @@ func init() {
 	reportCmd.AddCommand(generateCmd)
 
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
-	generateCmd.Flags().BoolVarP(&perceptionSort, "perception-sort", "P", false, "Sort screenshots with perception hashing")
-	generateCmd.Flags().BoolVarP(&statusCodeSort, "status-code-sort", "S", false, "Sort screenshots by HTTP status codes")
+	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
+	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
 }
 
 func validateGenerateFlags() {
 	if perceptionSort && statusCodeSort {
-		log.Fatal("Either --perception-sort or --status-code-sort can be set. Not both.")
+		log.Fatal("Only one sort option is allowed")
 	}
 }
