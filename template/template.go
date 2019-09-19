@@ -115,11 +115,27 @@ var HTMLContent = `
 
     <section class="jumbotron text-center">
       <div class="container">
-        <h1 class="jumbotron-heading">This gowitness report contains {{ len .ScreenShots }} screenshot(s)!</h1>
+        <h4 class="jumbotron-heading">This gowitness report page contains {{ len .ScreenShots }} screenshot(s)!</h4>
       </div>
     </section>
 
     <div class="album text-muted">
+
+      {{ $report_name := .ReportName }}
+      {{ $current_page := .CurrentPage }}
+
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+          {{ range $i, $p := .Pages }}
+            <li class="page-item {{ if eq $i $current_page }}active{{ end }}">
+              <a class="page-link" href="{{ printf "%s-%d.html" $report_name $i }}">
+                {{ $i }}
+              </a>
+            </li>
+          {{ end }}
+        </ul>
+      </nav>
+
       <div class="container">
 
         {{ range $screenshot := .ScreenShots }}
@@ -193,6 +209,19 @@ var HTMLContent = `
         {{ end }}
 
       </div>
+
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+          {{ range $i, $p := .Pages }}
+            <li class="page-item {{ if eq $i $current_page }}active{{ end }}">
+              <a class="page-link" href="{{ printf "%s-%d.html" $report_name $i }}">
+                {{ $i }}
+              </a>
+            </li>
+          {{ end }}
+        </ul>
+      </nav>
+
     </div>
 
   </main>

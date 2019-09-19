@@ -3,10 +3,12 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"image/png"
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/corona10/goimagehash"
@@ -122,16 +124,37 @@ $ gowitness generate`,
 			log.WithField("err", err).Fatal("Failed to parse template")
 		}
 
+		// chunk up the entries into chunks of limit
+		var batches [][]storage.HTTResponse
+		for reportChunks < len(screenshotEntries) {
+			screenshotEntries, batches = screenshotEntries[reportChunks:],
+				append(batches, screenshotEntries[0:reportChunks:reportChunks])
+		}
+		batches = append(batches, screenshotEntries)
+
 		type TemplateData struct {
 			ScreenShots []storage.HTTResponse
+			Pages       []int // wtf have to use range in template :/
+			CurrentPage int
+			ReportName  string
 		}
-		templateData := TemplateData{ScreenShots: screenshotEntries}
 
-		var doc bytes.Buffer
-		tmpl.Execute(&doc, templateData)
+		// next, loop the batches and write the report chunks
+		for i, batch := range batches {
 
-		if err := ioutil.WriteFile(reportFileName, []byte(doc.String()), 0644); err != nil {
-			log.WithField("err", err).Fatal("Failed to write report html")
+			templateData := TemplateData{
+				ScreenShots: batch,
+				Pages:       make([]int, len(batches)),
+				CurrentPage: i,
+				ReportName:  reportFileName,
+			}
+
+			var doc bytes.Buffer
+			tmpl.Execute(&doc, templateData)
+
+			if err := ioutil.WriteFile(fmt.Sprintf(`%s-%d.html`, reportFileName, i), []byte(doc.String()), 0644); err != nil {
+				log.WithField("err", err).Fatal("Failed to write report html")
+			}
 		}
 
 		log.WithField("report-file", reportFileName).Info("Report generated")
@@ -142,6 +165,7 @@ func init() {
 	reportCmd.AddCommand(generateCmd)
 
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
+	generateCmd.Flags().IntVarP(&reportChunks, "chunk", "c", 100, "Number of screenshots per report chunk")
 	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
 	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
 	generateCmd.Flags().BoolVarP(&titleSort, "sort-title", "L", false, "Sort screenshots by parsed <title> tags")
@@ -164,5 +188,10 @@ func validateGenerateFlags() {
 	}
 	if occurrences > 1 {
 		log.Fatal("Only one sort option is allowed")
+	}
+
+	// fix up the filename if it ends with .html
+	if strings.HasSuffix(reportFileName, ".html") {
+		reportFileName = strings.ReplaceAll(reportFileName, ".html", "")
 	}
 }

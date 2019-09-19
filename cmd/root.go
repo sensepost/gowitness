@@ -55,6 +55,7 @@ var (
 
 	// generate command
 	reportFileName    string
+	reportChunks      int
 	perceptionSort    bool
 	statusCodeSort    bool
 	titleSort         bool
