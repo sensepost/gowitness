@@ -60,6 +60,7 @@ var (
 	statusCodeSort    bool
 	titleSort         bool
 	filterStatusCodes []int
+	ignoreFailed      bool
 
 	// execution time
 	startTime = time.Now()

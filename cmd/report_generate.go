@@ -71,6 +71,11 @@ $ gowitness generate`,
 
 				log.WithField("url", data.FinalURL).Debug("Generating screenshot entry")
 
+				// filters - ignore errors
+				if ignoreFailed && (400 <= data.ResponseCode && data.ResponseCode < 600) {
+					return true
+				}
+
 				// filters – http status codes
 				if len(filterStatusCodes) > 0 {
 
@@ -166,6 +171,7 @@ func init() {
 
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
 	generateCmd.Flags().IntVarP(&reportChunks, "chunk", "c", 100, "Number of screenshots per report chunk")
+	generateCmd.Flags().BoolVarP(&ignoreFailed, "ignore-failed", "f", false, "Ignore entries that did not have a successful response")
 	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
 	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
 	generateCmd.Flags().BoolVarP(&titleSort, "sort-title", "L", false, "Sort screenshots by parsed <title> tags")
@@ -193,5 +199,11 @@ func validateGenerateFlags() {
 	// fix up the filename if it ends with .html
 	if strings.HasSuffix(reportFileName, ".html") {
 		reportFileName = strings.ReplaceAll(reportFileName, ".html", "")
+	}
+
+	// check if ignore errors and filter status codes are on
+	if len(filterStatusCodes) > 0 && ignoreFailed {
+		log.Warn("Both --filter-code and --ignore-failed failed flags are on. If a" +
+			"filtered status code is part of an error status, it will be ignored.")
 	}
 }
