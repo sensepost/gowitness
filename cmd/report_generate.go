@@ -97,6 +97,13 @@ $ gowitness generate`,
 				})
 			}
 
+			// Sort by Title
+			if titleSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					return screenshotEntries[i].Title < screenshotEntries[j].Title
+				})
+			}
+
 			return nil
 		})
 
@@ -137,11 +144,25 @@ func init() {
 	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
 	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
 	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
+	generateCmd.Flags().BoolVarP(&titleSort, "sort-title", "L", false, "Sort screenshots by parsed <title> tags")
 	generateCmd.Flags().IntSliceVarP(&filterStatusCodes, "filter-code", "C", []int{}, "The HTTP status code to filter on (Can specify more than one --filter-status-codes)")
 }
 
 func validateGenerateFlags() {
-	if perceptionSort && statusCodeSort {
+
+	// validate sort flags
+	sortFlags := []bool{
+		perceptionSort,
+		statusCodeSort,
+		titleSort,
+	}
+	var occurrences int
+	for _, o := range sortFlags {
+		if o == true {
+			occurrences = occurrences + 1
+		}
+	}
+	if occurrences > 1 {
 		log.Fatal("Only one sort option is allowed")
 	}
 }

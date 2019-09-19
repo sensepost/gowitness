@@ -57,6 +57,7 @@ var (
 	reportFileName    string
 	perceptionSort    bool
 	statusCodeSort    bool
+	titleSort         bool
 	filterStatusCodes []int
 
 	// execution time
