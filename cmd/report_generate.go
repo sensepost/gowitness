@@ -162,7 +162,7 @@ $ gowitness generate`,
 			}
 		}
 
-		log.WithField("report-file", reportFileName).Info("Report generated")
+		log.WithField("report-file", fmt.Sprintf(`%s-0.html`, reportFileName)).Info("Report generated")
 	},
 }
 
