@@ -49,13 +49,17 @@ This should result in many `.png` images in the current directory when complete.
 
 ### generate a report
 
-`$ gowitness generate`
+`$ gowitness report generate`
 
 This should result in an `report.html` file with a screenshot report.
 
-`$ gowitness generate --sort`
+`$ gowitness report generate --sort-perception`
 
 This should result in an `report.html` file with a screenshot report where screenshots are sorted using perception hashing.
+
+`$ gowitness report list`
+
+This should list the entries in the `gowitness.db` file.
 
 ## license
 
