@@ -34,6 +34,7 @@ var (
 	chromePath       string
 	userAgent        string
 	disableDb        bool
+	chromeArgvs      []string
 
 	// screenshot command flags
 	screenshotURL         string
@@ -92,6 +93,7 @@ var RootCmd = &cobra.Command{
 			ChromeTimeBudget: chromeTimeBudget,
 			Path:             chromePath,
 			UserAgent:        userAgent,
+			Argvs:            chromeArgvs,
 		}
 		chrome.Setup()
 
@@ -138,6 +140,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&screenshotDestination, "destination", "d", ".", "Destination directory for screenshots")
 	RootCmd.PersistentFlags().BoolVarP(&disableDb, "disable-db", "", false, "Disable database features (wont write a gowitness.db)")
 	RootCmd.PersistentFlags().StringVarP(&dbLocation, "db", "D", "gowitness.db", "Destination for the gowitness database")
+	RootCmd.PersistentFlags().StringSliceVarP(&chromeArgvs, "chrome-arg", "g", []string{}, "Extra arguments to pass to chrome headless")
 }
 
 // initConfig reads in config file and ENV variables if set.
