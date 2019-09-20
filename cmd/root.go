@@ -45,12 +45,17 @@ var (
 	prefixHTTP  bool
 	prefixHTTPS bool
 
+	// nmap scanner command flags
+	nmapFile      string
+	scanHostnames bool
+	nmapServices  []string
+
 	// range scanner command flags
 	scanCidr           []string
 	scanFileCidr       string
 	scanPorts          string
-	skipHTTP           bool
-	skipHTTPS          bool
+	skipHTTP           bool // used in nmap command too
+	skipHTTPS          bool // used in nmap command too
 	randomPermutations bool
 
 	// generate command
