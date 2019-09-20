@@ -58,7 +58,7 @@ var (
 	skipHTTPS          bool // used in nmap command too
 	randomPermutations bool
 
-	// generate command
+	// report generate command
 	reportFileName    string
 	reportChunks      int
 	perceptionSort    bool
@@ -66,6 +66,9 @@ var (
 	titleSort         bool
 	filterStatusCodes []int
 	ignoreFailed      bool
+
+	// report list command
+	colWidth int
 
 	// execution time
 	startTime = time.Now()
