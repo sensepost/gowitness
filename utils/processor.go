@@ -121,6 +121,12 @@ func getPageTitle(n *html.Node) string {
 
 	var title string
 	if n.Type == html.ElementNode && n.Data == "title" {
+
+		// handle empty <title> node
+		if n.FirstChild == nil {
+			return "(empty)"
+		}
+
 		return n.FirstChild.Data
 	}
 
