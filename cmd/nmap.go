@@ -26,22 +26,31 @@ var nmapCmd = &cobra.Command{
 When performing an Nmap scan, specify the -oX nmap.xml flag to store
 data in an XML formatted file that gowitness can parse.
 
-Running this command without specifying any --services flags mean it
+Running this command without specifying any --services flags means it
 will try and screenshot all ports (incl. silly things like SSH etc.).
-For this reason you probably want to rather specify services to probe.
+For this reason, you probably want to rather specify services to probe.
 This can be done with the --services / -n flags. For more example
-service names, parse your local nmap-services file.
+service names parse your local nmap-services file.
 
 For most http-based services, try:
 -n http -n http-alt -n http-mgmt -n http-proxy -n https -n https-alt
 
+Alternatively, you can specify --port (multiple times) to only scan
+specific ports for hosts. This may be used in conjunction with the
+--services flag.
+
 For example:
 
-$ gowitness nmap --nmap-file nmap.xml 	# WARNING: scans all services
-$ gowitness nmap --nmap-file nmap.xml --scan-hostnames	# WARNING: scans all services
+# WARNING: These scan all exposed service, like SSH
+$ gowitness nmap --nmap-file nmap.xml
+$ gowitness nmap --nmap-file nmap.xml --scan-hostnames
+
+# These filter services from the nmap file
 $ gowitness nmap --nmap-file nmap.xml --service http --service https
 $ gowitness nmap -f nmap.xml --no-http
+$ gowitness nmap -f nmap.xml --no-http --service https --port 8888
 $ gowitness nmap -f nmap.xml --no-https -n http -n http-alt
+$ gowitness nmap -f nmap.xml --port 80 --port 8080
 $ gowitness nmap --nmap-file nmap.xml -s -n http`,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -126,8 +135,8 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 		for _, address := range host.Addresses {
 			for _, port := range host.Ports {
 
-				// if we need to filter by service, do that
-				if len(nmapServices) > 0 {
+				// if we need to filter by service or port, do that
+				if len(nmapServices) > 0 || len(nmapPorts) > 0 {
 					if utils.SliceContainsString(nmapServices, port.Service.Name) {
 
 						for _, r := range buildURI(address.Addr, port.PortId) {
@@ -140,6 +149,13 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 									u = append(u, r)
 								}
 							}
+						}
+					}
+
+					// add the port if it should be included
+					if utils.SliceContainsInt(nmapPorts, port.PortId) {
+						for _, r := range buildURI(address.Addr, port.PortId) {
+							u = append(u, r)
 						}
 					}
 
@@ -185,6 +201,7 @@ func init() {
 
 	nmapCmd.Flags().StringVarP(&nmapFile, "nmap-file", "f", "", "The source file containing urls")
 	nmapCmd.Flags().StringSliceVarP(&nmapServices, "service", "n", []string{}, "Nmap service names to filter by. Multiple --service flags are supported")
+	nmapCmd.Flags().IntSliceVarP(&nmapPorts, "port", "p", []int{}, "Nmap ports to filter by. Multiple --port flags are supported")
 	nmapCmd.Flags().BoolVarP(&scanHostnames, "scan-hostnames", "N", false, "Also scan hostnames (useful for virtual hosting)")
 	nmapCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	nmapCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")

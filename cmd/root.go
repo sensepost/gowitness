@@ -50,6 +50,7 @@ var (
 	nmapFile      string
 	scanHostnames bool
 	nmapServices  []string
+	nmapPorts     []int
 
 	// range scanner command flags
 	scanCidr           []string
