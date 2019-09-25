@@ -67,7 +67,7 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 			candidate := scanner.Text()
 
-			if !strings.HasPrefix(candidate, `htt`) && (prefixHTTP || prefixHTTPS) {
+			if !(strings.HasPrefix(candidate, `http://`) || strings.HasPrefix(`https://`, candidate)) && (prefixHTTP || prefixHTTPS) {
 				if prefixHTTP {
 					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with http://")
 					candidate = fmt.Sprintf(`%s%s`, `http://`, candidate)
