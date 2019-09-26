@@ -1,7 +1,7 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/sensepost/objection">
-    <img src="images/gowitness-logo.png" alt="objection"></a>
+  <a href="https://github.com/sensepost/gowitness">
+    <img src="images/gowitness-logo.png" alt="gowitness"></a>
   <br>
   <br>
 </h1>
