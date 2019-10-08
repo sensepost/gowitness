@@ -25,6 +25,7 @@ type Chrome struct {
 	Path             string
 	UserAgent        string
 	Argvs            []string
+	NoSandbox        bool
 
 	ScreenshotPath string
 }
@@ -168,9 +169,9 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 
 	// When we are running as root, chromiun will flag the 'cant
 	// run as root' thing. Handle that case.
-	if os.Geteuid() == 0 {
+	if os.Geteuid() == 0 || chrome.NoSandbox {
 
-		log.WithField("euid", os.Geteuid()).Debug("Running as root, adding --no-sandbox")
+		log.WithField("euid", os.Geteuid()).Debug("Running as root or enable no-sandbox, adding --no-sandbox")
 		chromeArguments = append(chromeArguments, "--no-sandbox")
 	}
 
