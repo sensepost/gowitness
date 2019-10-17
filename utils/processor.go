@@ -68,7 +68,6 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 
 	// Parse any TLS information
 	if resp.TLS != nil {
-
 		// storage for the TLS information
 		SSLCertificate := storage.SSLCertificate{}
 
@@ -102,7 +101,7 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 	// Generate a safe filename to use
 	fname := SafeFileName(url.String()) + ".png"
 
-	// Get the tull path where we will be saving the screenshot to
+	// Get the full path where we will be saving the screenshot to
 	dst := filepath.Join(chrome.ScreenshotPath, fname)
 
 	HTTPResponseStorage.ScreenshotFile = dst

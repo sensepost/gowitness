@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -126,11 +125,6 @@ func (chrome *Chrome) checkVersion(lowestVersion string) bool {
 
 // SetScreenshotPath sets the path for screenshots
 func (chrome *Chrome) SetScreenshotPath(p string) error {
-
-	p, err := filepath.Abs(p)
-	if err != nil {
-		return err
-	}
 
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		return errors.New("Destination path does not exist")
