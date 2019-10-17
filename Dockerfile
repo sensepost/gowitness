@@ -2,10 +2,12 @@ FROM golang:alpine as build
 
 LABEL maintainer="Leon Jacobs <leonja511@gmail.com>"
 
+RUN apk --no-cache add make git
+
 COPY . /src
 
 WORKDIR /src
-RUN go build -o gowitness
+RUN make docker
 
 # final image
 FROM zenika/alpine-chrome:latest

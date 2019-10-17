@@ -23,5 +23,8 @@ linux:
 windows:
 	GOOS=windows GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-windows-amd64.exe'
 
+docker:
+	go build $(LD_FLAGS) -o gowitness
+
 integrity:
 	cd $(BIN_DIR) && shasum *
