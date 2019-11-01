@@ -64,7 +64,7 @@ Available Commands:
 
 To build `gowitness` from source, follow the following steps:
 
-* Ensure that you have at least golang version 1.1333.
+* Ensure that you have at least golang version 1.13.
 * Clone this repository and `cd` into it.
 * Run `go build` to get the `gowitness` binary for the current machine.
 * Or, `make` to build for all targets. Binaries will be in the `build/` diretory.
