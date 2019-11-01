@@ -33,7 +33,7 @@ To screenshot a page using docker, simply run the following command that would a
 docker run --rm -it -v $(pwd)/screenshots:/screenshots leonjza/gowitness:latest single --url=https://www.google.com
 ```
 
-Keep in mind that a folder needs to be mounted into the container for `gowitness` to write your screenshots to, otherwise they will be lost when the container exists. The container is configured with the `/screenshots/` directory as the working directory, so the above command mounts a local `screenshots/` directory there.
+Keep in mind that a folder needs to be mounted into the container for `gowitness` to write your screenshots to, otherwise they will be lost when the container exits. The container is configured with the `/screenshots/` directory as the working directory, so the above command mounts a local `screenshots/` directory there.
 
 If you want to read an nmap file, save it locally into a screenshots directory, and use it with:
 
@@ -64,7 +64,7 @@ Available Commands:
 
 To build `gowitness` from source, follow the following steps:
 
-* Ensure that you have at least golang version 1.11.
+* Ensure that you have at least golang version 1.1333.
 * Clone this repository and `cd` into it.
 * Run `go build` to get the `gowitness` binary for the current machine.
 * Or, `make` to build for all targets. Binaries will be in the `build/` diretory.
