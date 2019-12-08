@@ -38,6 +38,15 @@ requests that are made wont follow each other on the same host.
 This may be useful in cases where too many ports specified by the
 --ports flag might trigger port scan alerts.
 
+The --append-uri and --append-uri-file flags will generate extra permutations
+where requests to these URI's will also be made. Consider an example network
+range that would scan 192.168.0.1 on port 80, using '--append-uri foo' would
+result in a permutation such as http://192.168.0.1:80/ including the permutation
+http://192.168.0.1:80/foo.
+Warning: Using a file to source URI's from using --append-uri-file with a large
+amount of content will dramatically increase the number of permutations that
+would be generated and utimately probed. Use with caution.
+
 For example:
 
 $ gowitness scan --cidr 192.168.0.0/24
@@ -261,6 +270,6 @@ func init() {
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")
 	scanCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	scanCmd.Flags().BoolVarP(&randomPermutations, "random", "r", false, "Randomize generated permutations")
-	scanCmd.Flags().StringVarP(&appendURI, "append-uri", "a", "", "Append this URI to all requests")
-	scanCmd.Flags().StringVarP(&appendURIFile, "append-uri-file", "A", "", "Append URI's from this file to all requests")
+	scanCmd.Flags().StringVarP(&appendURI, "append-uri", "a", "", "Add permutations appending this URI")
+	scanCmd.Flags().StringVarP(&appendURIFile, "append-uri-file", "A", "", "Add permutations appending URI's from this file")
 }
