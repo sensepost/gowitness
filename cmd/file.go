@@ -33,6 +33,8 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		validateFileCmdFlags()
+
 		log.WithField("source", sourceFile).Debug("Reading source file")
 
 		// process the source file
@@ -107,6 +109,15 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 		log.WithFields(log.Fields{"run-time": time.Since(startTime)}).Info("Complete")
 
 	},
+}
+
+// Validates that the arguments received for fileCmd is valid.
+func validateFileCmdFlags() {
+
+	if prefixHTTP && prefixHTTPS {
+		log.WithFields(log.Fields{"prefix-http": prefixHTTP, "prefix-https": prefixHTTPS}).
+			Fatal("Both --prefix-http and --prefix-https cannot be set")
+	}
 }
 
 func init() {
