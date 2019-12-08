@@ -86,6 +86,42 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 
 		permutations, err := utils.Permutations(ips, ports, skipHTTP, skipHTTPS)
 
+		// uri appends
+		if appendURI != "" {
+			log.WithFields(log.Fields{"append-uri": appendURI}).Info("Appending URI to permutations")
+			for _, permutation := range permutations {
+				permutations = append(permutations, permutation+appendURI)
+			}
+		} else if appendURIFile != "" {
+			var newPermutations []string
+			log.WithFields(log.Fields{"append-uri-file": appendURIFile}).Info("Appending URIs from file")
+			o, err := os.Open(appendURIFile)
+			if err != nil {
+				log.WithFields(log.Fields{"append-uri-file": appendURIFile, "error": err}).
+					Fatal("Unable to open file to read URIs from")
+			}
+			scanner := bufio.NewScanner(o)
+			for scanner.Scan() {
+				u := scanner.Text()
+				if !strings.HasPrefix(u, `/`) {
+					log.WithField("append-uri-from-file", u).Debug("Prefixing file candidate with /")
+					u = `/` + u
+				}
+
+				log.Debug(u)
+
+				for _, permutation := range permutations {
+					log.Debug(permutation, permutation+u)
+					newPermutations = append(newPermutations, permutation+u)
+				}
+			}
+
+			// figure out how to do this without yet another loop
+			for _, k := range newPermutations {
+				permutations = append(permutations, k)
+			}
+		}
+
 		if randomPermutations {
 			log.WithFields(log.Fields{"cidr-count": len(cidrs)}).Info("Randomizing permutations")
 			permutations = utils.ShufflePermutations(permutations)
@@ -198,6 +234,19 @@ func validateScanCmdFlags() {
 		log.WithFields(log.Fields{"skip-http": skipHTTP, "skip-https": skipHTTPS}).
 			Fatal("Both HTTP and HTTPS cannot be skipped")
 	}
+
+	if appendURI != "" && appendURIFile != "" {
+		log.WithFields(log.Fields{"append-uri": appendURI, "append-uri-file": appendURIFile}).
+			Fatal("Both --append-uri and --append-uri-file cannot be set")
+	}
+
+	if appendURI != "" {
+		if !strings.HasPrefix(appendURI, `/`) {
+			log.WithFields(log.Fields{"append-uri": `/`}).
+				Warn("Append URI value does not start with a /, automatically appending it")
+			appendURI = `/` + appendURI
+		}
+	}
 }
 
 func init() {
@@ -210,4 +259,6 @@ func init() {
 	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")
 	scanCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	scanCmd.Flags().BoolVarP(&randomPermutations, "random", "r", false, "Randomize generated permutations")
+	scanCmd.Flags().StringVarP(&appendURI, "append-uri", "a", "", "Append this URI to all requests")
+	scanCmd.Flags().StringVarP(&appendURIFile, "append-uri-file", "A", "", "Append URI's from this file to all requests")
 }

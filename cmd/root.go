@@ -59,6 +59,8 @@ var (
 	skipHTTP           bool // used in nmap command too
 	skipHTTPS          bool // used in nmap command too
 	randomPermutations bool
+	appendURI          string
+	appendURIFile      string
 
 	// report generate command
 	reportFileName    string
