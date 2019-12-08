@@ -45,6 +45,8 @@ $ gowitness scan --cidr 192.168.0.0/24 --cidr 10.10.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.1/32 --no-https
 $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --cidr 192.168.0.0/30
+$ gowitness scan --ports 80,443,8080 --cidr 192.168.0.0/30 --append-uri '/admin'
+$ gowitness scan --ports 80,443,8080 --cidr 192.168.0.0/30 --append-uri-file ~/wordlists/adminpanels.txt
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
