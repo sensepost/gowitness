@@ -5,6 +5,7 @@ import (
 	"image/png"
 	"os"
 	"strconv"
+	"sort"
 
 	"github.com/corona10/goimagehash"
 	"github.com/olekukonko/tablewriter"
@@ -13,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/buntdb"
+	"github.com/sensepost/gowitness/utils"
 )
 
 // listCmd represents the list command
@@ -21,13 +23,18 @@ var listCmd = &cobra.Command{
 	Short: "List entries in the gowitness database",
 	Long:  `List entries in the gowitness database`,
 	Run: func(cmd *cobra.Command, args []string) {
+		validateGenerateFlags()
+
+		// Populate a variable with the data the template will
+		// want to parse
+		var screenshotEntries []storage.HTTResponse
+		var hash uint64 = 0
+
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"URL", "HTTP Code", "Title", "Hash"})
+		table.SetColWidth(colWidth)
+
 		err := db.Db.View(func(tx *buntdb.Tx) error {
-
-			var hash uint64 = 0
-
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"URL", "HTTP Code", "Title"})
-			table.SetColWidth(colWidth)
 
 			tx.Ascend("", func(key, value string) bool {
 
@@ -58,14 +65,50 @@ var listCmd = &cobra.Command{
 				}
 				data.Hash = hash
 
-				table.Append([]string{
-					data.FinalURL, strconv.Itoa(data.ResponseCode), data.Title,
-				})
+				log.WithField("url", data.FinalURL).Debug("Generating screenshot entry")
+
+				// filters - ignore errors
+				if ignoreFailed && (400 <= data.ResponseCode && data.ResponseCode < 600) {
+					return true
+				}
+
+				// filters – http status codes
+				if len(filterStatusCodes) > 0 {
+
+					if utils.SliceContainsInt(filterStatusCodes, data.ResponseCode) {
+						screenshotEntries = append(screenshotEntries, data)
+					}
+
+				} else {
+					screenshotEntries = append(screenshotEntries, data)
+				}
 
 				return true
 			})
 
-			table.Render()
+			// Sort by Image Perception Hashes
+			if perceptionSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					if screenshotEntries[i].Hash == screenshotEntries[j].Hash {
+						return screenshotEntries[i].ResponseCode < screenshotEntries[j].ResponseCode
+					}
+					return screenshotEntries[i].Hash < screenshotEntries[j].Hash
+				})
+			}
+
+			// Sort by Status Codes
+			if statusCodeSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					return screenshotEntries[i].ResponseCode < screenshotEntries[j].ResponseCode
+				})
+			}
+
+			// Sort by Title
+			if titleSort {
+				sort.Slice(screenshotEntries, func(i, j int) bool {
+					return screenshotEntries[i].Title < screenshotEntries[j].Title
+				})
+			}
 
 			return nil
 		})
@@ -73,11 +116,22 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		// Sort the screenshots
+		for _, element := range screenshotEntries {
+			table.Append([]string{
+						element.FinalURL, strconv.Itoa(element.ResponseCode), element.Title, strconv.FormatUint(element.Hash,10),
+			})
+		}
+		table.Render()
 	},
 }
 
 func init() {
 	reportCmd.AddCommand(listCmd)
 	listCmd.Flags().IntVarP(&colWidth, "column-width", "w", 120, "The column width use to print")
+	listCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
+	listCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
+	listCmd.Flags().BoolVarP(&titleSort, "sort-title", "L", false, "Sort screenshots by parsed <title> tags")
 }
+
+
