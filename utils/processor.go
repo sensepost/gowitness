@@ -31,11 +31,11 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 	// prepare a storage instance for this URL
 	log.WithField("url", url).Debug("Processing URL")
 
-	request := gorequest.New().Timeout(time.Duration(timeout)*time.Second).
-		TLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
-		Set("User-Agent", chrome.UserAgent)
+	request := gorequest.New().Timeout(time.Duration(timeout) * time.Second).
+		TLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-	resp, _, errs := request.Get(url.String()).End()
+	resp, _, errs := request.Get(url.String()).
+		Set("User-Agent", chrome.UserAgent).End()
 	if errs != nil {
 		log.WithFields(log.Fields{"url": url, "error": errs}).Error("Failed to query url")
 
