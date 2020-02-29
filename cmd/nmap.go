@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"strings"
 	"sync/atomic"
 	"text/template"
 	"time"
@@ -39,6 +40,10 @@ Alternatively, you can specify --port (multiple times) to only scan
 specific ports for hosts. This may be used in conjunction with the
 --services flag.
 
+It is also possible to filter for services containing a specific string
+with the --service-contains / -w flag. Specifying -w flag as http means
+it would match services like http-alt, http-proxy etc.
+
 For example:
 
 # WARNING: These scan all exposed service, like SSH
@@ -47,6 +52,8 @@ $ gowitness nmap --nmap-file nmap.xml --scan-hostnames
 
 # These filter services from the nmap file
 $ gowitness nmap --nmap-file nmap.xml --service http --service https
+$ gowitness nmap --nmap-file nmap.xml --service-contains http --service ftp
+$ gowitness nmap --nmap-file nmap.xml -w http
 $ gowitness nmap -f nmap.xml --no-http
 $ gowitness nmap -f nmap.xml --no-http --service https --port 8888
 $ gowitness nmap -f nmap.xml --no-https -n http -n http-alt
@@ -136,8 +143,11 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 			for _, port := range host.Ports {
 
 				// if we need to filter by service or port, do that
-				if len(nmapServices) > 0 || len(nmapPorts) > 0 {
-					if utils.SliceContainsString(nmapServices, port.Service.Name) {
+				if len(nmapServices) > 0 || len(nmapPorts) > 0 || len(nmapServiceContains) > 0 {
+
+					if utils.SliceContainsString(nmapServices, port.Service.Name) ||
+						(len(nmapServiceContains) > 0 &&
+							strings.Contains(port.Service.Name, nmapServiceContains)) {
 
 						for _, r := range buildURI(address.Addr, port.PortId) {
 							u = append(u, r)
@@ -201,6 +211,7 @@ func init() {
 
 	nmapCmd.Flags().StringVarP(&nmapFile, "nmap-file", "f", "", "The source file containing urls")
 	nmapCmd.Flags().StringSliceVarP(&nmapServices, "service", "n", []string{}, "Nmap service names to filter by. Multiple --service flags are supported")
+	nmapCmd.Flags().StringVarP(&nmapServiceContains, "service-contains", "w", "", "Nmap service to filter by, containing this string")
 	nmapCmd.Flags().IntSliceVarP(&nmapPorts, "port", "p", []int{}, "Nmap ports to filter by. Multiple --port flags are supported")
 	nmapCmd.Flags().BoolVarP(&scanHostnames, "scan-hostnames", "N", false, "Also scan hostnames (useful for virtual hosting)")
 	nmapCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")

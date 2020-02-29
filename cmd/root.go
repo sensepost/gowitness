@@ -47,10 +47,11 @@ var (
 	prefixHTTPS bool
 
 	// nmap scanner command flags
-	nmapFile      string
-	scanHostnames bool
-	nmapServices  []string
-	nmapPorts     []int
+	nmapFile            string
+	scanHostnames       bool
+	nmapServices        []string
+	nmapServiceContains string
+	nmapPorts           []int
 
 	// range scanner command flags
 	scanCidr           []string
