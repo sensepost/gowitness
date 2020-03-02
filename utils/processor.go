@@ -109,7 +109,11 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 		Debug("Generated filename for screenshot")
 
 	// Screenshot the URL
-	chrome.ScreenshotURL(finalURL, dst)
+	if err := chrome.ScreenshotURL(finalURL, dst); err != nil {
+		log.WithFields(log.Fields{"url": url, "error": err}).
+			Error("Chrome process reported an error taking screenshot")
+		return
+	}
 
 	// Update the database with this entry
 	db.SetHTTPData(&HTTPResponseStorage)

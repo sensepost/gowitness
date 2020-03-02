@@ -137,7 +137,7 @@ func (chrome *Chrome) SetScreenshotPath(p string) error {
 }
 
 // ScreenshotURL takes a screenshot of a URL
-func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
+func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) error {
 
 	log.WithFields(log.Fields{"url": targetURL, "full-destination": destination}).
 		Debug("Full path to screenshot save using Chrome")
@@ -186,7 +186,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		if err := proxy.start(); err != nil {
 
 			log.WithField("error", err).Warning("Failed to start proxy for HTTPS request")
-			return
+			return err
 		}
 
 		// Update the URL scheme back to http, the proxy will handle the SSL
@@ -233,16 +233,18 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) {
 		if ctx.Err() == context.DeadlineExceeded {
 			log.WithFields(log.Fields{"url": targetURL, "destination": destination, "err": err}).
 				Error("Timeout reached while waiting for screenshot to finish")
-			return
+			return err
 		}
 
 		log.WithFields(log.Fields{"url": targetURL, "destination": destination, "err": err}).
 			Error("Screenshot failed")
 
-		return
+		return err
 	}
 
 	log.WithFields(log.Fields{
 		"url": targetURL, "destination": destination, "duration": time.Since(startTime),
 	}).Info("Screenshot taken")
+
+	return nil
 }
