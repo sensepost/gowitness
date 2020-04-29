@@ -26,5 +26,8 @@ windows:
 docker:
 	go build $(LD_FLAGS) -o gowitness
 
+docker-image:
+	docker build -t gowitness:local .
+
 integrity:
 	cd $(BIN_DIR) && shasum *
