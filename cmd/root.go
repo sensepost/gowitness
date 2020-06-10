@@ -45,6 +45,7 @@ var (
 	maxThreads  int
 	prefixHTTP  bool
 	prefixHTTPS bool
+    prefixBoth  bool
 
 	// nmap scanner command flags
 	nmapFile            string

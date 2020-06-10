@@ -65,43 +65,53 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 		bar.SetStatus(status)
 		bar.Render(os.Stdout)
 
-		for scanner.Scan() {
+	    for scanner.Scan() {
+	        candidate := scanner.Text()
+            for i:=0; i<2; i++ {
+                if !(strings.HasPrefix(candidate, `http://`) || strings.HasPrefix(`https://`, candidate)){
+                    prefix := ""
+                    if prefixBoth {
+                        if i == 0 {
+                            prefix = `http://`
+                        } else {
+                            prefix = `https://`
+                        }
+                    } else{
+                        if prefixHTTP {
+	                        prefix = `http://`
+                        } else if prefixHTTPS {
+	                        prefix = `https://`
+                        }
+                        i += 3
+                    }
+                    log.WithFields(log.Fields{"candidate": candidate}).Warn(fmt.Sprintf("Prefixing candidate with %s",prefix))
+	                candidate = fmt.Sprintf(`%s%s`, prefix, candidate)
+                }
+                u, err := url.ParseRequestURI(candidate)
+                if err != nil {
 
-			candidate := scanner.Text()
+                    log.WithField("url", candidate).Warn("Skipping Invalid URL")
+                    continue
+                }
 
-			if !(strings.HasPrefix(candidate, `http://`) || strings.HasPrefix(`https://`, candidate)) && (prefixHTTP || prefixHTTPS) {
-				if prefixHTTP {
-					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with http://")
-					candidate = fmt.Sprintf(`%s%s`, `http://`, candidate)
-				} else if prefixHTTPS {
-					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with https://")
-					candidate = fmt.Sprintf(`%s%s`, `https://`, candidate)
-				} // TODO: Refactor this a bit to support adding both
-			}
+                swg.Add()
 
-			u, err := url.ParseRequestURI(candidate)
-			if err != nil {
+                // Goroutine to run the URL processor
+                go func(url *url.URL) {
 
-				log.WithField("url", candidate).Warn("Skipping Invalid URL")
-				continue
-			}
+                    defer swg.Done()
 
-			swg.Add()
+                    utils.ProcessURL(url, &chrome, &db, waitTimeout)
 
-			// Goroutine to run the URL processor
-			go func(url *url.URL) {
+                    // update the progress bar
+                    atomic.AddInt64(&status.Done, 1)
+                    atomic.AddInt64(&status.Updated, 1)
+                    bar.Render(os.Stdout)
 
-				defer swg.Done()
-
-				utils.ProcessURL(url, &chrome, &db, waitTimeout)
-
-				// update the progress bar
-				atomic.AddInt64(&status.Done, 1)
-				atomic.AddInt64(&status.Updated, 1)
-				bar.Render(os.Stdout)
-
-			}(u)
-		}
+                }(u)
+                candidate = scanner.Text()
+            }
+	    }
 
 		swg.Wait()
 		bar.Clear(os.Stdout)
@@ -127,4 +137,5 @@ func init() {
 	fileCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	fileCmd.Flags().BoolVarP(&prefixHTTP, "prefix-http", "", false, "Prefix file entries with http:// that have none")
 	fileCmd.Flags().BoolVarP(&prefixHTTPS, "prefix-https", "", false, "Prefix file entries with https:// that have none")
+	fileCmd.Flags().BoolVarP(&prefixBoth, "prefix-both", "", false, "Prefix file entries with both https:// and http:// that have none")
 }
