@@ -115,7 +115,7 @@ $ gowitness nmap --nmap-file nmap.xml -s -n http`,
 
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, &db, waitTimeout)
+				utils.ProcessURL(url, &chrome, &db, waitTimeout, "")
 
 				// update the progress bar
 				atomic.AddInt64(&status.Done, 1)

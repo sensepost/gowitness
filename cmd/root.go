@@ -39,6 +39,7 @@ var (
 	// screenshot command flags
 	screenshotURL         string
 	screenshotDestination string
+	outputFile            string
 
 	// file scanner command flags
 	sourceFile  string
