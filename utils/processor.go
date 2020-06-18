@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/tls"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -109,8 +108,7 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 		if filepath.IsAbs(fname) {
 			dst = fname
 		} else {
-			pwd, _ := os.Getwd()
-			dst = filepath.Join(pwd, fname)
+			dst = filepath.Join(chrome.ScreenshotPath, fname)
 		}
 	}
 
