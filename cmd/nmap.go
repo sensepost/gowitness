@@ -217,7 +217,7 @@ func init() {
 	nmapCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	nmapCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	nmapCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
-	nmapCmd.Flags().BoolVarP(&nmapOnlyOpenPorts, "open","",false,"Nmap ports to filter by. Only uses ports with an open state")
+	nmapCmd.Flags().BoolVarP(&nmapOnlyOpenPorts, "open","",false,"Only select open ports")
 	cobra.MarkFlagRequired(nmapCmd.Flags(), "source")
 }
 
