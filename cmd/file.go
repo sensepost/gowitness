@@ -37,18 +37,28 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 		log.WithField("source", sourceFile).Debug("Reading source file")
 
-		// process the source file
-		file, err := os.Open(sourceFile)
-		if err != nil {
-			log.WithFields(log.Fields{"error": err, "source": sourceFile}).Fatal("Unable to read source file")
+		var scanner *bufio.Scanner
+		if sourceFile == "-" {
+
+			// support stdin reading
+			scanner = bufio.NewScanner(os.Stdin)
+
+		} else {
+
+			// process the source file
+			file, err := os.Open(sourceFile)
+			if err != nil {
+				log.WithFields(log.Fields{"error": err, "source": sourceFile}).Fatal("Unable to read source file")
+			}
+
+			// close the file when we are done with it
+			defer file.Close()
+
+			// read each line and populate the channel used to
+			// start screenshotting
+			scanner = bufio.NewScanner(file)
 		}
 
-		// close the file when we are done with it
-		defer file.Close()
-
-		// read each line and populate the channel used to
-		// start screenshotting
-		scanner := bufio.NewScanner(file)
 		swg := sizedwaitgroup.New(maxThreads)
 
 		// Prepare the progress bar to use.
@@ -123,7 +133,7 @@ func validateFileCmdFlags() {
 func init() {
 	RootCmd.AddCommand(fileCmd)
 
-	fileCmd.Flags().StringVarP(&sourceFile, "source", "s", "", "The source file containing urls")
+	fileCmd.Flags().StringVarP(&sourceFile, "source", "s", "", "The source file containing urls. Use - for stdin")
 	fileCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	fileCmd.Flags().BoolVarP(&prefixHTTP, "prefix-http", "", false, "Prefix file entries with http:// that have none")
 	fileCmd.Flags().BoolVarP(&prefixHTTPS, "prefix-https", "", false, "Prefix file entries with https:// that have none")
