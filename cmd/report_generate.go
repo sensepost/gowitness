@@ -129,14 +129,6 @@ $ gowitness generate`,
 			log.WithField("err", err).Fatal("Failed to parse template")
 		}
 
-		// chunk up the entries into chunks of limit
-		var batches [][]storage.HTTResponse
-		for reportChunks < len(screenshotEntries) {
-			screenshotEntries, batches = screenshotEntries[reportChunks:],
-				append(batches, screenshotEntries[0:reportChunks:reportChunks])
-		}
-		batches = append(batches, screenshotEntries)
-
 		type TemplateData struct {
 			ScreenShots []storage.HTTResponse
 			Pages       []int // wtf have to use range in template :/
@@ -144,33 +136,63 @@ $ gowitness generate`,
 			ReportName  string
 		}
 
-		// next, loop the batches and write the report chunks
-		for i, batch := range batches {
+		// a zero chunk means the user wants everything in one
+		if reportChunks == 0 {
 
 			templateData := TemplateData{
-				ScreenShots: batch,
-				Pages:       make([]int, len(batches)),
-				CurrentPage: i,
+				ScreenShots: screenshotEntries,
+				Pages:       make([]int, 1),
+				CurrentPage: 1,
 				ReportName:  reportFileName,
 			}
 
 			var doc bytes.Buffer
 			tmpl.Execute(&doc, templateData)
 
-			if err := ioutil.WriteFile(fmt.Sprintf(`%s-%d.html`, reportFileName, i), []byte(doc.String()), 0644); err != nil {
+			if err := ioutil.WriteFile(fmt.Sprintf(`%s.html`, reportFileName), []byte(doc.String()), 0644); err != nil {
 				log.WithField("err", err).Fatal("Failed to write report html")
 			}
-		}
 
-		log.WithField("report-file", fmt.Sprintf(`%s-0.html`, reportFileName)).Info("Report generated")
+			log.WithField("report-file", fmt.Sprintf(`%s.html`, reportFileName)).Info("Report generated")
+
+		} else {
+
+			// chunk up the entries into chunks of limit
+			var batches [][]storage.HTTResponse
+			for reportChunks < len(screenshotEntries) {
+				screenshotEntries, batches = screenshotEntries[reportChunks:],
+					append(batches, screenshotEntries[0:reportChunks:reportChunks])
+			}
+			batches = append(batches, screenshotEntries)
+
+			// next, loop the batches and write the report chunks
+			for i, batch := range batches {
+
+				templateData := TemplateData{
+					ScreenShots: batch,
+					Pages:       make([]int, len(batches)),
+					CurrentPage: i,
+					ReportName:  reportFileName,
+				}
+
+				var doc bytes.Buffer
+				tmpl.Execute(&doc, templateData)
+
+				if err := ioutil.WriteFile(fmt.Sprintf(`%s-%d.html`, reportFileName, i), []byte(doc.String()), 0644); err != nil {
+					log.WithField("err", err).Fatal("Failed to write report html")
+				}
+				log.WithField("report-file", fmt.Sprintf(`%s-0.html`, reportFileName)).Info("Report generated")
+			}
+
+		}
 	},
 }
 
 func init() {
 	reportCmd.AddCommand(generateCmd)
 
-	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report.html", "Destination report filename")
-	generateCmd.Flags().IntVarP(&reportChunks, "chunk", "c", 100, "Number of screenshots per report chunk")
+	generateCmd.Flags().StringVarP(&reportFileName, "name", "n", "report", "Destination report filename excl. extention (will have integer suffixes in batched mode)")
+	generateCmd.Flags().IntVarP(&reportChunks, "chunk", "c", 100, "Number of screenshots per report chunk. Use 0 to disable chunking (warning, large chunks may have trouble rendering reports)")
 	generateCmd.Flags().BoolVarP(&ignoreFailed, "ignore-failed", "f", false, "Ignore entries that did not have a successful response")
 	generateCmd.Flags().BoolVarP(&perceptionSort, "sort-perception", "P", false, "Sort screenshots with perception hashing")
 	generateCmd.Flags().BoolVarP(&statusCodeSort, "sort-status-code", "S", false, "Sort screenshots by HTTP status codes")
