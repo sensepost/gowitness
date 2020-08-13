@@ -1,62 +1,79 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 
-	"github.com/gosimple/slug"
-	chrm "github.com/sensepost/gowitness/chrome"
+	"github.com/sensepost/gowitness/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var (
-	serverAddr          string
-	serverResolution    string
-	serverCacheDir 	    string
-	serverChromeTimeout int
+	serverAddr string
 )
 
+// handler is the HTTP handler for the web service this command exposes
 func handler(w http.ResponseWriter, r *http.Request) {
-	URL := r.URL.Query().Get("url")
-	if URL == "" {
-		log.Println("missing URL argument")
+	rawURL := r.URL.Query().Get("url")
+	if rawURL == "" {
+		log.Error("missing url argument")
 		return
 	}
-	log.Println("screenshot of url: ", URL)
+	log.WithFields(log.Fields{"raw-url": rawURL}).Info("taking screenshot of url")
 
-	chrome := &chrm.Chrome{
-		Resolution:    serverResolution,
-		ChromeTimeout: 30,
-	}
-	chrome.Setup()
-
-	u, err := url.ParseRequestURI(URL)
+	u, err := url.ParseRequestURI(rawURL)
 	if err != nil {
-		log.Println("ParseRequestURI error: ", err)
+		log.WithError(err).Error("Error parsing URL")
 		return
 	}
-	outputPath := filepath.Join(serverCacheDir, fmt.Sprintf("%s.png", slug.Make(URL)))
-	chrome.ScreenshotURL(u, outputPath)
 
-	dat, err := ioutil.ReadFile(outputPath)
+	// Generate a safe filename to use
+	fname := utils.SafeFileName(u.String()) + ".png"
+
+	// Get the full path where we will be saving the screenshot to
+	dst := filepath.Join(chrome.ScreenshotPath, fname)
+
+	log.WithFields(log.Fields{"url": u, "file-name": fname, "destination": dst}).
+		Debug("Generated filename for screenshot")
+
+	// Screenshot the URL
+	if err := chrome.ScreenshotURL(u, dst); err != nil {
+		log.WithFields(log.Fields{"url": u, "error": err}).
+			Error("Chrome process reported an error taking screenshot")
+		return
+	}
+
+	dat, err := ioutil.ReadFile(dst)
 	if err != nil {
-		log.Println("ReadFile error: ", err)
+		log.WithError(err).Error("Error reading saved screenshot file")
 		return
 	}
 
 	w.Header().Set("Content-Type", "image/png")
 	w.Write(dat)
+
+	// cleanup the file
+	log.WithFields(log.Fields{"url": u, "file-name": fname, "destination": dst}).
+		Debug("Removing screenshot file")
+	os.Remove(dst)
 }
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Take a screenshot of URL with a webservice",
+	Short: "Starts a webservice that takes screenshots",
 	Long: `
-Takes a screenshot of a single given URL and return the image.
+Start a webservice that takes screenshots. The server starts its
+own webserver, and when invoked with the url query parameter,
+instructs the underlying Chrome instance to take a screenshot and
+return it as the HTTP response.
+
+Assuming the server is hosted on localhost, an HTTP GET request to
+take a screenshot of google.com would be:
+	http://localhost:7171/?url=https://www.google.com
 
 For example:
 
@@ -64,15 +81,12 @@ $ gowitness server
 $ gowitness server --addr 0.0.0.0:8080`,
 	Run: func(cmd *cobra.Command, args []string) {
 		http.HandleFunc("/", handler)
-		log.Println("listening on", serverAddr)
+		log.WithField("address", serverAddr).Info("server listening")
 		log.Fatal(http.ListenAndServe(serverAddr, nil))
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
-	serverCmd.Flags().IntVarP(&serverChromeTimeout, "timeout", "t", 120, "Chrome timeout value.")
-        serverCmd.Flags().StringVarP(&serverCacheDir, "cache-dir", "c", "./data", "screenshots cache directory")
-	serverCmd.Flags().StringVarP(&serverResolution, "resolution", "r", "800x600", "Screenshot resolution (WidthxHeight)")
-	serverCmd.Flags().StringVarP(&serverAddr, "addr", "a", ":7171", "server listening address")
+	serverCmd.Flags().StringVarP(&serverAddr, "address", "a", "localhost:7171", "server listening address")
 }
