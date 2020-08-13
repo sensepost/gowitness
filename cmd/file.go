@@ -103,7 +103,7 @@ $ gowitness file --source ~/Desktop/urls --threads -2
 
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, &db, waitTimeout)
+				utils.ProcessURL(url, &chrome, &db, waitTimeout, "")
 
 				// update the progress bar
 				atomic.AddInt64(&status.Done, 1)

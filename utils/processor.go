@@ -23,7 +23,7 @@ const (
 )
 
 // ProcessURL processes a URL
-func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout int) {
+func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout int, outputFile string) {
 
 	// prepare some storage for this URL
 	HTTPResponseStorage := storage.HTTResponse{URL: url.String()}
@@ -98,11 +98,19 @@ func ProcessURL(url *url.URL, chrome *chrm.Chrome, db *storage.Storage, timeout 
 		log.WithFields(log.Fields{"url": url, "cipher-suite": resp.TLS.CipherSuite}).Info("Cipher suite in use")
 	}
 
-	// Generate a safe filename to use
-	fname := SafeFileName(url.String()) + ".png"
-
-	// Get the full path where we will be saving the screenshot to
-	dst := filepath.Join(chrome.ScreenshotPath, fname)
+	// Generate a safe filename and a destination to use
+	var fname, dst string
+	if outputFile == "" {
+		fname = SafeFileName(url.String()) + ".png"
+		dst = filepath.Join(chrome.ScreenshotPath, fname)
+	} else {
+		fname = outputFile
+		if filepath.IsAbs(fname) {
+			dst = fname
+		} else {
+			dst = filepath.Join(chrome.ScreenshotPath, fname)
+		}
+	}
 
 	HTTPResponseStorage.ScreenshotFile = dst
 	log.WithFields(log.Fields{"url": url, "file-name": fname, "destination": dst}).

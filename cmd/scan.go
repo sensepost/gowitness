@@ -182,7 +182,7 @@ $ gowitness scan --ports 80,443,8080 --cidr 192.168.0.0/30 --append-uri-file ~/w
 
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, &db, waitTimeout)
+				utils.ProcessURL(url, &chrome, &db, waitTimeout, "")
 
 				// update the progress bar
 				atomic.AddInt64(&status.Done, 1)
