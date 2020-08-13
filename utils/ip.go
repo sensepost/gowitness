@@ -45,6 +45,7 @@ func Ports(ports string) ([]int, error) {
 
 	parsed := strings.Split(ports, ",")
 
+	var m = make(map[int]bool)
 	var r []int
 
 	for _, port := range parsed {
@@ -54,7 +55,13 @@ func Ports(ports string) ([]int, error) {
 			continue
 		}
 
+		// uniq
+		if m[p] {
+			continue
+		}
+
 		r = append(r, p)
+		m[p] = true
 	}
 
 	return r, nil
