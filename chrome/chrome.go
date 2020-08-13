@@ -209,7 +209,7 @@ func (chrome *Chrome) ScreenshotURL(targetURL *url.URL, destination string) erro
 		chromeArguments = append(chromeArguments, targetURL.String())
 	}
 
-	log.WithFields(log.Fields{"arguments": chromeArguments}).Debug("Google Chrome arguments")
+	log.WithFields(log.Fields{"arguments": chromeArguments, "binary": chrome.Path}).Debug("Google Chrome arguments")
 
 	// get a context to run the command in
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(chrome.ChromeTimeout)*time.Second)
