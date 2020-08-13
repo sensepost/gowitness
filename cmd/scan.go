@@ -17,6 +17,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	portsS bool
+	portsM bool
+	portsL bool
+)
+
 // scanCmd represents the scan command
 var scanCmd = &cobra.Command{
 	Use:   "scan",
@@ -56,10 +62,12 @@ $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.1/32 --no-htt
 $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --cidr 192.168.0.0/30
 $ gowitness scan --ports 80,443,8080 --cidr 192.168.0.0/30 --append-uri '/admin'
 $ gowitness scan --ports 80,443,8080 --cidr 192.168.0.0/30 --append-uri-file ~/wordlists/adminpanels.txt
+$ gowitness scan --ports 9999,9943 --ports-me --cidr 192.168.0.0/30 --append-uri-file ~/wordlists/adminpanels.txt
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		validateScanCmdFlags()
+		appendPorts()
 
 		ports, _ := utils.Ports(scanPorts)
 		log.WithField("ports", ports).Debug("Using ports")
@@ -260,6 +268,30 @@ func validateScanCmdFlags() {
 	}
 }
 
+func appendPorts() {
+
+	if portsS {
+		if !strings.HasSuffix(scanPorts, ",") {
+			scanPorts = scanPorts + ","
+		}
+		scanPorts = scanPorts + scanPortsSmall
+	}
+
+	if portsM {
+		if !strings.HasSuffix(scanPorts, ",") {
+			scanPorts = scanPorts + ","
+		}
+		scanPorts = scanPorts + scanPortsMedium
+	}
+
+	if portsL {
+		if !strings.HasSuffix(scanPorts, ",") {
+			scanPorts = scanPorts + ","
+		}
+		scanPorts = scanPorts + scanPortsLarge
+	}
+}
+
 func init() {
 	RootCmd.AddCommand(scanCmd)
 
@@ -267,7 +299,10 @@ func init() {
 	scanCmd.Flags().StringVarP(&scanFileCidr, "file-cidr", "f", "", "A file containing newline separated CIDRs to scan")
 	scanCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	scanCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
-	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "80,443,8080,8443", "Ports to scan")
+	scanCmd.Flags().StringVarP(&scanPorts, "ports", "p", "", "Ports to scan")
+	scanCmd.Flags().BoolVar(&portsS, "ports-sm", true, "Use the small ports list (80,443,8080,8443)")
+	scanCmd.Flags().BoolVar(&portsM, "ports-me", false, "Use the medium ports list (small + 81,90,591,3000,3128,8000,8008,8081,8082,8834,8888,7015,8800,8990,10000)")
+	scanCmd.Flags().BoolVar(&portsL, "ports-lg", false, "Use the large ports list (medium + 300,2082,2087,2095,4243,4993,5000,7000,7171,7396,7474,8090,8280,8880,9443)")
 	scanCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
 	scanCmd.Flags().BoolVarP(&randomPermutations, "random", "r", false, "Randomize generated permutations")
 	scanCmd.Flags().StringVarP(&appendURI, "append-uri", "a", "", "Add permutations appending this URI")
