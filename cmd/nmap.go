@@ -163,7 +163,7 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 					}
 
 					// add the port if it should be included
-					if utils.SliceContainsInt(nmapPorts, port.PortId) || (nmapOnlyOpenPorts && port.State.State == "open"){
+					if utils.SliceContainsInt(nmapPorts, port.PortId) || (nmapOnlyOpenPorts && port.State.State == "open") {
 						for _, r := range buildURI(address.Addr, port.PortId) {
 							u = append(u, r)
 						}
@@ -217,7 +217,7 @@ func init() {
 	nmapCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
 	nmapCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
 	nmapCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
-	nmapCmd.Flags().BoolVarP(&nmapOnlyOpenPorts, "open","",false,"Only select open ports")
+	nmapCmd.Flags().BoolVarP(&nmapOnlyOpenPorts, "open", "", false, "Only select open ports")
 	cobra.MarkFlagRequired(nmapCmd.Flags(), "source")
 }
 
