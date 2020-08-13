@@ -53,6 +53,7 @@ var (
 	nmapServices        []string
 	nmapServiceContains string
 	nmapPorts           []int
+	nmapOnlyOpenPorts   bool
 
 	// range scanner command flags
 	scanCidr           []string
