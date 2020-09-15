@@ -1,21 +1,26 @@
-FROM golang:alpine as build
+FROM golang:1 as build
 
 LABEL maintainer="Leon Jacobs <leonja511@gmail.com>"
-
-RUN apk --no-cache add make git
 
 COPY . /src
 
 WORKDIR /src
-RUN make docker
+RUN make generate docker
 
 # final image
-FROM zenika/alpine-chrome:latest
+# https://github.com/chromedp/docker-headless-shell#using-as-a-base-image
+FROM chromedp/headless-shell:latest
 
-COPY --from=build /src/gowitness /
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
+    dumb-init \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /src/gowitness /usr/local/bin
 
 VOLUME ["/screenshots"]
 WORKDIR /screenshots
 
-# https://github.com/Zenika/alpine-chrome#-with---no-sandbox
-ENTRYPOINT ["/gowitness", "--chrome-arg=\"-no-sandbox\""]
+ENTRYPOINT ["dumb-init", "--"]

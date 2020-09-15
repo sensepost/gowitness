@@ -2,10 +2,11 @@
 
 G := $(shell go version | cut -d' ' -f 3,4 | sed 's/ /_/g')
 V := $(shell git rev-parse --short HEAD)
+PWD := $(shell pwd)
 LD_FLAGS := -ldflags="-s -w -X=github.com/sensepost/gowitness/cmd.gitHash=$(V) -X=github.com/sensepost/gowitness/cmd.goVer=$(G)"
 BIN_DIR := build
 
-default: clean darwin linux windows integrity
+default: clean generate darwin linux windows integrity
 
 clean:
 	$(RM) $(BIN_DIR)/gowitness*
@@ -34,3 +35,6 @@ docker-image:
 
 integrity:
 	cd $(BIN_DIR) && shasum *
+
+release:
+	docker run --rm -v $(PWD):/usr/src/myapp -w /usr/src/myapp golang:1 make
