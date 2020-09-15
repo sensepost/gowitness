@@ -14,6 +14,9 @@ clean:
 install:
 	go install
 
+generate:
+	cd web && go generate && cd -
+
 darwin:
 	GOOS=darwin GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-darwin-amd64'
 

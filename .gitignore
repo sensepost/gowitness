@@ -3,12 +3,16 @@
 *.dll
 *.so
 *.dylib
+*.sqlite3
 
 # dep vendor/
 vendor/
 
 # build artifacts
 build/
+
+# screenshots dir
+screenshots/
 
 # Test binary, build with `go test -c`
 *.test

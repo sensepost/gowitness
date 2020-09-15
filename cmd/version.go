@@ -16,7 +16,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Prints the version of gowitness",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if gitHash == "" {
 			gitHash = "dev"
 		}
@@ -31,5 +30,5 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(versionCmd)
 }

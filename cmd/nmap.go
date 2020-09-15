@@ -4,16 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"strings"
-	"sync/atomic"
-	"text/template"
-	"time"
 
-	"github.com/reconquest/barely"
 	"github.com/remeh/sizedwaitgroup"
-	"github.com/sensepost/gowitness/utils"
-	log "github.com/sirupsen/logrus"
+	"github.com/sensepost/gowitness/lib"
 	"github.com/spf13/cobra"
 	"github.com/tomsteele/go-nmap"
 )
@@ -42,100 +36,126 @@ specific ports for hosts. This may be used in conjunction with the
 
 It is also possible to filter for services containing a specific string
 with the --service-contains / -w flag. Specifying -w flag as http means
-it would match services like http-alt, http-proxy etc.
-
-For example:
-
-# WARNING: These scan all exposed service, like SSH
+it would match services like http-alt, http-proxy etc.`,
+	Example: `# WARNING: These scan all exposed service, like SSH
 $ gowitness nmap --nmap-file nmap.xml
 $ gowitness nmap --nmap-file nmap.xml --scan-hostnames
 
 # These filter services from the nmap file
-$ gowitness nmap --nmap-file nmap.xml --service http --service https
-$ gowitness nmap --nmap-file nmap.xml --service-contains http --service ftp
-$ gowitness nmap --nmap-file nmap.xml -w http
+$ gowitness nmap --file nmap.xml --service http --service https
+$ gowitness nmap --file nmap.xml --service-contains http --service ftp
+$ gowitness nmap --file nmap.xml -w http
 $ gowitness nmap -f nmap.xml --no-http
 $ gowitness nmap -f nmap.xml --no-http --service https --port 8888
 $ gowitness nmap -f nmap.xml --no-https -n http -n http-alt
 $ gowitness nmap -f nmap.xml --port 80 --port 8080
 $ gowitness nmap --nmap-file nmap.xml -s -n http`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := options.Logger
 
-		validateNmapFlags()
-
-		log.WithFields(log.Fields{"file": nmapFile}).Info("Parsing nmap file")
-		xml, err := ioutil.ReadFile(nmapFile)
+		// prepare targets
+		targets, err := getNmapURLs()
 		if err != nil {
-			log.WithFields(log.Fields{"file": nmapFile, "err": err}).Fatal("Error reading nmap file")
+			log.Fatal().Err(err).Msg("could not process nmap xml file")
+		}
+		log.Debug().Int("targets", len(targets)).Msg("number of targets")
+
+		// screeny path
+		if err = options.PrepareScreenshotPath(); err != nil {
+			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
 		}
 
-		f, err := nmap.Parse(xml)
+		// prepare db
+		db, err := db.Get()
 		if err != nil {
-			log.WithFields(log.Fields{"file": nmapFile, "err": err}).Fatal("Error parsing nmap file")
+			log.Fatal().Err(err).Msg("failed to get a db handle")
 		}
-		log.WithFields(log.Fields{"args": f.Args}).Info("Parsed NMAP file information, generating URL's")
 
-		targets := parseNmapURLs(f)
-		log.WithField("target-count", len(targets)).Info("Total targets to be processed")
+		// prepare swg
+		log.Debug().Int("threads", options.Threads).Msg("thread count to use with goroutines")
+		swg := sizedwaitgroup.New(options.Threads)
 
-		// Start processing the calculated permutations
-		log.WithField("thread-count", maxThreads).Debug("Maximum threads")
-		swg := sizedwaitgroup.New(maxThreads)
-
-		// Prepare the progress bar to use.
-		format, err := template.New("status-bar").
-			Parse("  > Processing range: {{if .Updated}}{{end}}{{.Done}}/{{.Total}}")
-		if err != nil {
-			log.WithField("err", err).Fatal("Unable to prepare progress bar to use.")
-		}
-		bar := barely.NewStatusBar(format)
-		status := &struct {
-			Total   int
-			Done    int64
-			Updated int64
-		}{
-			Total: len(targets),
-		}
-		bar.SetStatus(status)
-		bar.Render(os.Stdout)
-
+		// process!
 		for _, target := range targets {
-
 			u, err := url.ParseRequestURI(target)
 			if err != nil {
-
-				log.WithField("url", target).Warn("Skipping Invalid URL")
+				log.Warn().Str("url", u.String()).Msg("skipping invalid url")
 				continue
 			}
 
 			swg.Add()
 
-			// Goroutine to run the URL processor
+			log.Debug().Str("url", u.String()).Msg("queueing goroutine for url")
 			go func(url *url.URL) {
-
 				defer swg.Done()
 
-				utils.ProcessURL(url, &chrome, &db, waitTimeout, "")
+				// file name / path
+				fn := lib.SafeFileName(url.String())
+				fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
-				// update the progress bar
-				atomic.AddInt64(&status.Done, 1)
-				atomic.AddInt64(&status.Updated, 1)
-				bar.Render(os.Stdout)
+				log.Debug().Str("url", url.String()).Msg("preflighting")
+				resp, title, err := chrm.Preflight(url)
+				if err != nil {
+					log.Err(err).Msg("preflight failed for url")
+					return
+				}
+				log.Info().Str("url", url.String()).Int("statuscode", resp.StatusCode).Str("title", title).
+					Msg("preflight result")
+
+				if db != nil {
+					log.Debug().Str("url", url.String()).Msg("storing preflight data")
+					if err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
+						log.Error().Err(err).Msg("failed to store preflight information")
+					}
+				}
+
+				log.Debug().Str("url", url.String()).Msg("screenshotting")
+				buf, err := chrm.Screenshot(url)
+				if err != nil {
+					log.Error().Err(err).Msg("failed to take screenshot")
+				}
+
+				log.Debug().Str("url", url.String()).Str("path", fn).Msg("saving screenshot buffer")
+				if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+					log.Error().Err(err).Msg("failed to save screenshot buffer")
+				}
 			}(u)
 		}
 
 		swg.Wait()
-		bar.Clear(os.Stdout)
-
-		log.WithFields(log.Fields{"run-time": time.Since(startTime), "target-count": len(targets)}).
-			Info("Complete")
+		log.Info().Msg("processing complete")
 	},
 }
 
-// parseNmapURLs parses an openeed nmap XML and returns URL's
-func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
+func init() {
+	rootCmd.AddCommand(nmapCmd)
 
-	var u []string
+	nmapCmd.Flags().StringVarP(&options.NmapFile, "file", "f", "", "nmap xml file")
+	nmapCmd.Flags().StringSliceVarP(&options.NmapService, "service", "n", []string{}, "map service name filter. supports multiple --service flags")
+	nmapCmd.Flags().StringVarP(&options.NmapServiceContains, "service-contains", "w", "", "partial service name filter (aka: contains)")
+	nmapCmd.Flags().IntSliceVarP(&options.NmapPorts, "port", "p", []int{}, "ports filter. supports multiple --port flags")
+	nmapCmd.Flags().BoolVarP(&options.NmapScanHostanmes, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
+	nmapCmd.Flags().BoolVarP(&options.NoHTTP, "no-http", "s", false, "do not try using http://")
+	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
+	nmapCmd.Flags().BoolVarP(&options.NmapOpenPortsOnly, "open", "", false, "only select open ports")
+	nmapCmd.Flags().IntVarP(&options.Threads, "threads", "t", 4, "threads used to run")
+
+	cobra.MarkFlagRequired(nmapCmd.Flags(), "file")
+}
+
+// getNmapURLs generates url's from an nmap xml file based on options
+// this function considers many of the flag combinations
+func getNmapURLs() (urls []string, err error) {
+
+	xml, err := ioutil.ReadFile(options.NmapFile)
+	if err != nil {
+		return
+	}
+
+	nmapXML, err := nmap.Parse(xml)
+	if err != nil {
+		return
+	}
 
 	// parse the data and generate URL's
 	for _, host := range nmapXML.Hosts {
@@ -143,29 +163,32 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 			for _, port := range host.Ports {
 
 				// if we need to filter by service or port, do that
-				if len(nmapServices) > 0 || len(nmapPorts) > 0 || len(nmapServiceContains) > 0 || nmapOnlyOpenPorts {
+				if len(options.NmapService) > 0 ||
+					len(options.NmapPorts) > 0 ||
+					len(options.NmapServiceContains) > 0 ||
+					options.NmapOpenPortsOnly {
 
-					if utils.SliceContainsString(nmapServices, port.Service.Name) ||
-						(len(nmapServiceContains) > 0 &&
-							strings.Contains(port.Service.Name, nmapServiceContains)) {
+					if lib.SliceContainsString(options.NmapService, port.Service.Name) ||
+						(len(options.NmapServiceContains) > 0 &&
+							strings.Contains(port.Service.Name, options.NmapServiceContains)) {
 
 						for _, r := range buildURI(address.Addr, port.PortId) {
-							u = append(u, r)
+							urls = append(urls, r)
 						}
 
-						if scanHostnames {
+						if options.NmapScanHostanmes {
 							for _, hn := range host.Hostnames {
 								for _, r := range buildURI(hn.Name, port.PortId) {
-									u = append(u, r)
+									urls = append(urls, r)
 								}
 							}
 						}
 					}
 
 					// add the port if it should be included
-					if utils.SliceContainsInt(nmapPorts, port.PortId) || (nmapOnlyOpenPorts && port.State.State == "open") {
+					if lib.SliceContainsInt(options.NmapPorts, port.PortId) || (options.NmapOpenPortsOnly && port.State.State == "open") {
 						for _, r := range buildURI(address.Addr, port.PortId) {
-							u = append(u, r)
+							urls = append(urls, r)
 						}
 					}
 
@@ -175,13 +198,13 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 
 				// process this without any service name filters
 				for _, r := range buildURI(address.Addr, port.PortId) {
-					u = append(u, r)
+					urls = append(urls, r)
 				}
 
-				if scanHostnames {
+				if options.NmapScanHostanmes {
 					for _, hn := range host.Hostnames {
 						for _, r := range buildURI(hn.Name, port.PortId) {
-							u = append(u, r)
+							urls = append(urls, r)
 						}
 					}
 				}
@@ -189,41 +212,19 @@ func parseNmapURLs(nmapXML *nmap.NmapRun) []string {
 		}
 	}
 
-	return u
+	return
 }
 
-func buildURI(hostname string, port int) []string {
-	var r []string
+// buildURI will build urls taking the http/https options int account
+func buildURI(hostname string, port int) (r []string) {
 
-	if !skipHTTP {
+	if !options.NoHTTP {
 		r = append(r, fmt.Sprintf(`http://%s:%d`, hostname, port))
 	}
 
-	if !skipHTTPS {
+	if !options.NoHTTPS {
 		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
 	}
 
 	return r
-}
-
-func init() {
-	RootCmd.AddCommand(nmapCmd)
-
-	nmapCmd.Flags().StringVarP(&nmapFile, "nmap-file", "f", "", "The source file containing urls")
-	nmapCmd.Flags().StringSliceVarP(&nmapServices, "service", "n", []string{}, "Nmap service names to filter by. Multiple --service flags are supported")
-	nmapCmd.Flags().StringVarP(&nmapServiceContains, "service-contains", "w", "", "Nmap service to filter by, containing this string")
-	nmapCmd.Flags().IntSliceVarP(&nmapPorts, "port", "p", []int{}, "Nmap ports to filter by. Multiple --port flags are supported")
-	nmapCmd.Flags().BoolVarP(&scanHostnames, "scan-hostnames", "N", false, "Also scan hostnames (useful for virtual hosting)")
-	nmapCmd.Flags().BoolVarP(&skipHTTP, "no-http", "s", false, "Skip trying to connect with HTTP")
-	nmapCmd.Flags().BoolVarP(&skipHTTPS, "no-https", "S", false, "Skip trying to connect with HTTPS")
-	nmapCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
-	nmapCmd.Flags().BoolVarP(&nmapOnlyOpenPorts, "open", "", false, "Only select open ports")
-	cobra.MarkFlagRequired(nmapCmd.Flags(), "source")
-}
-
-func validateNmapFlags() {
-
-	if skipHTTP && skipHTTPS {
-		log.Fatal("Cannot disable both http and https scanning")
-	}
 }

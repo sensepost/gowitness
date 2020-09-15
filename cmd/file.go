@@ -2,139 +2,165 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
-	"sync/atomic"
-	"text/template"
-	"time"
 
-	"github.com/reconquest/barely"
-	log "github.com/sirupsen/logrus"
-
-	"github.com/remeh/sizedwaitgroup" // <3
-	"github.com/sensepost/gowitness/utils"
+	"github.com/remeh/sizedwaitgroup"
+	"github.com/sensepost/gowitness/lib"
 	"github.com/spf13/cobra"
 )
 
 // fileCmd represents the file command
 var fileCmd = &cobra.Command{
-	Use:   "file",
-	Short: "Screenshot URLs sourced from a file",
-	Long: `
-Screenshot URLs sourced from a file. URLs in the source file should be
-newline separated. Invalid URLs are simply logged and ignored.
-
-For Example:
-
-$ gowitness file -s ~/Desktop/urls
-$ gowitness file --source ~/Desktop/urls --threads -2
-`,
+	Use:   "file [input]",
+	Short: "screenshot URLs sourced from a file or stdin",
+	Long: `Screenshot URLs sourced from a file or stdin. URLs in the source
+file should be newline separated. Invalid URLs are simply logged and ignored.`,
+	Example: `$ gowitness file -f ~/Desktop/urls
+$ gowitness file -f urls.txt --threads 2
+$ cat urls.txt | gowitness file -f -
+$ gowitness file -f <( shuf domains ) --no-http`,
 	Run: func(cmd *cobra.Command, args []string) {
+		log := options.Logger
 
-		validateFileCmdFlags()
-
-		log.WithField("source", sourceFile).Debug("Reading source file")
-
-		var scanner *bufio.Scanner
-		if sourceFile == "-" {
-
-			// support stdin reading
-			scanner = bufio.NewScanner(os.Stdin)
-
-		} else {
-
-			// process the source file
-			file, err := os.Open(sourceFile)
-			if err != nil {
-				log.WithFields(log.Fields{"error": err, "source": sourceFile}).Fatal("Unable to read source file")
-			}
-
-			// close the file when we are done with it
-			defer file.Close()
-
-			// read each line and populate the channel used to
-			// start screenshotting
-			scanner = bufio.NewScanner(file)
-		}
-
-		swg := sizedwaitgroup.New(maxThreads)
-
-		// Prepare the progress bar to use.
-		format, err := template.New("status-bar").
-			Parse("  > Processing file: {{if .Updated}}{{end}}{{.Done}}")
+		scanner, f, err := getScanner(options.File)
 		if err != nil {
-			log.WithField("err", err).Fatal("Unable to prepare progress bar to use.")
+			log.Fatal().Err(err).Str("file", options.File).Msg("unable to read source file")
 		}
-		bar := barely.NewStatusBar(format)
-		status := &struct {
-			Done    int64
-			Updated int64
-		}{}
-		bar.SetStatus(status)
-		bar.Render(os.Stdout)
+		defer f.Close()
+
+		db, err := db.Get()
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to get a db handle")
+		}
+
+		log.Debug().Int("threads", options.Threads).Msg("thread count to use with goroutines")
+		swg := sizedwaitgroup.New(options.Threads)
+
+		if err = options.PrepareScreenshotPath(); err != nil {
+			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
+		}
 
 		for scanner.Scan() {
-
 			candidate := scanner.Text()
-
-			if !(strings.HasPrefix(candidate, `http://`) || strings.HasPrefix(`https://`, candidate)) && (prefixHTTP || prefixHTTPS) {
-				if prefixHTTP {
-					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with http://")
-					candidate = fmt.Sprintf(`%s%s`, `http://`, candidate)
-				} else if prefixHTTPS {
-					log.WithFields(log.Fields{"candidate": candidate}).Warn("Prefixing candiate with https://")
-					candidate = fmt.Sprintf(`%s%s`, `https://`, candidate)
-				} // TODO: Refactor this a bit to support adding both
+			if candidate == "" {
+				return
 			}
 
-			u, err := url.ParseRequestURI(candidate)
-			if err != nil {
+			for _, u := range getUrls(candidate) {
+				swg.Add()
 
-				log.WithField("url", candidate).Warn("Skipping Invalid URL")
-				continue
+				log.Debug().Str("url", u.String()).Msg("queueing goroutine for url")
+				go func(url *url.URL) {
+					defer swg.Done()
+
+					// file name / path
+					fn := lib.SafeFileName(url.String())
+					fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
+
+					log.Debug().Str("url", url.String()).Msg("preflighting")
+					resp, title, err := chrm.Preflight(url)
+					if err != nil {
+						log.Err(err).Msg("preflight failed for url")
+						return
+					}
+					log.Info().Str("url", url.String()).Int("statuscode", resp.StatusCode).Str("title", title).
+						Msg("preflight result")
+
+					if db != nil {
+						log.Debug().Str("url", url.String()).Msg("storing preflight data")
+						if err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
+							log.Error().Err(err).Msg("failed to store preflight information")
+						}
+					}
+
+					log.Debug().Str("url", url.String()).Msg("screenshotting")
+					buf, err := chrm.Screenshot(url)
+					if err != nil {
+						log.Error().Err(err).Msg("failed to take screenshot")
+					}
+
+					log.Debug().Str("url", url.String()).Str("path", fn).Msg("saving screenshot buffer")
+					if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+						log.Error().Err(err).Msg("failed to save screenshot buffer")
+					}
+				}(u)
 			}
-
-			swg.Add()
-
-			// Goroutine to run the URL processor
-			go func(url *url.URL) {
-
-				defer swg.Done()
-
-				utils.ProcessURL(url, &chrome, &db, waitTimeout, "")
-
-				// update the progress bar
-				atomic.AddInt64(&status.Done, 1)
-				atomic.AddInt64(&status.Updated, 1)
-				bar.Render(os.Stdout)
-
-			}(u)
 		}
 
 		swg.Wait()
-		bar.Clear(os.Stdout)
-
-		log.WithFields(log.Fields{"run-time": time.Since(startTime)}).Info("Complete")
-
+		log.Info().Msg("processing complete")
 	},
 }
 
-// Validates that the arguments received for fileCmd is valid.
-func validateFileCmdFlags() {
+func init() {
+	rootCmd.AddCommand(fileCmd)
 
-	if prefixHTTP && prefixHTTPS {
-		log.WithFields(log.Fields{"prefix-http": prefixHTTP, "prefix-https": prefixHTTPS}).
-			Fatal("Both --prefix-http and --prefix-https cannot be set")
-	}
+	fileCmd.Flags().StringVarP(&options.File, "file", "f", "", "file containing urls. use - for stdin")
+	fileCmd.Flags().IntVarP(&options.Threads, "threads", "t", 4, "threads used to run")
+	fileCmd.Flags().BoolVar(&options.NoHTTPS, "no-https", false, "do not prefix https:// where missing")
+	fileCmd.Flags().BoolVar(&options.NoHTTP, "no-http", false, "do not prefix http:// where missing")
+
+	cobra.MarkFlagRequired(fileCmd.Flags(), "file")
 }
 
-func init() {
-	RootCmd.AddCommand(fileCmd)
+// getInput determines what the file input should be
+// without any file argument we will assume stdin with -
+func getInput(a []string) (input string) {
+	if len(a) <= 0 {
+		input = "-"
+	} else {
+		input = a[0]
+	}
+	return
+}
 
-	fileCmd.Flags().StringVarP(&sourceFile, "source", "s", "", "The source file containing urls. Use - for stdin")
-	fileCmd.Flags().IntVarP(&maxThreads, "threads", "t", 4, "Maximum concurrent threads to run")
-	fileCmd.Flags().BoolVarP(&prefixHTTP, "prefix-http", "", false, "Prefix file entries with http:// that have none")
-	fileCmd.Flags().BoolVarP(&prefixHTTPS, "prefix-https", "", false, "Prefix file entries with https:// that have none")
+// getScanner prepares a bufio.Scanner to read from either
+// stdin, or a file.
+// the size attribute > 0 will be returned if a file was the input
+// it is up to the caller to close the file.
+func getScanner(i string) (*bufio.Scanner, *os.File, error) {
+	if i == "-" {
+		return bufio.NewScanner(os.Stdin), nil, nil
+	}
+
+	file, err := os.Open(i)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return bufio.NewScanner(file), file, nil
+}
+
+// getUrls generates urls for an incoming target depending
+// on wether the target has an http prefix and the flags set
+func getUrls(target string) (c []*url.URL) {
+
+	// if there already is a protocol, just parse and add that
+	if strings.HasPrefix(target, "http") {
+		u, err := url.ParseRequestURI(target)
+		if err == nil {
+			c = append(c, u)
+		}
+
+		return
+	}
+
+	if !strings.HasPrefix(target, "http://") && !options.NoHTTP {
+		u, err := url.ParseRequestURI("http://" + target)
+		if err == nil {
+			c = append(c, u)
+		}
+	}
+
+	if !strings.HasPrefix(target, "https://") && !options.NoHTTPS {
+		u, err := url.ParseRequestURI("https://" + target)
+		if err == nil {
+			c = append(c, u)
+		}
+	}
+
+	return
 }

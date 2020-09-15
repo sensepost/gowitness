@@ -1,0 +1,84 @@
+{{ define "gallery" }}
+{{ template "header" }}
+<!-- Page title -->
+<div class="page-header">
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <h2 class="page-title">
+        Gallery
+      </h2>
+    </div>
+    <div class="col-auto">
+      <div class="text-muted text-h5 mt-2">{{ .Offset }}-{{ .Range }} of {{ .Count }} screenshots</div>
+    </div>
+    <!-- Page title actions -->
+    <div class="col-auto ml-auto d-print-none">
+      <div class="d-flex">
+        <div class="mr-3">
+          <div class="input-icon">
+            <input type="text" class="form-control" placeholder="Search…">
+            <span class="input-icon-addon">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" /></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+
+  {{ range .Records}}
+
+  <div class="col-sm-6 col-lg-4">
+    <div class="card card-sm">
+      <a href="/screenshots/{{ .Filename }}" class="d-block">
+        <img loading="lazy" src="/screenshots/{{ .Filename }}" 
+             onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
+      </a>
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="lh-sm">
+            <div>{{ .URL }}</div>
+            <div class="text-muted">{{ .Title }}</div>
+          </div>
+          <div class="ml-auto">
+            <a href="/details?id={{ .ID }}" class="btn btn-light btn-sm">
+              View
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{ end }}
+
+</div>
+<div class="d-flex">
+  <ul class="pagination ml-auto">
+    <li class="page-item {{ if le .Page 1 }}disabled{{ end }}">
+      <a class="page-link" href="/?limit={{ .Limit }}&page={{ .PrevPage }}" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18" /></svg>
+        prev
+      </a>
+    </li>
+    {{ range $p := .PrevPageRange }}
+      <li class="page-item"><a class="page-link" href="/?limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a></li>
+    {{ end }}
+
+    <li class="page-item active"><a class="page-link" href="#">{{ .Page }}</a></li>
+
+    {{ range $p := .NextPageRange }}
+      <li class="page-item"><a class="page-link" href="/?limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a></li>
+    {{ end }}
+    <li class="page-item">
+      <a class="page-link" href="/?limit={{ .Limit }}&page={{ .NextPage }}">
+        next <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="9 6 15 12 9 18" /></svg>
+      </a>
+    </li>
+  </ul>
+</div>
+{{ template "footer" }}
+{{ end }}
