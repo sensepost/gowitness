@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"html/template"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -23,6 +25,9 @@ var (
 var reportServeCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "starts a web server to view screenshot reports",
+	Long: `Starts a web server to view screenshot reports.
+The global database and screenshot paths should be set to the same as
+what they were when a scan was run.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
@@ -39,9 +44,11 @@ var reportServeCmd = &cobra.Command{
 		log.Info().Str("path", options.ScreenshotPath).Msg("screenshot path")
 
 		// routes
+		// messing with the trailing /'s breaks routing in confusing ways :<
 		http.HandleFunc("/", indexHandler)
 		http.HandleFunc("/table/", tableHandler)
 		http.HandleFunc("/details", detailHandler)
+		http.HandleFunc("/submit", submitHandler)
 
 		// static
 		http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(web.Assets)))
@@ -58,6 +65,63 @@ func init() {
 	reportCmd.AddCommand(reportServeCmd)
 
 	reportServeCmd.Flags().StringVarP(&options.ServerAddr, "address", "a", "localhost:7171", "server listening address")
+}
+
+// submitHandler handles url submissions
+func submitHandler(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case "GET":
+		t := tmpl.Lookup("submit.html")
+		err := t.ExecuteTemplate(w, "submit", nil)
+		if err != nil {
+			panic(err)
+		}
+		break
+	case "POST":
+		// prepare target
+		url, err := url.ParseRequestURI(strings.TrimSpace(r.FormValue("url")))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fn := lib.SafeFileName(url.String())
+		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
+
+		resp, title, err := chrm.Preflight(url)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rid uint
+		if rsDB != nil {
+			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		buf, err := chrm.Screenshot(url)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rid > 0 {
+			http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), 301)
+			return
+		}
+
+		http.Redirect(w, r, "/submit", 301)
+		break
+	}
 }
 
 // detailHandler gets all of the details for a particular url id

@@ -1,0 +1,36 @@
+{{ define "submit" }}
+{{ template "header" }}
+<!-- Page title -->
+<div class="page-header">
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <h2 class="page-title">
+        Submit URL
+      </h2>
+    </div>
+  </div>
+</div>
+<div class="box">
+
+  <div class="card">
+    <div class="card-body">
+      <form action="/submit" method="post">
+        <div class="mb-3">
+          <label class="form-label">URL to screenshot</label>
+          <div class="input-group input-group-flat">
+            <input type="text" name="url" placeholder=" https://www.google.com" class="form-control pl-1" >
+          </div>
+          <div class="form-hint">
+            The target URL will have a screenshot taken and other HTTP related information stored in the DB.
+          </div>
+        </div>
+        <div class="form-footer">
+          <button type="submit" class="btn btn-primary btn-light">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{{ template "footer" }}
+{{ end }}

@@ -61,7 +61,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 }
 
 // StorePreflight will store preflight info to a DB
-func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Response, title string, filename string) error {
+func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Response, title string, filename string) (uint, error) {
 
 	record := &storage.URL{
 		URL:            url.String(),
@@ -103,8 +103,7 @@ func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Respo
 	}
 
 	db.Create(record)
-
-	return nil
+	return record.ID, nil
 }
 
 // Screenshot takes a screenshot of a URL and saves it to destination

@@ -108,7 +108,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 
 				if db != nil {
 					log.Debug().Str("url", url.String()).Msg("storing preflight data")
-					if err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
+					if _, err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
 						log.Error().Err(err).Msg("failed to store preflight information")
 					}
 				}
