@@ -23,7 +23,8 @@ var reportListCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to get a db handle")
 		}
 
-		rows, err := db.Model(&storage.URL{}).Rows()
+		rows, err := db.Scopes(storage.OrderPerception(options.PerceptionSort)).
+			Model(&storage.URL{}).Rows()
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to get rows")
 		}
@@ -55,6 +56,7 @@ func init() {
 
 	reportListCmd.Flags().BoolVarP(&options.ReportJSON, "json", "j", false, "output json")
 	reportListCmd.Flags().BoolVarP(&options.ReportCSV, "csv", "c", false, "output csv")
+	reportListCmd.Flags().BoolVarP(&options.PerceptionSort, "sort", "S", false, "sort by image percpetion")
 }
 
 // outputJSON prints the report in JSON format

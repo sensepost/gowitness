@@ -183,6 +183,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		Limit:    limit,
 	}
 
+	// perception hashing enabled?
+	if strings.TrimSpace(r.URL.Query().Get("perception_sort")) == "true" {
+		pager.OrderBy = []string{"perception_hash desc"}
+	}
+
 	var urls []storage.URL
 	page, err := pager.Page(&urls)
 	if err != nil {

@@ -19,6 +19,7 @@ type URL struct {
 	ContentLength  int64
 	Title          string
 	Filename       string
+	PerceptionHash string
 
 	Headers []Header
 	TLS     TLS

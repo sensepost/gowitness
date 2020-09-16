@@ -2,13 +2,17 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
+	"image/png"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
 
+	"github.com/corona10/goimagehash"
 	"github.com/remeh/sizedwaitgroup"
 	"github.com/sensepost/gowitness/lib"
+	"github.com/sensepost/gowitness/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -69,9 +73,10 @@ $ gowitness file -f <( shuf domains ) --no-http`,
 					log.Info().Str("url", url.String()).Int("statuscode", resp.StatusCode).Str("title", title).
 						Msg("preflight result")
 
+					var rid uint
 					if db != nil {
 						log.Debug().Str("url", url.String()).Msg("storing preflight data")
-						if _, err := chrm.StorePreflight(url, db, resp, title, fn); err != nil {
+						if rid, err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
 							log.Error().Err(err).Msg("failed to store preflight information")
 						}
 					}
@@ -80,6 +85,23 @@ $ gowitness file -f <( shuf domains ) --no-http`,
 					buf, err := chrm.Screenshot(url)
 					if err != nil {
 						log.Error().Err(err).Msg("failed to take screenshot")
+					}
+
+					if db != nil {
+						log.Debug().Str("url", url.String()).Msg("calculating perception hash")
+						img, err := png.Decode(bytes.NewReader(buf))
+						if err != nil {
+							log.Error().Err(err).Msg("failed to decode screenshot buffer for perception hashing")
+						}
+						comp, err := goimagehash.PerceptionHash(img)
+						if err != nil {
+							log.Error().Err(err).Msg("failed to compute perception hash")
+						}
+
+						var dburl storage.URL
+						db.First(&dburl, rid)
+						dburl.PerceptionHash = comp.ToString()
+						db.Save(&dburl)
 					}
 
 					log.Debug().Str("url", url.String()).Str("path", fn).Msg("saving screenshot buffer")
