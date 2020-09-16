@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"strconv"
 
 	"github.com/corona10/goimagehash"
 	"github.com/remeh/sizedwaitgroup"
@@ -100,7 +101,7 @@ $ gowitness file -f <( shuf domains ) --no-http`,
 
 						var dburl storage.URL
 						db.First(&dburl, rid)
-						dburl.PerceptionHash = comp.ToString()
+						dburl.PerceptionHash = strconv.FormatUint(comp.GetHash(),10)
 						db.Save(&dburl)
 					}
 
