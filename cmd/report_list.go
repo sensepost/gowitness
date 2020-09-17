@@ -56,7 +56,7 @@ func init() {
 
 	reportListCmd.Flags().BoolVarP(&options.ReportJSON, "json", "j", false, "output json")
 	reportListCmd.Flags().BoolVarP(&options.ReportCSV, "csv", "c", false, "output csv")
-	reportListCmd.Flags().BoolVarP(&options.PerceptionSort, "sort", "S", false, "sort by image percpetion")
+	reportListCmd.Flags().BoolVarP(&options.PerceptionSort, "sort", "S", false, "sort by image perceptions")
 }
 
 // outputJSON prints the report in JSON format

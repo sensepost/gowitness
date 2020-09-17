@@ -31,7 +31,7 @@ type Processor struct {
 	// preflight response
 	response *http.Response
 	title    string
-	// persistance id
+	// persistence id
 	urlid uint
 	// screenshot
 	screenshot *[]byte
