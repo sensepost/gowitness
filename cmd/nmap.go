@@ -141,6 +141,11 @@ func getNmapURLs() (urls []string, err error) {
 	// parse the data and generate URL's
 	for _, host := range nmapXML.Hosts {
 		for _, address := range host.Addresses {
+
+			if !lib.SliceContainsString([]string{"ipv4", "ipv6"}, address.AddrType) {
+				break
+			}
+
 			for _, port := range host.Ports {
 
 				// if we need to filter by service or port, do that
