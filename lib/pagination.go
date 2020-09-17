@@ -19,6 +19,7 @@ type PaginationPage struct {
 	PrevPageRange []int
 	NextPage      int
 	NextPageRange []int
+	Ordered       bool
 }
 
 // Pagination has options for a Page
@@ -31,6 +32,11 @@ type Pagination struct {
 
 // Page pages a dataset
 func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
+
+	var pagination PaginationPage
+	var count int64
+	var offset int
+
 	db := p.DB
 
 	if p.CurrPage < 1 {
@@ -43,11 +49,10 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 		for _, order := range p.OrderBy {
 			db = db.Order(order)
 		}
+		pagination.Ordered = true
+	} else {
+		pagination.Ordered = false
 	}
-
-	var pagination PaginationPage
-	var count int64
-	var offset int
 
 	db.Model(data).Count(&count)
 

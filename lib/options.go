@@ -46,8 +46,9 @@ type Options struct {
 	NmapOpenPortsOnly   bool
 
 	// Report List
-	ReportJSON bool
-	ReportCSV  bool
+	ReportJSON     bool
+	ReportCSV      bool
+	PerceptionSort bool
 }
 
 // NewOptions returns a new options struct
