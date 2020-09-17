@@ -24,6 +24,7 @@ type Chrome struct {
 	UserAgent   string
 	Timeout     int64
 	FullPage    bool
+	ChromePath  string
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -122,6 +123,10 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	options = append(options, chromedp.DisableGPU)
 	options = append(options, chromedp.Flag("ignore-certificate-errors", true)) // RIP shittyproxy.go
 	options = append(options, chromedp.WindowSize(chrome.ResolutionX, chrome.ResolutionY))
+
+	if chrome.ChromePath != "" {
+		options = append(options, chromedp.ExecPath(chrome.ChromePath))
+	}
 
 	actx, acancel := chromedp.NewExecAllocator(context.Background(), options...)
 	ctx, cancel := chromedp.NewContext(actx)
