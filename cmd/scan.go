@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"io/ioutil"
 	"math/rand"
 	"net/url"
 	"os"
@@ -93,35 +92,16 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 			go func(url *url.URL) {
 				defer swg.Done()
 
-				// file name / path
-				fn := lib.SafeFileName(url.String())
-				fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
-
-				log.Debug().Str("url", url.String()).Msg("preflighting")
-				resp, title, err := chrm.Preflight(url)
-				if err != nil {
-					log.Err(err).Msg("preflight failed for url")
-					return
-				}
-				log.Info().Str("url", url.String()).Int("statuscode", resp.StatusCode).Str("title", title).
-					Msg("preflight result")
-
-				if db != nil {
-					log.Debug().Str("url", url.String()).Msg("storing preflight data")
-					if _, err = chrm.StorePreflight(url, db, resp, title, fn); err != nil {
-						log.Error().Err(err).Msg("failed to store preflight information")
-					}
+				p := &lib.Processor{
+					Logger:         log,
+					Db:             db,
+					Chrome:         chrm,
+					URL:            url,
+					ScreenshotPath: options.ScreenshotPath,
 				}
 
-				log.Debug().Str("url", url.String()).Msg("screenshotting")
-				buf, err := chrm.Screenshot(url)
-				if err != nil {
-					log.Error().Err(err).Msg("failed to take screenshot")
-				}
-
-				log.Debug().Str("url", url.String()).Str("path", fn).Msg("saving screenshot buffer")
-				if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
-					log.Error().Err(err).Msg("failed to save screenshot buffer")
+				if err := p.Gowitness(); err != nil {
+					log.Debug().Err(err).Str("url", url.String()).Msg("failed to witness url")
 				}
 			}(u)
 		}
