@@ -22,6 +22,17 @@
             </span>
           </div>
         </div>
+        {{ if .Ordered }}
+        <a href="/?perception_sort=false&limit={{ .Limit }}&page={{ .Page }}" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><rect width="6" height="6" x="14" y="5" rx="1"></rect><line x1="4" y1="7" x2="10" y2="7"></line><line x1="4" y1="11" x2="10" y2="11"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="4" y1="19" x2="20" y2="19"></line></svg>
+          Disable Perception Sorting
+        </a>
+        {{ else }}
+        <a href="/?perception_sort=true&limit={{ .Limit }}&page={{ .Page }}" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><rect width="6" height="6" x="4" y="5" rx="1"></rect><line x1="14" y1="7" x2="20" y2="7"></line><line x1="14" y1="11" x2="20" y2="11"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="4" y1="19" x2="20" y2="19"></line></svg>
+          Enabe Perception Sorting
+        </a>
+        {{ end }}
       </div>
     </div>
   </div>
@@ -59,22 +70,26 @@
 <div class="d-flex">
   <ul class="pagination ml-auto">
     <li class="page-item {{ if le .Page 1 }}disabled{{ end }}">
-      <a class="page-link" href="/?limit={{ .Limit }}&page={{ .PrevPage }}" tabindex="-1">
+      <a class="page-link" href="/?{{ if .Ordered }}perception_sort=true&{{ end }}limit={{ .Limit }}&page={{ .PrevPage }}" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18" /></svg>
         prev
       </a>
     </li>
     {{ range $p := .PrevPageRange }}
-      <li class="page-item"><a class="page-link" href="/?limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a></li>
+      <li class="page-item">
+        <a class="page-link" href="/?{{ if $.Ordered }}perception_sort=true&{{ end }}limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a>
+      </li>
     {{ end }}
 
     <li class="page-item active"><a class="page-link" href="#">{{ .Page }}</a></li>
 
     {{ range $p := .NextPageRange }}
-      <li class="page-item"><a class="page-link" href="/?limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a></li>
+      <li class="page-item">
+        <a class="page-link" href="/?{{ if $.Ordered }}perception_sort=true&{{ end }}limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a>
+      </li>
     {{ end }}
     <li class="page-item">
-      <a class="page-link" href="/?limit={{ .Limit }}&page={{ .NextPage }}">
+      <a class="page-link" href="/?{{ if .Ordered }}perception_sort=true&{{ end }}limit={{ .Limit }}&page={{ .NextPage }}">
         next <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="9 6 15 12 9 18" /></svg>
       </a>
     </li>
