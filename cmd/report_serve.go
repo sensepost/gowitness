@@ -183,9 +183,17 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		Limit:    limit,
 	}
 
-	// perception hashing enabled?
+	// perception hashing
 	if strings.TrimSpace(r.URL.Query().Get("perception_sort")) == "true" {
 		pager.OrderBy = []string{"perception_hash desc"}
+	}
+
+	// search
+	if strings.TrimSpace(r.URL.Query().Get("search")) != "" {
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "title",
+			Value:  r.URL.Query().Get("search"),
+		})
 	}
 
 	var urls []storage.URL
