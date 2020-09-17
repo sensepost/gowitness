@@ -24,12 +24,12 @@ func (db *Db) Get() (*gorm.DB, error) {
 		return nil, nil
 	}
 
-	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), &gorm.Config{})
+	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Error),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	conn.Logger.LogMode(logger.Silent)
 
 	conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{})
 	return conn, nil
