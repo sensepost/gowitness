@@ -8,7 +8,7 @@
 
 <h4 align="center">A golang, web screenshot utility using Chrome Headless.</h4>
 <p align="center">
-  <a href="https://twitter.com/leonjza"><img src="https://img.shields.io/badge/Twitter-%40leonjza-blue.svg" alt="@leonjza" height="18"></a>
+  <a href="https://twitter.com/leonjza"><img src="https://img.shields.io/badge/twitter-%40leonjza-blue.svg" alt="@leonjza" height="18"></a>
   <a href="https://goreportcard.com/report/github.com/sensepost/gowitness"><img src="https://goreportcard.com/badge/github.com/sensepost/gowitness" alt="Go Report Card" height="18"></a>
   <a href="https://hub.docker.com/r/leonjza/gowitness"><img alt="Docker Cloud Build Status" src="https://img.shields.io/docker/cloud/build/leonjza/gowitness"></a>
 </p>
