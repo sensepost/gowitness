@@ -147,52 +147,38 @@ func getNmapURLs() (urls []string, err error) {
 			}
 
 			for _, port := range host.Ports {
-
-				// if we need to filter by service or port, do that
-				if len(options.NmapService) > 0 ||
-					len(options.NmapPorts) > 0 ||
-					len(options.NmapServiceContains) > 0 ||
-					options.NmapOpenPortsOnly {
-
-					if lib.SliceContainsString(options.NmapService, port.Service.Name) ||
-						(len(options.NmapServiceContains) > 0 &&
-							strings.Contains(port.Service.Name, options.NmapServiceContains)) {
-
-						for _, r := range buildURI(address.Addr, port.PortId) {
-							urls = append(urls, r)
-						}
-
-						if options.NmapScanHostanmes {
-							for _, hn := range host.Hostnames {
-								for _, r := range buildURI(hn.Name, port.PortId) {
-									urls = append(urls, r)
-								}
-							}
-						}
-					}
-
-					// add the port if it should be included
-					if lib.SliceContainsInt(options.NmapPorts, port.PortId) || (options.NmapOpenPortsOnly && port.State.State == "open") {
-						for _, r := range buildURI(address.Addr, port.PortId) {
-							urls = append(urls, r)
-						}
-					}
-
-					// Stop processing, we are filtering by service names
+				// skip port if the --open flag has been set and the port is filtered/closed
+				if options.NmapOpenPortsOnly && port.State.State != "open" {
 					continue
 				}
 
-				// process this without any service name filters
-				for _, r := range buildURI(address.Addr, port.PortId) {
-					urls = append(urls, r)
+				// skip port if the port id does not match the provided ports to filter
+				if len(options.NmapPorts) > 0 && !lib.SliceContainsInt(options.NmapPorts, port.PortId) {
+					continue
 				}
 
+				// skip port if the service name flag has been set and the service name does not match the filter
+				if len(options.NmapService) > 0 && !lib.SliceContainsString(options.NmapService, port.Service.Name) {
+					continue
+				}
+
+				// skip port if the service contains flag has been set and the service name does not contain the filter
+				if len(options.NmapServiceContains) > 0 && !strings.Contains(port.Service.Name, options.NmapServiceContains) {
+					continue
+				}
+
+				// add the hostnames if the option has been set
 				if options.NmapScanHostanmes {
 					for _, hn := range host.Hostnames {
 						for _, r := range buildURI(hn.Name, port.PortId) {
 							urls = append(urls, r)
 						}
 					}
+				}
+
+				// process the port successfully
+				for _, r := range buildURI(address.Addr, port.PortId) {
+					urls = append(urls, r)
 				}
 			}
 		}
