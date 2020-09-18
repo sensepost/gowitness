@@ -20,7 +20,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 COPY --from=build /src/gowitness /usr/local/bin
 
-VOLUME ["/screenshots"]
-WORKDIR /screenshots
+VOLUME ["/data"]
+WORKDIR /data
 
 ENTRYPOINT ["dumb-init", "--"]
