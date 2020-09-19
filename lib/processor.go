@@ -96,7 +96,6 @@ func (p *Processor) preflight() (err error) {
 	var l *zerolog.Event
 	if p.response.StatusCode == 200 {
 		l = p.Logger.Info()
-		p.Logger.Info()
 	} else {
 		l = p.Logger.Warn()
 	}
