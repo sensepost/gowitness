@@ -8,12 +8,14 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"net"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
+	"golang.org/x/net/proxy"
 )
 
 // Chrome contains information about a Google Chrome
@@ -25,6 +27,7 @@ type Chrome struct {
 	Timeout     int64
 	FullPage    bool
 	ChromePath  string
+	ProxyServer string
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -34,12 +37,29 @@ func NewChrome() *Chrome {
 
 // Preflight will preflight a url
 func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string, err error) {
+	// proxy setup for preflight
+	baseDialer := &net.Dialer {
+		Timeout:	time.Duration(chrome.Timeout)*time.Second,
+		KeepAlive:	time.Duration(chrome.Timeout)*time.Second,
+	}
+	dialContext := (baseDialer).DialContext
+	if chrome.ProxyServer != "" {
+		// url, could use error handling for bad urls
+		pUrl, _ := url.Parse(chrome.ProxyServer)
+		// proxy.FromURL supports both HTTP and socks5 protocols
+		dialSocksProxy, _ := proxy.FromURL(pUrl, baseDialer)
+		if contextDialer, ok := dialSocksProxy.(proxy.ContextDialer); ok {
+			dialContext = contextDialer.DialContext
+		}
+	}
 
 	// purposefully ignore bad certs
 	client := http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 			DisableKeepAlives: true,
+			Proxy:		   http.ProxyFromEnvironment,
+			DialContext:	   dialContext,
 		},
 	}
 
@@ -126,6 +146,10 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 
 	if chrome.ChromePath != "" {
 		options = append(options, chromedp.ExecPath(chrome.ChromePath))
+	}
+
+	if chrome.ProxyServer != "" {
+		options = append(options, chromedp.ProxyServer(chrome.ProxyServer))
 	}
 
 	actx, acancel := chromedp.NewExecAllocator(context.Background(), options...)

@@ -67,4 +67,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&chrm.FullPage, "fullpage", "F", false, "take fullpage screenshots")
 	rootCmd.PersistentFlags().Int64Var(&chrm.Timeout, "timeout", 10, "preflight check timeout")
 	rootCmd.PersistentFlags().StringVarP(&chrm.ChromePath, "chrome-path", "", "", "path to chrome executable to use")
+	rootCmd.PersistentFlags().StringVarP(&chrm.ProxyServer, "proxy-server", "", "", "http/socks5 proxy to use. Use format proto://address:port")
 }
