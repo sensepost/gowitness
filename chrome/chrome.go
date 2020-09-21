@@ -25,6 +25,7 @@ type Chrome struct {
 	Timeout     int64
 	FullPage    bool
 	ChromePath  string
+	ProxyServer string
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -34,13 +35,23 @@ func NewChrome() *Chrome {
 
 // Preflight will preflight a url
 func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string, err error) {
+	// purposefully ignore bad certs
+	transport := &http.Transport{
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+		DisableKeepAlives: true,
+ 	}
+	if chrome.ProxyServer != "" {
+		var erri error
+		proxyURL, erri := url.Parse(chrome.ProxyServer)
+		if err != nil {
+			return nil, "", erri
+ 		}
+		transport.Proxy = http.ProxyURL(proxyURL)
+	}
 
 	// purposefully ignore bad certs
 	client := http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
-			DisableKeepAlives: true,
-		},
+		Transport: transport,
 	}
 
 	req, err := http.NewRequest("GET", url.String(), nil)
@@ -126,6 +137,10 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 
 	if chrome.ChromePath != "" {
 		options = append(options, chromedp.ExecPath(chrome.ChromePath))
+	}
+
+	if chrome.ProxyServer != "" {
+		options = append(options, chromedp.ProxyServer(chrome.ProxyServer))
 	}
 
 	actx, acancel := chromedp.NewExecAllocator(context.Background(), options...)
