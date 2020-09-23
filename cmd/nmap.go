@@ -114,7 +114,7 @@ func init() {
 	nmapCmd.Flags().StringVarP(&options.NmapFile, "file", "f", "", "nmap xml file")
 	nmapCmd.Flags().StringSliceVarP(&options.NmapService, "service", "n", []string{}, "map service name filter. supports multiple --service flags")
 	nmapCmd.Flags().StringVarP(&options.NmapServiceContains, "service-contains", "w", "", "partial service name filter (aka: contains)")
-	nmapCmd.Flags().IntSliceVarP(&options.NmapPorts, "port", "p", []int{}, "ports filter. supports multiple --port flags")
+	nmapCmd.Flags().IntSliceVar(&options.NmapPorts, "port", []int{}, "ports filter. supports multiple --port flags")
 	nmapCmd.Flags().BoolVarP(&options.NmapScanHostanmes, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTP, "no-http", "s", false, "do not try using http://")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
