@@ -2,7 +2,7 @@
 
 G := $(shell go version | cut -d' ' -f 3,4 | sed 's/ /_/g')
 V := $(shell git rev-parse --short HEAD)
-APPVER := $(shell grep version cmd/root.go | cut -d \" -f2)
+APPVER := $(shell grep 'version =' cmd/version.go | cut -d \" -f2)
 PWD := $(shell pwd)
 LD_FLAGS := -ldflags="-s -w -X=github.com/sensepost/gowitness/cmd.gitHash=$(V) -X=github.com/sensepost/gowitness/cmd.goVer=$(G)"
 BIN_DIR := build
