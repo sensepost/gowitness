@@ -15,7 +15,6 @@ import (
 
 var (
 	cfgFile string
-	version = "2.0.0"
 	options = lib.NewOptions()
 	chrm    = chrome.NewChrome()
 	db      = storage.NewDb()

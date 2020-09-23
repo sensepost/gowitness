@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	version = "2.1.0"
+
 	gitHash string
 	goVer   string
 )
