@@ -37,6 +37,10 @@ $ gowitness single --destination ~/screenshots -o twitter.png https://twitter.co
 			log.Fatal().Err(err).Msg("failed to get a db handle")
 		}
 
+		if err = options.PrepareScreenshotPath(); err != nil {
+			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
+		}
+
 		p := &lib.Processor{
 			Logger:             log,
 			Db:                 db,
