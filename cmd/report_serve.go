@@ -86,7 +86,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fn := lib.SafeFileName(url.String()) + ".png"
+		fn := lib.SafeFileName(url.String())
 		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
 		resp, title, err := chrm.Preflight(url)
