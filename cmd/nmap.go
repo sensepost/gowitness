@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/remeh/sizedwaitgroup"
@@ -121,16 +120,12 @@ func init() {
 	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
 	nmapCmd.Flags().BoolVarP(&options.NmapOpenPortsOnly, "open", "", false, "only select open ports")
 	nmapCmd.Flags().IntVarP(&options.Threads, "threads", "t", 4, "threads used to run")
-	//newFK
-	nmapCmd.Flags().BoolVarP(&options.NmapScanVHosts, "scan-vhosts", "V", false, "scan virtual hostnames")
 
 	cobra.MarkFlagRequired(nmapCmd.Flags(), "file")
 }
 
 // getNmapURLs generates url's from an nmap xml file based on options
 // this function considers many of the flag combinations
-//var test2 []string
-
 func getNmapURLs() (urls []string, err error) {
 
 	xml, err := ioutil.ReadFile(options.NmapFile)
@@ -181,52 +176,6 @@ func getNmapURLs() (urls []string, err error) {
 					}
 				}
 
-				//newFK
-				// add the virtual hostnames if the option has been set
-				if options.NmapScanVHosts {
-					for _, hn := range port.Scripts {
-						//fmt.Println(hn.Output)
-						//re := regexp.MustCompile(`[^ ?DNS|^*|^.|^:]((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*`)
-						re := regexp.MustCompile(`(([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-z]{2,10})`)
-
-						if re.FindAll([]byte(hn.Output), -1) != nil {
-							var test [][]byte = re.FindAll([]byte(hn.Output), -1)
-							//re2 := regexp.MustCompile(` `)
-							for _, c := range test {
-								//fmt.Println(buildURIvHosts(string(c), port.PortId)[0])
-								fmt.Println(string(c))
-								fmt.Println(urls)
-								fmt.Println(stringInSlice(buildURIvHosts(string(c), port.PortId)[0], urls))
-
-								if stringInSlice(buildURIvHosts(string(c), port.PortId)[0], urls) {
-
-								} else {
-									for _, r := range buildURIvHosts(string(c), port.PortId) {
-										urls = append(urls, r)
-									}
-								}
-								//test2 = append(test2, string(c))
-
-								fmt.Println("---------------------------------------------------")
-								//								fmt.Println(string(c))
-
-								/*test2 := re2.Split(string(c), -1)
-								for _, f := range test2 {
-									fmt.Println(f)
-								}*/
-							}
-
-							//fmt.Println(re.FindAllStringSubmatch(hn.Output, -1))
-						}
-
-						//for _, r := range buildURI(hn.Name, port.PortId) {
-						//	fmt.Println(port.PortId)
-						//	urls = append(urls, r)
-						//	fmt.Println(port.Scripts)
-						//}
-					}
-
-				}
 				// process the port successfully
 				for _, r := range buildURI(address.Addr, port.PortId) {
 					urls = append(urls, r)
@@ -238,30 +187,12 @@ func getNmapURLs() (urls []string, err error) {
 	return
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 // buildURI will build urls taking the http/https options int account
 func buildURI(hostname string, port int) (r []string) {
 
 	if !options.NoHTTP {
 		r = append(r, fmt.Sprintf(`http://%s:%d`, hostname, port))
 	}
-
-	if !options.NoHTTPS {
-		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
-	}
-
-	return r
-}
-
-func buildURIvHosts(hostname string, port int) (r []string) {
 
 	if !options.NoHTTPS {
 		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
