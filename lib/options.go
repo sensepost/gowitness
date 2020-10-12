@@ -44,6 +44,7 @@ type Options struct {
 	NmapPorts           []int
 	NmapScanHostanmes   bool
 	NmapOpenPortsOnly   bool
+	NmapScanVHosts      []string
 
 	// Report List
 	ReportJSON     bool

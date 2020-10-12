@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/remeh/sizedwaitgroup"
@@ -45,6 +46,12 @@ $ gowitness nmap --nmap-file nmap.xml --scan-hostnames
 $ gowitness nmap --file nmap.xml --service http --service https
 $ gowitness nmap --file nmap.xml --service-contains http --service ftp
 $ gowitness nmap --file nmap.xml -w http
+
+$ gowitness nmap -f nmap.xml --scan-vhosts *
+$ gowitness nmap -f nmap.xml --scan-vhosts *.example.com
+$ gowitness nmap -f nmap.xml --scan-vhosts *example*.com
+$ gowitness nmap -f nmap.xml --scan-vhosts *.example.com,*.otherexample.com
+
 $ gowitness nmap -f nmap.xml --no-http
 $ gowitness nmap -f nmap.xml --no-http --service https --port 8888
 $ gowitness nmap -f nmap.xml --no-https -n http -n http-alt
@@ -120,6 +127,7 @@ func init() {
 	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
 	nmapCmd.Flags().BoolVarP(&options.NmapOpenPortsOnly, "open", "", false, "only select open ports")
 	nmapCmd.Flags().IntVarP(&options.Threads, "threads", "t", 4, "threads used to run")
+	nmapCmd.Flags().StringSliceVarP(&options.NmapScanVHosts, "scan-vhosts", "V", []string{}, "scan virtual hostnames")
 
 	cobra.MarkFlagRequired(nmapCmd.Flags(), "file")
 }
@@ -176,6 +184,45 @@ func getNmapURLs() (urls []string, err error) {
 					}
 				}
 
+				// add the virtual hostnames if the option has been set
+				if len(options.NmapScanVHosts) > 0 {
+					for _, hn := range port.Scripts {
+						re := regexp.MustCompile(`(([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-z]{2,10})`) // regex for extracting virtual hosts
+						if re.FindAll([]byte(hn.Output), -1) != nil {                              // find domain names from output field of the nmap script results
+							var scriptOutput [][]byte = re.FindAll([]byte(hn.Output), -1)
+							for _, virtualHostname := range scriptOutput {
+								// filter virtual hostnames according to user's scope
+								for _, userFilter := range options.NmapScanVHosts {
+									// if filter is "*", scan all virtual hosts
+									if userFilter == "*" {
+										if !stringInSlice(buildURIvHosts(string(virtualHostname), port.PortId)[0], urls) {
+											for _, r := range buildURIvHosts(string(virtualHostname), port.PortId) {
+												urls = append(urls, r)
+											}
+										}
+										continue
+									}
+									// regex adjusting
+									if strings.HasPrefix(userFilter, "*") {
+										userFilter = "." + userFilter
+									}
+									if !strings.HasSuffix(userFilter, "*") {
+										userFilter = userFilter + "$"
+									}
+									// scan virtualhosts according to user's scope
+									re := regexp.MustCompile("(?i)" + userFilter)
+									if re.FindAll(virtualHostname, -1) != nil {
+										if !stringInSlice(buildURIvHosts(string(virtualHostname), port.PortId)[0], urls) {
+											for _, r := range buildURIvHosts(string(virtualHostname), port.PortId) {
+												urls = append(urls, r)
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 				// process the port successfully
 				for _, r := range buildURI(address.Addr, port.PortId) {
 					urls = append(urls, r)
@@ -183,8 +230,17 @@ func getNmapURLs() (urls []string, err error) {
 			}
 		}
 	}
-
 	return
+}
+
+// function to check if the virtual host is in the scan list.
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // buildURI will build urls taking the http/https options int account
@@ -193,6 +249,16 @@ func buildURI(hostname string, port int) (r []string) {
 	if !options.NoHTTP {
 		r = append(r, fmt.Sprintf(`http://%s:%d`, hostname, port))
 	}
+
+	if !options.NoHTTPS {
+		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
+	}
+
+	return r
+}
+
+// buildURIvHosts will build urls taking the https option int account for virtual hosts
+func buildURIvHosts(hostname string, port int) (r []string) {
 
 	if !options.NoHTTPS {
 		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
