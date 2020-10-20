@@ -187,8 +187,8 @@ func getNmapURLs() (urls []string, err error) {
 				// add the virtual hostnames if the option has been set
 				if len(options.NmapScanVHosts) > 0 {
 					for _, hn := range port.Scripts {
-						re := regexp.MustCompile(`(([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-z]{2,10})`) // regex for extracting virtual hosts
-						if re.FindAll([]byte(hn.Output), -1) != nil {                              // find domain names from output field of the nmap script results
+						re := regexp.MustCompile(`(([\w+]+(-[a-zA-Z0-9]+)*\.)+[a-z]{2,10})`) // regex for extracting virtual hosts
+						if re.FindAll([]byte(hn.Output), -1) != nil {                        // find domain names from output field of the nmap script results
 							var scriptOutput [][]byte = re.FindAll([]byte(hn.Output), -1)
 							for _, virtualHostname := range scriptOutput {
 								// filter virtual hostnames according to user's scope
