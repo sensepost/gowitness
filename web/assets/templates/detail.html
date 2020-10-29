@@ -18,7 +18,7 @@
 
   <div class="col-sm-6 col-lg-4">
     <div class="card card-sm">
-      <a href="/screenshots/{{ .Filename }}" class="d-block">
+      <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
         <img loading="lazy" src="/screenshots/{{ .Filename }}" 
              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
       </a>
@@ -47,7 +47,10 @@
             <h3 class="card-title">Summary</h3>
           </div>
           <div class="card-body">
-            <p><kbd>{{ .URL }}</kbd> responsed with <kbd>{{ .ResponseReason}}</kbd></p>
+            <p><kbd>{{ .URL }}</kbd> responded with <kbd>{{ .ResponseReason}}</kbd></p>
+             <div>
+              <a href="{{ .URL }}" target="_blank" class="btn btn-light">Open URL</a>
+            </div>
           </div>
         </div>
       </div>

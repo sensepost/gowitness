@@ -45,15 +45,16 @@
   {{ range .Records}}
 
   <div class="col-sm-6 col-lg-4">
-    <div class="card card-sm">
+    <div class="card card-sm" style="position: relative">
       <a href="/screenshots/{{ .Filename }}" class="d-block">
         <img loading="lazy" src="/screenshots/{{ .Filename }}" 
              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
       </a>
+      <div style="position: absolute; top: 2px; right: 4px;"><a href="{{ .URL }}" target="_blank" class="btn btn-dark btn-sm"><span><svg class="w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg> Open</span></a></div>
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="lh-sm">
-            <div>{{ .URL }}</div>
+            <div><a href="{{ .URL }}">{{ .URL }}</a></div>
             <div class="text-muted">{{ .Title }}</div>
           </div>
           <div class="ml-auto">
