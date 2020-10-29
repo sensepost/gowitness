@@ -47,10 +47,14 @@
             <h3 class="card-title">Summary</h3>
           </div>
           <div class="card-body">
-            <p><kbd>{{ .URL }}</kbd> responded with <kbd>{{ .ResponseReason}}</kbd></p>
-             <div>
-              <a href="{{ .URL }}" target="_blank" class="btn btn-light">Open URL</a>
-            </div>
+            <p>
+              <kbd>{{ .URL }}</kbd> responded with <kbd>{{ .ResponseReason}}</kbd>
+              <span>
+                <a href="{{ .URL }}" target="_blank" class="btn-sm btn-light float-right">
+                  Open URL
+                </a>
+              </span>
+            </p>
           </div>
         </div>
       </div>
