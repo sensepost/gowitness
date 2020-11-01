@@ -42,31 +42,47 @@
 
 <div class="row">
 
-  {{ range .Records}}
+  {{ $length := len .Records }} {{ if eq $length 0 }}
 
-  <div class="col-sm-6 col-lg-4">
-    <div class="card card-sm">
-      <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
-        <img loading="lazy" src="/screenshots/{{ .Filename }}" 
-             onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
-      </a>
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="lh-sm">
-            <div>
-              <a href="{{ .URL }}" target="_blank">{{ .URL }}</a>
-             </div>
-            <div class="text-muted">{{ .Title }}</div>
-          </div>
-          <div class="ml-auto">
-            <a href="/details?id={{ .ID }}" class="btn btn-light btn-sm">
-              View
-            </a>
+    <div class="container-xl d-flex flex-column justify-content-center">
+      <div class="empty">
+        <p class="empty-title h3">No results found</p>
+        <p class="empty-subtitle text-muted">
+          Double check that your report server can see the database.
+          Check out the <kbd>--db-path</kbd> flag for more information.
+        </p>
+      </div>
+    </div>
+
+  {{ else }}
+
+    {{ range .Records}}
+
+    <div class="col-sm-6 col-lg-4">
+      <div class="card card-sm">
+        <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
+          <img loading="lazy" src="/screenshots/{{ .Filename }}" 
+              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
+        </a>
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="lh-sm">
+              <div>
+                <a href="{{ .URL }}" target="_blank">{{ .URL }}</a>
+              </div>
+              <div class="text-muted">{{ .Title }}</div>
+            </div>
+            <div class="ml-auto">
+              <a href="/details?id={{ .ID }}" class="btn btn-light btn-sm">
+                View
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+
+    {{ end }}
 
   {{ end }}
 
