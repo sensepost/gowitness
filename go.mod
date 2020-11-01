@@ -6,6 +6,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20200116234248-4da64dd111ac
 	github.com/chromedp/chromedp v0.5.3
 	github.com/corona10/goimagehash v1.0.2
+	github.com/h2non/filetype v1.1.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rs/zerolog v1.19.0

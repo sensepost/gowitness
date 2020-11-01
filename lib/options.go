@@ -49,6 +49,11 @@ type Options struct {
 	ReportJSON     bool
 	ReportCSV      bool
 	PerceptionSort bool
+
+	// Merge
+	MergeDBs        []string
+	MergeSourcePath string
+	MergeOutputDB   string
 }
 
 // NewOptions returns a new options struct

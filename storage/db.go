@@ -8,8 +8,9 @@ import (
 
 // Db is the SQLite3 db handler ype
 type Db struct {
-	Path     string
-	Disabled bool
+	Path          string
+	Disabled      bool
+	SkipMigration bool
 }
 
 // NewDb sets up a new DB
@@ -31,7 +32,10 @@ func (db *Db) Get() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{})
+	if !db.SkipMigration {
+		conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{})
+	}
+
 	return conn, nil
 }
 
