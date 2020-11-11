@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
@@ -19,13 +20,14 @@ import (
 // Chrome contains information about a Google Chrome
 // instance, with methods to run on it.
 type Chrome struct {
-	ResolutionX int
-	ResolutionY int
-	UserAgent   string
-	Timeout     int64
-	FullPage    bool
-	ChromePath  string
-	Proxy       string
+	ResolutionX   int
+	ResolutionY   int
+	UserAgent     string
+	TransparentBg bool
+	Timeout       int64
+	FullPage      bool
+	ChromePath    string
+	Proxy         string
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -197,7 +199,25 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// normal viewport screenshot
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
-			chromedp.CaptureScreenshot(&buf),
+			chromedp.Tasks{
+				chromedp.ActionFunc(func(ctx context.Context) error {
+					var err error
+
+					if chrome.TransparentBg {
+						err = emulation.SetDefaultBackgroundColorOverride().WithColor(&cdp.RGBA{0, 0, 0, 0}).Do(ctx)
+						if err != nil {
+							return err
+						}
+					}
+
+					buf, err = page.CaptureScreenshot().Do(ctx)
+					if err != nil {
+						return err
+					}
+
+					return nil
+				}),
+			},
 		}); err != nil {
 			return nil, err
 		}
