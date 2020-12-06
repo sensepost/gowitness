@@ -80,7 +80,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	case "POST":
 		// prepare target
-		url, err := url.ParseRequestURI(strings.TrimSpace(r.FormValue("url")))
+		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

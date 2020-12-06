@@ -26,7 +26,7 @@ $ gowitness single --destination ~/screenshots -o twitter.png https://twitter.co
 		log := options.Logger
 
 		// prepare target
-		url, err := url.ParseRequestURI(args[0])
+		url, err := url.Parse(args[0])
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to parse target uri")
 		}

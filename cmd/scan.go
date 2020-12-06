@@ -80,7 +80,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 
 		// process!
 		for _, target := range targets {
-			u, err := url.ParseRequestURI(target)
+			u, err := url.Parse(target)
 			if err != nil {
 				log.Warn().Str("url", u.String()).Msg("skipping invalid url")
 				continue

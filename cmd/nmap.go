@@ -77,7 +77,7 @@ $ gowitness nmap --nmap-file nmap.xml -s -n http`,
 
 		// process!
 		for _, target := range targets {
-			u, err := url.ParseRequestURI(target)
+			u, err := url.Parse(target)
 			if err != nil {
 				log.Warn().Str("url", u.String()).Msg("skipping invalid url")
 				continue
