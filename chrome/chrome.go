@@ -23,6 +23,7 @@ type Chrome struct {
 	ResolutionY int
 	UserAgent   string
 	Timeout     int64
+	Delay       int
 	FullPage    bool
 	ChromePath  string
 	Proxy       string
@@ -154,6 +155,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// straight from: https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go#L54
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
+			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				// get layout metrics
 				_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
@@ -197,6 +199,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// normal viewport screenshot
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
+			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
 			chromedp.CaptureScreenshot(&buf),
 		}); err != nil {
 			return nil, err
