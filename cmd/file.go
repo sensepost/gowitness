@@ -120,7 +120,7 @@ func getUrls(target string) (c []*url.URL) {
 
 	// if there already is a protocol, just parse and add that
 	if strings.HasPrefix(target, "http") {
-		u, err := url.ParseRequestURI(target)
+		u, err := url.Parse(target)
 		if err == nil {
 			c = append(c, u)
 		}
@@ -129,14 +129,14 @@ func getUrls(target string) (c []*url.URL) {
 	}
 
 	if !strings.HasPrefix(target, "http://") && !options.NoHTTP {
-		u, err := url.ParseRequestURI("http://" + target)
+		u, err := url.Parse("http://" + target)
 		if err == nil {
 			c = append(c, u)
 		}
 	}
 
 	if !strings.HasPrefix(target, "https://") && !options.NoHTTPS {
-		u, err := url.ParseRequestURI("https://" + target)
+		u, err := url.Parse("https://" + target)
 		if err == nil {
 			c = append(c, u)
 		}

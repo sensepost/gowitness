@@ -107,6 +107,7 @@ func (p *Processor) preflight() (err error) {
 
 // persistPreflight dispatches the StorePreflight function
 func (p *Processor) persistPreflight() (err error) {
+
 	if p.Db == nil {
 		return
 	}
@@ -134,6 +135,11 @@ func (p *Processor) takeScreenshot() (err error) {
 
 // storePerceptionHash calculates and stores a perception hash
 func (p *Processor) storePerceptionHash() (err error) {
+
+	if p.Db == nil {
+		return
+	}
+
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("calculating perception hash")
 	img, err := png.Decode(bytes.NewReader(*p.screenshot))
 	if err != nil {

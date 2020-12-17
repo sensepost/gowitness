@@ -47,7 +47,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := url.ParseRequestURI(rawURL)
+	url, err := url.Parse(rawURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

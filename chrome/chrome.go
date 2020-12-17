@@ -20,14 +20,15 @@ import (
 // Chrome contains information about a Google Chrome
 // instance, with methods to run on it.
 type Chrome struct {
-	ResolutionX   int
-	ResolutionY   int
-	UserAgent     string
-	TransparentBg bool
-	Timeout       int64
-	FullPage      bool
-	ChromePath    string
-	Proxy         string
+	ResolutionX int
+	ResolutionY int
+	UserAgent   string
+  TransparentBg bool
+	Timeout     int64
+	Delay       int
+	FullPage    bool
+	ChromePath  string
+	Proxy       string
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -156,6 +157,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// straight from: https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go#L54
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
+			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
 			chromedp.ActionFunc(func(ctx context.Context) error {
 				// get layout metrics
 				_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
@@ -199,6 +201,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// normal viewport screenshot
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
+			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
 			chromedp.Tasks{
 				chromedp.ActionFunc(func(ctx context.Context) error {
 					var err error
