@@ -1,7 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/sensepost/gowitness">
-    <img src="images/gowitness-logo.png" alt="gowitness"></a>
+    🔍 gowitness
   <br>
   <br>
 </h1>
