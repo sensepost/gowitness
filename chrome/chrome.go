@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"fmt"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
@@ -152,25 +151,26 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 
 	var buf []byte
 
+	// squash JavaScript dialog boxes such as alert();
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		if _, ok := ev.(*page.EventJavascriptDialogOpening); ok {
+			go func() {
+				if err := chromedp.Run(ctx,
+					page.HandleJavaScriptDialog(true),
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
+	})
+
 	if chrome.FullPage {
 		// straight from: https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go#L54
-		chromedp.ListenTarget(ctx, func(ev interface{}) {
-			if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
-				fmt.Println("closing alert:", ev.Message)
-				go func() {
-					if err := chromedp.Run(ctx,
-						page.HandleJavaScriptDialog(true),
-					); err != nil {
-						panic(err)
-					}
-				}()
-			}
-		})
+
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
 			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
 			chromedp.ActionFunc(func(ctx context.Context) error {
-	
 
 				// get layout metrics
 				_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
@@ -212,18 +212,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 
 	} else {
 		// normal viewport screenshot
-		chromedp.ListenTarget(ctx, func(ev interface{}) {
-			if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
-				fmt.Println("closing alert:", ev.Message)
-				go func() {
-					if err := chromedp.Run(ctx,
-						page.HandleJavaScriptDialog(true),
-					); err != nil {
-						panic(err)
-					}
-				}()
-			}
-		})
+
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
 			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
