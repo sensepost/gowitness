@@ -109,6 +109,7 @@ func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Respo
 				SubjectCommonName:  cert.Subject.CommonName,
 				IssuerCommonName:   cert.Issuer.CommonName,
 				SignatureAlgorithm: cert.SignatureAlgorithm.String(),
+				PubkeyAlgorithm:    cert.PublicKeyAlgorithm.String(),
 			}
 
 			for _, name := range cert.DNSNames {

@@ -99,6 +99,7 @@ type TLSCertificate struct {
 	SubjectCommonName  string
 	IssuerCommonName   string
 	SignatureAlgorithm string
+	PubkeyAlgorithm    string
 }
 
 // AddDNSName adds a new DNS Name to a Certificate
