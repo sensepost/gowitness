@@ -44,7 +44,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 	if chrome.Proxy != "" {
 		var erri error
 		proxyURL, erri := url.Parse(chrome.Proxy)
-		if err != nil {
+		if erri != nil {
 			return nil, "", erri
 		}
 		transport.Proxy = http.ProxyURL(proxyURL)
