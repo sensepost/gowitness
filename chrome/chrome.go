@@ -174,7 +174,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 			chromedp.ActionFunc(func(ctx context.Context) error {
 
 				// get layout metrics
-				_, _, contentSize, err := page.GetLayoutMetrics().Do(ctx)
+				_, _, contentSize, _, _, _, err := page.GetLayoutMetrics().Do(ctx)
 				if err != nil {
 					return err
 				}

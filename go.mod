@@ -5,8 +5,8 @@ go 1.15
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
-	github.com/chromedp/cdproto v0.0.0-20210222063305-a3ac505ff0bd
-	github.com/chromedp/chromedp v0.6.6
+	github.com/chromedp/cdproto v0.0.0-20210508221054-d7cfa85db7d1
+	github.com/chromedp/chromedp v0.7.2
 	github.com/corona10/goimagehash v1.0.3
 	github.com/h2non/filetype v1.1.1
 	github.com/knq/sysutil v0.0.0-20191005231841-15668db23d08 // indirect
@@ -23,7 +23,7 @@ require (
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77 // indirect
 	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
-	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073 // indirect
+	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.20.12
 )
