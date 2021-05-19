@@ -22,6 +22,9 @@ type Options struct {
 	NoHTTP     bool
 	ServerAddr string
 
+	// Server command
+	AllowInsecureURIs bool
+
 	// File command
 	File string
 
