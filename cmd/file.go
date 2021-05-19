@@ -15,8 +15,10 @@ import (
 var fileCmd = &cobra.Command{
 	Use:   "file [input]",
 	Short: "screenshot URLs sourced from a file or stdin",
-	Long: `Screenshot URLs sourced from a file or stdin. URLs in the source
-file should be newline separated. Invalid URLs are simply logged and ignored.`,
+	Long: `Screenshot URLs sourced from a file or stdin.
+
+URLs in the source file should be newline separated. Invalid URLs are simply
+logged and ignored.`,
 	Example: `$ gowitness file -f ~/Desktop/urls
 $ gowitness file -f urls.txt --threads 2
 $ cat urls.txt | gowitness file -f -
@@ -84,17 +86,6 @@ func init() {
 	fileCmd.Flags().BoolVar(&options.NoHTTP, "no-http", false, "do not prefix http:// where missing")
 
 	cobra.MarkFlagRequired(fileCmd.Flags(), "file")
-}
-
-// getInput determines what the file input should be
-// without any file argument we will assume stdin with -
-func getInput(a []string) (input string) {
-	if len(a) <= 0 {
-		input = "-"
-	} else {
-		input = a[0]
-	}
-	return
 }
 
 // getScanner prepares a bufio.Scanner to read from either

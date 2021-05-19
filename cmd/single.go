@@ -13,6 +13,7 @@ var singleCmd = &cobra.Command{
 	Short: "Take a screenshot of a single URL",
 	Args:  cobra.ExactArgs(1),
 	Long: `Takes a screenshot of a single given URL and saves it to a file.
+
 If no --output is provided, a filename for the screenshot will
 be automatically generated based on the given URL. If an absolute
 output file path is given, the --destination parameter will be

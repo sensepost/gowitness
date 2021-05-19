@@ -95,7 +95,6 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		break
 	case "POST":
 		// prepare target
 		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
@@ -140,12 +139,11 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if rid > 0 {
-			http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), 301)
+			http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), http.StatusMovedPermanently)
 			return
 		}
 
-		http.Redirect(w, r, "/submit", 301)
-		break
+		http.Redirect(w, r, "/submit", http.StatusMovedPermanently)
 	}
 }
 
@@ -154,7 +152,7 @@ func detailHandler(w http.ResponseWriter, r *http.Request) {
 
 	d := strings.TrimSpace(r.URL.Query().Get("id"))
 	if d == "" {
-		http.Redirect(w, r, "/", 301)
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
 		return
 	}
 	id, err := strconv.Atoi(d)
