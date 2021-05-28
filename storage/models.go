@@ -21,14 +21,22 @@ type URL struct {
 	Filename       string
 	PerceptionHash string
 
-	Headers []Header
-	TLS     TLS
+	Headers      []Header
+	TLS          TLS
+	Technologies []Technologie
 }
 
 // AddHeader adds a new header to a URL
 func (url *URL) AddHeader(key string, value string) {
 	url.Headers = append(url.Headers, Header{
 		Key:   key,
+		Value: value,
+	})
+}
+
+// AddTechnlogies adds a new technologies to a URL
+func (url *URL) AddTechnologie(value string) {
+	url.Technologies = append(url.Technologies, Technologie{
 		Value: value,
 	})
 }
@@ -76,6 +84,14 @@ type Header struct {
 
 	URLID uint
 	Key   string
+	Value string
+}
+
+// Technologie contains a technologie
+type Technologie struct {
+	gorm.Model
+
+	URLID uint
 	Value string
 }
 

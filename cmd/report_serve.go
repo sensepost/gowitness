@@ -113,7 +113,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		fn := lib.SafeFileName(url.String())
 		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
-		resp, title, err := chrm.Preflight(url)
+		resp, title, technologies, err := chrm.Preflight(url)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -121,7 +121,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 
 		var rid uint
 		if rsDB != nil {
-			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, technologies, fn); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -167,6 +167,7 @@ func detailHandler(w http.ResponseWriter, r *http.Request) {
 		Preload("TLS").
 		Preload("TLS.TLSCertificates").
 		Preload("TLS.TLSCertificates.DNSNames").
+		Preload("Technologies").
 		First(&url, id)
 
 	// fmt.Printf("%+v\n", url)

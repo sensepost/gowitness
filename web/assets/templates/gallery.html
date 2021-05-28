@@ -71,6 +71,11 @@
                 <a href="{{ .URL }}" target="_blank">{{ .URL }}</a>
               </div>
               <div class="text-muted">{{ .Title }}</div>
+              <div>              
+                {{ range .Technologies }}
+                <span class="badge bg-blue">{{ .Value}}</span>
+                {{ end }}
+              </div>
             </div>
             <div class="ml-auto">
               <a href="/details?id={{ .ID }}" class="btn btn-light btn-sm">
