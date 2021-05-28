@@ -27,6 +27,8 @@ generate:
 
 darwin:
 	GOOS=darwin GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-darwin-amd64'
+darwin-arm:
+	GOOS=darwin GOARCH=arm64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-darwin-arm64'
 linux:
 	GOOS=linux GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-linux-amd64'
 windows:
@@ -37,6 +39,7 @@ release: clean generate darwin-release linux-release windows-release integrity
 
 darwin-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-darwin-debian10 --build-cmd "make darwin" -p "darwin/amd64"
+	$(DOCKER_RELEASE_BUILD_CMD)-darwin-arm64-debian10 --build-cmd "make darwin-arm" -p "darwin/arm64"
 linux-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-main --build-cmd "make linux" -p "linux/amd64"
 windows-release:
