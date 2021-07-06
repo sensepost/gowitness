@@ -195,6 +195,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 		// defer execution
 		go func() {
+			log := options.Logger
+
 			fn := p.Name
 			if fn == "" {
 				fn = lib.SafeFileName(url.String())
@@ -205,22 +207,26 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 			resp, title, err := chrm.Preflight(url)
 			if err != nil {
+				log.Error().Err(err).Msg("Unexpected error occurred")
 				return
 			}
 
 			var rid uint
 			if rsDB != nil {
 				if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+					log.Error().Err(err).Msg("Failed to save in database")
 					return
 				}
 			}
 
 			buf, err := chrm.Screenshot(url)
 			if err != nil {
+				log.Error().Err(err).Msg("Failed to take screenshot")
 				return
 			}
 
 			if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+				log.Error().Err(err).Msg("Failed to save screenshot")
 				return
 			}
 
