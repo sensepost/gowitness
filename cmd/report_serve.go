@@ -19,8 +19,8 @@ import (
 )
 
 type ApiRequest struct {
-    Name string
-    Url  string
+	Name string
+	Url  string
 }
 
 var (
@@ -129,7 +129,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 
 		var rid uint
 		if rsDB != nil {
-                if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -165,15 +165,15 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "message": "only POST requests are accepted"}`))
 		return
 	case "POST":
-	    var p ApiRequest
+		var p ApiRequest
 
-        err := json.NewDecoder(r.Body).Decode(&p)
-        if err != nil {
-            w.Header().Set("Content-Type", "application/json")
-            w.WriteHeader(http.StatusInternalServerError)
-            w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
-            return
-        }
+		err := json.NewDecoder(r.Body).Decode(&p)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+			return
+		}
 
 		// prepare target
 		url, err := url.Parse(strings.TrimSpace(p.Url))
@@ -196,7 +196,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		// defer execution
 		go func() {
 			fn := p.Name
-			if fn == ""  {
+			if fn == "" {
 				fn = lib.SafeFileName(url.String())
 			} else if !strings.HasSuffix(fn, ".png") {
 				fn = fn + ".png"
