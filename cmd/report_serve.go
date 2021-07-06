@@ -1,6 +1,7 @@
 package cmd
 
 import (
+    "fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -66,6 +67,7 @@ warning though, that also means that someone may request a URL like file:///etc/
 		http.HandleFunc("/table/", tableHandler)
 		http.HandleFunc("/details", detailHandler)
 		http.HandleFunc("/submit", submitHandler)
+		http.HandleFunc("/api", apiHandler)
 
 		// static
 		http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(web.Assets)))
@@ -144,6 +146,72 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Redirect(w, r, "/submit", http.StatusMovedPermanently)
+	}
+}
+
+// apiHandler allows url submissions via a POST request without waiting for completion
+func apiHandler(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case "GET":
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusMethodNotAllowed)
+        w.Write([]byte(`{"success": false, "message": "only POST requests are accepted"}`))
+		return
+	case "POST":
+		// prepare target
+		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
+		if err != nil {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusInternalServerError)
+            w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+			return
+		}
+
+		if !options.AllowInsecureURIs {
+			if !strings.HasPrefix(url.Scheme, "http") {
+				w.Header().Set("Content-Type", "application/json")
+                w.WriteHeader(http.StatusNotAcceptable)
+                w.Write([]byte(`{"success": false, "message": "only http(s) urls are accepted"}`))
+				return
+			}
+		}
+
+        // Defer execution
+        go func() {
+            fn := lib.SafeFileName(url.String())
+            fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
+
+            resp, title, err := chrm.Preflight(url)
+            if err != nil {
+                return
+            }
+
+            var rid uint
+            if rsDB != nil {
+                if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+                    return
+                }
+            }
+
+            buf, err := chrm.Screenshot(url)
+            if err != nil {
+                return
+            }
+
+            if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+                return
+            }
+
+            if rid > 0 {
+                return
+            }
+		}()
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte(`{"success": true}`))
+		return
 	}
 }
 
