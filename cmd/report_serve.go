@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -16,6 +17,11 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
+
+type ApiRequest struct {
+    Name string
+    Url  string
+}
 
 var (
 	tmpl *template.Template
@@ -123,7 +129,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 
 		var rid uint
 		if rsDB != nil {
-			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+                if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -159,8 +165,18 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "message": "only POST requests are accepted"}`))
 		return
 	case "POST":
+	    var p ApiRequest
+
+        err := json.NewDecoder(r.Body).Decode(&p)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusInternalServerError)
+            w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+            return
+        }
+
 		// prepare target
-		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
+		url, err := url.Parse(strings.TrimSpace(p.Url))
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -177,9 +193,14 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Defer execution
+		// defer execution
 		go func() {
-			fn := lib.SafeFileName(url.String())
+			fn := p.Name
+			if fn == ""  {
+				fn = lib.SafeFileName(url.String())
+			} else if !strings.HasSuffix(fn, ".png") {
+				fn = fn + ".png"
+			}
 			fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
 			resp, title, err := chrm.Preflight(url)
