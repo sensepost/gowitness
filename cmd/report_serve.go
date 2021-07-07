@@ -73,7 +73,7 @@ warning though, that also means that someone may request a URL like file:///etc/
 		http.HandleFunc("/table/", tableHandler)
 		http.HandleFunc("/details", detailHandler)
 		http.HandleFunc("/submit", submitHandler)
-		http.HandleFunc("/api", apiHandler)
+		http.HandleFunc("/api", submitHandler)
 
 		// static
 		http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(web.Assets)))
@@ -93,152 +93,131 @@ func init() {
 	reportServeCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
 }
 
-// submitHandler handles url submissions
-func submitHandler(w http.ResponseWriter, r *http.Request) {
-
-	switch r.Method {
-	case "GET":
-		t := tmpl.Lookup("submit.html")
-		err := t.ExecuteTemplate(w, "submit", nil)
-		if err != nil {
-			panic(err)
-		}
-	case "POST":
-		// prepare target
-		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if !options.AllowInsecureURIs {
-			if !strings.HasPrefix(url.Scheme, "http") {
-				http.Error(w, "only http(s) urls are accepted", http.StatusNotAcceptable)
-				return
-			}
-		}
-
-		fn := lib.SafeFileName(url.String())
-		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
-
-		resp, title, err := chrm.Preflight(url)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var rid uint
-		if rsDB != nil {
-			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		buf, err := chrm.Screenshot(url)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if rid > 0 {
-			http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), http.StatusMovedPermanently)
-			return
-		}
-
-		http.Redirect(w, r, "/submit", http.StatusMovedPermanently)
+func takeScreenshot(rUrl string, fn string) (uint, error) {
+	url, err := url.Parse(rUrl)
+	if err != nil {
+		return 0, err
 	}
+
+	if fn == "" {
+		fn = lib.SafeFileName(url.String())
+	} else if !strings.HasSuffix(fn, ".png") {
+		fn = fn + ".png"
+	}
+	fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
+
+	resp, title, err := chrm.Preflight(url)
+	if err != nil {
+		return 0, err
+	}
+
+	var rid uint
+	if rsDB != nil {
+		if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
+			return 0, err
+		}
+	}
+
+	buf, err := chrm.Screenshot(url)
+	if err != nil {
+		return 0, err
+	}
+
+	if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+		return 0, err
+	}
+
+	return rid, nil
 }
 
-// apiHandler allows url submissions via a POST request without waiting for completion
-func apiHandler(w http.ResponseWriter, r *http.Request) {
+// submitHandler handles url submissions
+func submitHandler(w http.ResponseWriter, r *http.Request) {
+	// check content-type
+	ct := r.Header.Get("Content-Type")
+	isApi := ct == "application/json"
 
 	switch r.Method {
 	case "GET":
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(`{"success": false, "message": "only POST requests are accepted"}`))
-		return
-	case "POST":
-		var p ApiRequest
-
-		err := json.NewDecoder(r.Body).Decode(&p)
-		if err != nil {
+		if isApi {
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte(`{"success": false, "message": "only POST requests are accepted"}`))
 			return
+		} else {
+			t := tmpl.Lookup("submit.html")
+			err := t.ExecuteTemplate(w, "submit", nil)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+	case "POST":
+		var rUrl string
+		var fn string
+		if isApi {
+			var p ApiRequest
+
+			err := json.NewDecoder(r.Body).Decode(&p)
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+				return
+			}
+
+			rUrl = p.Url
+			fn = p.Name
+		} else {
+			rUrl = strings.TrimSpace(r.FormValue("url"))
 		}
 
 		// prepare target
-		url, err := url.Parse(strings.TrimSpace(p.Url))
+		url, err := url.Parse(rUrl)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+			if isApi {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf(`{"success": false, "message": "%s"}`, err.Error())))
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 
 		if !options.AllowInsecureURIs {
 			if !strings.HasPrefix(url.Scheme, "http") {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotAcceptable)
-				w.Write([]byte(`{"success": false, "message": "only http(s) urls are accepted"}`))
+				if isApi {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusNotAcceptable)
+					w.Write([]byte(`{"success": false, "message": "only http(s) urls are accepted"}`))
+				} else {
+					http.Error(w, "only http(s) urls are accepted", http.StatusNotAcceptable)
+				}
 				return
 			}
 		}
 
-		// defer execution
-		go func() {
-			log := options.Logger
+		if isApi {
+			go takeScreenshot(rUrl, fn)
 
-			fn := p.Name
-			if fn == "" {
-				fn = lib.SafeFileName(url.String())
-			} else if !strings.HasSuffix(fn, ".png") {
-				fn = fn + ".png"
-			}
-			fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
-
-			resp, title, err := chrm.Preflight(url)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"success": true}`))
+			return
+		} else {
+			rid, err := takeScreenshot(rUrl, "")
 			if err != nil {
-				log.Error().Err(err).Msg("Unexpected error occurred")
-				return
-			}
-
-			var rid uint
-			if rsDB != nil {
-				if rid, err = chrm.StorePreflight(url, rsDB, resp, title, fn); err != nil {
-					log.Error().Err(err).Msg("Failed to save in database")
-					return
-				}
-			}
-
-			buf, err := chrm.Screenshot(url)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to take screenshot")
-				return
-			}
-
-			if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
-				log.Error().Err(err).Msg("Failed to save screenshot")
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			if rid > 0 {
+				http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), http.StatusMovedPermanently)
 				return
 			}
-		}()
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"success": true}`))
-		return
+			http.Redirect(w, r, "/submit", http.StatusMovedPermanently)
+		}
 	}
 }
 
