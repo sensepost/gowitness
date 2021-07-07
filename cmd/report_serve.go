@@ -93,6 +93,7 @@ func init() {
 	reportServeCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
 }
 
+// takes a screenshot of the requested url
 func takeScreenshot(rUrl string, fn string) (uint, error) {
 	url, err := url.Parse(rUrl)
 	if err != nil {
