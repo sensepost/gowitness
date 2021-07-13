@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/projectdiscovery/wappalyzergo v0.0.4
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rs/zerolog v1.20.0
@@ -22,7 +23,7 @@ require (
 	github.com/tomsteele/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77 // indirect
-	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.20.12

@@ -29,8 +29,9 @@ type Processor struct {
 	fn string
 	fp string
 	// preflight response
-	response *http.Response
-	title    string
+	response     *http.Response
+	title        string
+	technologies []string
 	// persistence id
 	urlid uint
 	// screenshot
@@ -88,7 +89,7 @@ func (p *Processor) init() {
 // preflight invokes the Chrome preflight helper
 func (p *Processor) preflight() (err error) {
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("preflighting")
-	p.response, p.title, err = p.Chrome.Preflight(p.URL)
+	p.response, p.title, p.technologies, err = p.Chrome.Preflight(p.URL)
 	if err != nil {
 		return
 	}
@@ -113,7 +114,7 @@ func (p *Processor) persistPreflight() (err error) {
 	}
 
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("storing preflight data")
-	if p.urlid, err = p.Chrome.StorePreflight(p.URL, p.Db, p.response, p.title, p.fn); err != nil {
+	if p.urlid, err = p.Chrome.StorePreflight(p.URL, p.Db, p.response, p.title, p.technologies, p.fn); err != nil {
 		return
 	}
 

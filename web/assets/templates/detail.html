@@ -27,6 +27,11 @@
           <div class="lh-sm">
             <div>{{ .URL }}</div>
             <div class="text-muted">{{ .Title }}</div>
+            <div>              
+              {{ range .Technologies }}
+              <span class="badge bg-blue">{{ .Value}}</span>
+              {{ end }}
+            </div>
           </div>
           <div class="ml-auto">
             <a href="#" class="text-muted">
