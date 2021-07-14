@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	cfgFile string
 	options = lib.NewOptions()
 	chrm    = chrome.NewChrome()
 	db      = storage.NewDb()
