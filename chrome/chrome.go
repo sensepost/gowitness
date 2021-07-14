@@ -3,13 +3,11 @@ package chrome
 import (
 	"context"
 	"crypto/tls"
-	"math"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/storage"
@@ -172,47 +170,12 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	})
 
 	if chrome.FullPage {
-		// straight from: https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go#L54
+		// straight from: https://github.com/chromedp/examples/blob/849108f7da9f743bcdaef449699ed57cb4053379/screenshot/main.go
 
 		if err := chromedp.Run(ctx, chromedp.Tasks{
 			chromedp.Navigate(url.String()),
 			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-			chromedp.ActionFunc(func(ctx context.Context) error {
-
-				// get layout metrics
-				_, _, contentSize, _, _, _, err := page.GetLayoutMetrics().Do(ctx)
-				if err != nil {
-					return err
-				}
-
-				width, height := int64(math.Ceil(contentSize.Width)),
-					int64(math.Ceil(contentSize.Height))
-
-				// force viewport emulation
-				err = emulation.SetDeviceMetricsOverride(width, height, 1, false).
-					WithScreenOrientation(&emulation.ScreenOrientation{
-						Type:  emulation.OrientationTypePortraitPrimary,
-						Angle: 0,
-					}).Do(ctx)
-				if err != nil {
-					return err
-				}
-
-				// capture screenshot
-				buf, err = page.CaptureScreenshot().
-					WithQuality(100).
-					WithClip(&page.Viewport{
-						X:      contentSize.X,
-						Y:      contentSize.Y,
-						Width:  contentSize.Width,
-						Height: contentSize.Height,
-						Scale:  2,
-					}).Do(ctx)
-				if err != nil {
-					return err
-				}
-				return nil
-			}),
+			chromedp.FullScreenshot(&buf, 100),
 		}); err != nil {
 			return nil, err
 		}
