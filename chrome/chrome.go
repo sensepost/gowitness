@@ -41,6 +41,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 		DisableKeepAlives: true,
 	}
+
 	if chrome.Proxy != "" {
 		var erri error
 		proxyURL, erri := url.Parse(chrome.Proxy)
