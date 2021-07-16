@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"math/rand"
 	"net/url"
 	"os"
@@ -35,7 +36,7 @@ requests that are made wont follow each other on the same host.
 This may be useful in cases where too many ports specified by the
 --ports flag might trigger port scan alerts.`,
 	Example: `$ gowitness scan --cidr 192.168.0.0/24
-$ gowitness scan --cidr 192.168.0.0/24 --cidr 10.10.0.0/24
+$ gowitness scan --cidr 192.168.0.0/24,10.10.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.0/24
 $ gowitness scan --threads 20 --ports 80,443,8080 --cidr 192.168.0.1/32 --no-https
 $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --cidr 192.168.0.0/30`,
@@ -115,7 +116,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 func init() {
 	rootCmd.AddCommand(scanCmd)
 
-	scanCmd.Flags().StringSliceVarP(&options.ScanCidr, "cidr", "c", []string{}, "a cidr to scan (supports multiple --cidr flags)")
+	scanCmd.Flags().StringSliceVarP(&options.ScanCidr, "cidr", "c", []string{}, "a cidr to scan (supports comma-separated or multiple --cidr flags)")
 	scanCmd.Flags().StringVarP(&options.ScanCidrFile, "file-cidr", "f", "", "a file containing newline separated cidrs")
 	scanCmd.Flags().BoolVar(&options.NoHTTPS, "no-https", false, "do not try using https://")
 	scanCmd.Flags().BoolVar(&options.NoHTTP, "no-http", false, "do not try using http://")
@@ -200,10 +201,10 @@ func getScanPermutations(ips *[]string, ports *[]int) (results []string, err err
 	for _, ip := range *ips {
 		for _, port := range *ports {
 
-			partialURL := ip + ":" + strconv.Itoa(port)
+			partialURL := fmt.Sprintf("%s:%s", ip, strconv.Itoa(port))
 			if !options.NoHTTP {
 
-				httpURL := "http://" + partialURL
+				httpURL := fmt.Sprintf("http://%s", partialURL)
 				u, err := url.Parse(httpURL)
 				if err != nil {
 					return nil, err
@@ -214,7 +215,7 @@ func getScanPermutations(ips *[]string, ports *[]int) (results []string, err err
 
 			if !options.NoHTTPS {
 
-				httpsURL := "https://" + partialURL
+				httpsURL := fmt.Sprintf("https://%s", partialURL)
 				u, err := url.Parse(httpsURL)
 				if err != nil {
 					return nil, err

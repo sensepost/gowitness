@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/binary"
 	"net"
 	"net/url"
 	"path/filepath"
@@ -79,37 +80,25 @@ func PortsFromString(ports string) ([]int, error) {
 }
 
 // HostsInCIDR returns the IP's from a provided CIDR
-func HostsInCIDR(cidr string) ([]string, error) {
+func HostsInCIDR(cidr string) (ips []string, err error) {
 
-	ip, ipnet, err := net.ParseCIDR(cidr)
+	_, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
 
-	var ips []string
-	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
-		ips = append(ips, ip.String())
-	}
+	mask := binary.BigEndian.Uint32(ipnet.Mask)
+	start := binary.BigEndian.Uint32(ipnet.IP)
+	end := (start & mask) | (mask ^ 0xFFFFFFFF)
 
-	if len(ips) > 1 {
-
-		// remove network address and broadcast address
-		return ips[1 : len(ips)-1], nil
-	}
-
-	// suppose this will only really happen with /32's
-	return ips, nil
-}
-
-// helper method: https://play.golang.org/p/m8TNTtygK0
-func inc(ip net.IP) {
-
-	for j := len(ip) - 1; j >= 0; j-- {
-		ip[j]++
-		if ip[j] > 0 {
-			break
+	for i := start; i <= end; i++ {
+		if !(i&0xFF == 255 || i&0xFF == 0) {
+			ip := make(net.IP, 4)
+			binary.BigEndian.PutUint32(ip, i)
+			ips = append(ips, ip.String())
 		}
 	}
+	return
 }
 
 // SliceContainsInt checks if a slice has an int
