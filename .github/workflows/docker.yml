@@ -44,7 +44,7 @@ jobs:
         with:
           image: leonjza/gowitness
           addLatest: true
-          tags: ${{ steps.get_version.outputs.VERSION }}, latest
+          tags: latest
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
