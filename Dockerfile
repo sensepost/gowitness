@@ -5,7 +5,7 @@ LABEL maintainer="Leon Jacobs <leonja511@gmail.com>"
 COPY . /src
 
 WORKDIR /src
-RUN make generate docker
+RUN make docker
 
 # final image
 # https://github.com/chromedp/docker-headless-shell#using-as-a-base-image

@@ -32,7 +32,7 @@ windows:
 	GOOS=windows GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-windows-amd64.exe'
 
 # release
-release: clean generate darwin-release linux-release windows-release integrity
+release: clean darwin-release linux-release windows-release integrity
 
 darwin-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-darwin-debian10 --build-cmd "make darwin" -p "darwin/amd64"
