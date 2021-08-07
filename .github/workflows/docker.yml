@@ -1,0 +1,33 @@
+name: Docker build & Push
+on:
+  push:
+    branches: [ master ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Publish to Github Repo
+        with:
+          image: gowitness
+          addLatest: true
+          tags: latest
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }} 
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Publish to Docker Repo
+        with:
+          image: leonjza/gowitness
+          addLatest: true
+          tags: latest
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
