@@ -12,8 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
       - uses: mr-smithers-excellent/docker-build-push@v5
-        name: Publish to Github Repo
+        name: Publish latest tag to Github Repo (only on master branch push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
           image: gowitness
           addLatest: true
@@ -23,11 +28,34 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }} 
 
       - uses: mr-smithers-excellent/docker-build-push@v5
-        name: Publish to Docker Repo
+        name: Publish latest and version tag to Github Repo (only on tag event)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        with:
+          image: gowitness
+          addLatest: true
+          tags: ${{ steps.get_version.outputs.VERSION }}, latest
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Publish latest tag to Docker Repo (only on master branch push)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
           image: leonjza/gowitness
           addLatest: true
-          tags: latest
+          tags: ${{ steps.get_version.outputs.VERSION }}, latest
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Publish latest and version tag to Docker Repo (only on tag event)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        with:
+          image: leonjza/gowitness
+          addLatest: true
+          tags: ${{ steps.get_version.outputs.VERSION }}, latest
           registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
