@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"html/template"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/sensepost/gowitness/lib"
 	"github.com/sensepost/gowitness/storage"
-	"github.com/sensepost/gowitness/web"
-	"github.com/shurcooL/httpfs/html/vfstemplate"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
@@ -48,7 +47,7 @@ warning though, that also means that someone may request a URL like file:///etc/
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the report serve command help for more information")
 		}
 
-		tmpl = template.Must(vfstemplate.ParseGlob(web.Assets, nil, "templates/*.html"))
+		tmpl = template.Must(template.ParseFS(Templates, "web/templates/*.html"))
 
 		// db
 		dbh, err := db.Get()
@@ -67,8 +66,13 @@ warning though, that also means that someone may request a URL like file:///etc/
 		http.HandleFunc("/details", detailHandler)
 		http.HandleFunc("/submit", submitHandler)
 
-		// static
-		http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(web.Assets)))
+		// static assets & screenshots
+		assetFs, err := fs.Sub(Assets, "web")
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not fs.Sub Assets")
+		}
+		// assetsFs := http.FileServer(http.FS(Assets))
+		http.Handle("/assets/", http.FileServer(http.FS(assetFs)))
 		http.Handle("/screenshots/", http.StripPrefix("/screenshots", http.FileServer(http.Dir(options.ScreenshotPath))))
 
 		log.Info().Str("address", options.ServerAddr).Msg("server listening")

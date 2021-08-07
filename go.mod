@@ -1,6 +1,6 @@
 module github.com/sensepost/gowitness
 
-go 1.15
+go 1.16
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20210728214956-1fab41c4e0b7
@@ -13,7 +13,6 @@ require (
 	github.com/projectdiscovery/wappalyzergo v0.0.7
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rs/zerolog v1.23.0
-	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/spf13/cobra v1.2.1
 	github.com/tomsteele/go-nmap v0.0.0-20191202052157-3507e0b03523
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d

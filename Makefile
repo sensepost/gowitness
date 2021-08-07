@@ -13,7 +13,7 @@ DOCKER_RELEASE_BUILD_CMD := docker run --rm -it -v $(PWD):/go/src/github.com/sen
 
 export CGO_ENABLED=1
 
-default: clean generate darwin linux windows integrity
+default: clean darwin linux windows integrity
 
 clean:
 	$(RM) $(BIN_DIR)/gowitness*
@@ -21,9 +21,6 @@ clean:
 
 install:
 	go install
-
-generate:
-	cd web && go generate && cd -
 
 darwin:
 	GOOS=darwin GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-darwin-amd64'
