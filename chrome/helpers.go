@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"golang.org/x/net/html"
 )
 
@@ -51,7 +50,6 @@ func GetHTMLTitle(r io.Reader) (string, bool) {
 // GetTechnologies uses wapalyzer signatures to return an array
 // of technologies that are in use by the remote site.
 func GetTechnologies(resp *http.Response) ([]string, error) {
-
 	var technologies []string
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -59,13 +57,7 @@ func GetTechnologies(resp *http.Response) ([]string, error) {
 		return technologies, err
 	}
 
-	wappalyzerClient, err := wappalyzer.New()
-	if err != nil {
-		return technologies, err
-	}
-
 	fingerprints := wappalyzerClient.Fingerprint(resp.Header, data)
-
 	for match := range fingerprints {
 		technologies = append(technologies, match)
 	}
