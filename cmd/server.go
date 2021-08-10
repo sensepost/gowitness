@@ -1,10 +1,15 @@
 package cmd
 
 import (
+	"bytes"
+	"image"
+	"image/png"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +35,11 @@ warning though, that also means that someone may request a URL like file:///etc/
 
 Assuming the server is hosted on localhost, an HTTP GET request to
 take a screenshot of google.com would be:
-	http://localhost:7171/?url=https://www.google.com`,
+	http://localhost:7171/?url=https://www.google.com
+	
+Optionally the request supports resizing to fit given width and height in request. This
+keeps the original viewport of chrome equal to resolution given in program arguments.
+	http://localhost:7171/?url=https://www.google.com&width=1280&height=720`,
 	Example: `$ gowitness server
 $ gowitness server --addr 0.0.0.0:8080`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -63,6 +72,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var width = 0
+	var height = 0
+
+	width, err := strconv.Atoi(r.URL.Query().Get("width"))
+	if err != nil || width < 1 {
+		width = 0
+	}
+
+	height, err = strconv.Atoi(r.URL.Query().Get("height"))
+	if err != nil || height < 1 {
+		height = 0
+	}
+
+	if width > 0 && height == 0 {
+		http.Error(w, "received width option without height argument", http.StatusNotAcceptable)
+		return
+	}
+
+	if height > 0 && width == 0 {
+		http.Error(w, "received height option without width argument", http.StatusNotAcceptable)
+		return
+	}
+
 	url, err := url.Parse(rawURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,5 +115,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "image/png")
-	w.Write(buf)
+
+	if width == 0 {
+		w.Write(buf)
+		return
+	}
+
+	img, _, err := image.Decode(bytes.NewReader(buf))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	dstImage := imaging.Fit(img, width, height, imaging.Lanczos)
+	err = png.Encode(w, dstImage)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
