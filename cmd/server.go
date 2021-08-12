@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"image"
-	"image/png"
+	"image/jpeg"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -114,9 +114,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/png")
-
 	if width == 0 {
+		w.Header().Set("Content-Type", "image/png")
 		w.Write(buf)
 		return
 	}
@@ -127,7 +126,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dstImage := imaging.Fit(img, width, height, imaging.Lanczos)
-	err = png.Encode(w, dstImage)
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	err = jpeg.Encode(w, dstImage, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
