@@ -42,6 +42,11 @@ $ gowitness single --destination ~/screenshots -o twitter.png https://twitter.co
 			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
 		}
 
+		// parse headers
+		if err = chrm.PrepareHeaderJSONMap(); err != nil {
+			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
+		}
+
 		p := &lib.Processor{
 			Logger:             log,
 			Db:                 db,
