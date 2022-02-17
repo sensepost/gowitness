@@ -85,7 +85,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 
 	body, _ := io.ReadAll(resp.Body)
 
-	title, _ = GetHTMLTitle(bytes.NewBuffer(body))
+	title, _ = GetHTMLTitle(bytes.NewReader(body))
 	technologies, _ = GetTechnologies(resp.Header, body)
 
 	return
