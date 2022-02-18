@@ -39,7 +39,8 @@ type Processor struct {
 }
 
 // Gowitness processes a URL by:
-//	- preflighting
+//	- preflighting as HTTP/2
+//	- preflighting as HTTP/1
 //	- storing
 //	- screenshotting
 //	- calculating a perception hash
@@ -48,9 +49,21 @@ func (p *Processor) Gowitness() (err error) {
 
 	p.init()
 
-	if err = p.preflight(); err != nil {
-		log.Error().Err(err).Msg("preflight request failed")
-		return
+	if err = p.preflighthttp2(); err != nil {
+		log.Error().Err(err).Msg("preflight http2 request failed, trying default preflight")
+
+		if err = p.preflight(); err != nil {
+			log.Error().Err(err).Msg("preflight request failed")
+			
+		}
+	}
+	if p.response != nil && p.response.StatusCode != http.StatusOK {
+		log.Error().Err(err).Msg("preflight http2 request not 200 OK, trying default preflight")
+
+		if err = p.preflight(); err != nil {
+			log.Error().Err(err).Msg("preflight request failed")
+			
+		}
 	}
 
 	if err = p.persistPreflight(); err != nil {
@@ -89,7 +102,7 @@ func (p *Processor) init() {
 // preflight invokes the Chrome preflight helper
 func (p *Processor) preflight() (err error) {
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("preflighting")
-	p.response, p.title, p.technologies, err = p.Chrome.Preflight(p.URL)
+	p.response, p.title, p.technologies, err = p.Chrome.Preflight(p.URL,false)
 	if err != nil {
 		return
 	}
@@ -102,6 +115,26 @@ func (p *Processor) preflight() (err error) {
 	}
 	l.Str("url", p.URL.String()).Int("statuscode", p.response.StatusCode).
 		Str("title", p.title).Msg("preflight result")
+
+	return
+}
+
+// preflight invokes the Chrome preflight HTTP/2 helper
+func (p *Processor) preflighthttp2() (err error) {
+	p.Logger.Debug().Str("url", p.URL.String()).Msg("preflighting http2")
+	p.response, p.title, p.technologies, err = p.Chrome.Preflight(p.URL,true)
+	if err != nil {
+		return
+	}
+
+	var l *zerolog.Event
+	if p.response.StatusCode == 200 {
+		l = p.Logger.Info()
+	} else {
+		l = p.Logger.Warn()
+	}
+	l.Str("url", p.URL.String()).Int("statuscode", p.response.StatusCode).
+		Str("title", p.title).Msg("preflight http2 result")
 
 	return
 }

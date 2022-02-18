@@ -12,6 +12,7 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
+	"golang.org/x/net/http2"
 )
 
 // Chrome contains information about a Google Chrome
@@ -33,7 +34,7 @@ func NewChrome() *Chrome {
 }
 
 // Preflight will preflight a url
-func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string, technologies []string, err error) {
+func (chrome *Chrome) Preflight(url *url.URL, useHttp2 bool) (resp *http.Response, title string, technologies []string, err error) {
 	// purposefully ignore bad certs
 	transport := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
@@ -47,6 +48,14 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 			return nil, "", nil, erri
 		}
 		transport.Proxy = http.ProxyURL(proxyURL)
+	}
+
+	// configure transport for HTTP/2
+	if useHttp2 {
+		http2err := http2.ConfigureTransport(transport)
+		if http2err != nil {
+			return
+		}
 	}
 
 	// purposefully ignore bad certs
@@ -80,52 +89,73 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 // StorePreflight will store preflight info to a DB
 func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Response, title string, technologies []string, filename string) (uint, error) {
 
-	record := &storage.URL{
-		URL:            url.String(),
-		FinalURL:       resp.Request.URL.String(),
-		ResponseCode:   resp.StatusCode,
-		ResponseReason: resp.Status,
-		Proto:          resp.Proto,
-		ContentLength:  resp.ContentLength,
-		Filename:       filename,
-		Title:          title,
-	}
-
-	// append headers
-	for k, v := range resp.Header {
-		hv := strings.Join(v, ", ")
-		record.AddHeader(k, hv)
-	}
-
-	for _, v := range technologies {
-		record.AddTechnologie(v)
-	}
-
-	// get TLS info, if any
-	if resp.TLS != nil {
-		record.TLS = storage.TLS{
-			Version:    resp.TLS.Version,
-			ServerName: resp.TLS.ServerName,
+	// check the response for empty content, if the response has not been set then the preflight was a failure
+	if resp != nil{
+		record := &storage.URL{
+			URL:            url.String(),
+			FinalURL:       resp.Request.URL.String(),
+			ResponseCode:   resp.StatusCode,
+			ResponseReason: resp.Status,
+			Proto:          resp.Proto,
+			ContentLength:  resp.ContentLength,
+			Filename:       filename,
+			Title:          title,
 		}
 
-		for _, cert := range resp.TLS.PeerCertificates {
-			tlsCert := &storage.TLSCertificate{
-				SubjectCommonName:  cert.Subject.CommonName,
-				IssuerCommonName:   cert.Issuer.CommonName,
-				SignatureAlgorithm: cert.SignatureAlgorithm.String(),
-				PubkeyAlgorithm:    cert.PublicKeyAlgorithm.String(),
-			}
-
-			for _, name := range cert.DNSNames {
-				tlsCert.AddDNSName(name)
-			}
-
-			record.TLS.TLSCertificates = append(record.TLS.TLSCertificates, *tlsCert)
+		// append headers
+		for k, v := range resp.Header {
+			hv := strings.Join(v, ", ")
+			record.AddHeader(k, hv)
 		}
-	}
 
-	db.Create(record)
-	return record.ID, nil
+		for _, v := range technologies {
+			record.AddTechnologie(v)
+		}
+
+		// get TLS info, if any
+		if resp.TLS != nil {
+			record.TLS = storage.TLS{
+				Version:    resp.TLS.Version,
+				ServerName: resp.TLS.ServerName,
+			}
+
+			for _, cert := range resp.TLS.PeerCertificates {
+				tlsCert := &storage.TLSCertificate{
+					SubjectCommonName:  cert.Subject.CommonName,
+					IssuerCommonName:   cert.Issuer.CommonName,
+					SignatureAlgorithm: cert.SignatureAlgorithm.String(),
+					PubkeyAlgorithm:    cert.PublicKeyAlgorithm.String(),
+				}
+
+				for _, name := range cert.DNSNames {
+					tlsCert.AddDNSName(name)
+				}
+
+				record.TLS.TLSCertificates = append(record.TLS.TLSCertificates, *tlsCert)
+			}
+		}
+
+		db.Create(record)
+		return record.ID, nil
+	} else {
+		// if the preflight is a failure, then we still need to create the DB record so the screenshot
+		// can still be attempted. It may be beneficial to introduce custom errors in this record in the future.
+		//
+		//		Note: Setting these values to arbitrary default 'failed' values, since we can't use the response body
+		record := &storage.URL{
+			URL:            url.String(),
+			FinalURL:       url.String(),
+			ResponseCode:   0,
+			ResponseReason: "Preflight Failed",
+			Proto:          url.Scheme,
+			ContentLength:  -1,
+			Filename:       filename,
+			Title:          title,
+		}
+
+		db.Create(record)
+		return record.ID, nil
+	}
 }
 
 // Screenshot takes a screenshot of a URL and saves it to destination
