@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
@@ -150,47 +151,99 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	}
 
 	actx, acancel := chromedp.NewExecAllocator(context.Background(), options...)
-	ctx, cancel := chromedp.NewContext(actx)
+	browserCtx, cancel := chromedp.NewContext(actx)
 	defer acancel()
 	defer cancel()
 
+	// create the initial context to act as the 'tab', where we will perform the initial navigation
+	// if this context loads successfully, then the screenshot will have been captured
+	//
+	//		Note:	You're not supposed to delay the initial run context, so we use WithTimeout
+	//				 https://pkg.go.dev/github.com/chromedp/chromedp#Run
+
+	tabCtx, cancel1 := context.WithTimeout(browserCtx, time.Duration(chrome.Timeout) * time.Second)
+	defer cancel1()
+
+	// Run the initial browser
+	if err := chromedp.Run(browserCtx); err != nil{
+		return nil, err
+	}
+
 	var buf []byte
 
+	// adding additional listeners to prevent browser crashes from locking the context (prevents hanging)
+	chromedp.ListenTarget(browserCtx, func(ev interface{}) {
+		if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+			go func() {
+				cancel()
+			}()
+		}
+	})
+	
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
+		if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+			go func() {
+				cancel1()
+			}()
+		}
+	})
+
 	// squash JavaScript dialog boxes such as alert();
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
 		if _, ok := ev.(*page.EventJavascriptDialogOpening); ok {
 			go func() {
-				if err := chromedp.Run(ctx,
+				if err := chromedp.Run(tabCtx,
 					page.HandleJavaScriptDialog(true),
 				); err != nil {
-					panic(err)
+					cancel1()
 				}
 			}()
 		}
 	})
 
-	if chrome.FullPage {
-		// straight from: https://github.com/chromedp/examples/blob/849108f7da9f743bcdaef449699ed57cb4053379/screenshot/main.go
+	// perform navigation on the tab context and attempt to take a clean screenshot
+	if err := chromedp.Run(tabCtx, buildTasks(chrome,url,true,&buf)); err != nil {
+		// if the context timeout exceeded (e.g. on a long page load) then just take the screenshot
+		// this will take a screenshot of whatever loaded before failing
 
-		if err := chromedp.Run(ctx, chromedp.Tasks{
-			chromedp.Navigate(url.String()),
-			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-			chromedp.FullScreenshot(&buf, 100),
-		}); err != nil {
-			return nil, err
-		}
+		// create a new tab context for this scenario, since our previous context expired
+		// using a context timeout delay again to help prevent hanging scenarios
+		tabCtxBackup, cancel2 := context.WithTimeout(browserCtx, time.Duration(chrome.Timeout) * time.Second)
+		defer cancel2()
 
-	} else {
-		// normal viewport screenshot
+		// listen for crashes on this backup context as well
+		chromedp.ListenTarget(tabCtxBackup, func(ev interface{}) {
+			if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+				go func() {
+					cancel2()
+				}()
+			}
+		})
 
-		if err := chromedp.Run(ctx, chromedp.Tasks{
-			chromedp.Navigate(url.String()),
-			chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-			chromedp.CaptureScreenshot(&buf),
-		}); err != nil {
+		// attempt to capture the screenshot of the tab
+		if err2 := chromedp.Run(tabCtxBackup, buildTasks(chrome,url,false,&buf)); err2 != nil {
 			return nil, err
 		}
 	}
 
+	// return the screenshot buffer
 	return buf, nil
+}
+
+// builds the chromedp tasks slice in a bit cleaner fashion with the various logic
+func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chromedp.Tasks {
+	var actions chromedp.Tasks
+	if doNavigate {
+		actions = append(actions, chromedp.Navigate(url.String()))
+		if chrome.Delay > 0 {
+			actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay) * time.Second))
+		}
+		actions = append(actions, chromedp.Stop())
+	}
+	if chrome.FullPage{
+		actions = append(actions,chromedp.FullScreenshot(buf,100))
+	} else {
+		actions = append(actions,chromedp.CaptureScreenshot(buf))
+	}
+	return actions
 }
