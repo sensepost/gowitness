@@ -28,8 +28,10 @@ var rootCmd = &cobra.Command{
 	Use:   "gowitness",
 	Short: "A commandline web screenshot and information gathering tool by @leonjza",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
 		// Setup the logger to use
+		if err := chrome.InitWappalyzer(); err != nil {
+			panic(fmt.Sprintf("Could not init wappalyzer: %s\n", err))
+		}
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "02 Jan 2006 15:04:05"})
 		if options.Debug {
 			log.Logger = log.Logger.Level(zerolog.DebugLevel)

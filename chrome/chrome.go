@@ -10,6 +10,7 @@ import (
 
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
 )
@@ -25,6 +26,14 @@ type Chrome struct {
 	FullPage    bool
 	ChromePath  string
 	Proxy       string
+}
+
+var wappalyzerClient *wappalyzer.Wappalyze
+
+func InitWappalyzer() error {
+	var err error
+	wappalyzerClient, err = wappalyzer.New()
+	return err
 }
 
 // NewChrome returns a new initialised Chrome struct
