@@ -48,7 +48,7 @@ func GetHTMLTitle(r io.Reader) (string, bool) {
 
 // GetTechnologies uses wapalyzer signatures to return an array
 // of technologies that are in use by the remote site.
-func GetTechnologies(headers http.Header, body []byte) ([]string, error) {
+func GetTechnologies(headers http.Header, body []byte) []string {
 	var technologies []string
 
 	fingerprints := wappalyzerClient.Fingerprint(headers, body)
@@ -57,5 +57,5 @@ func GetTechnologies(headers http.Header, body []byte) ([]string, error) {
 		technologies = append(technologies, match)
 	}
 
-	return technologies, nil
+	return technologies
 }
