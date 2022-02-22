@@ -117,7 +117,8 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		fn := lib.SafeFileName(url.String())
 		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
-		resp, title, technologies, err := chrm.Preflight(url)
+		// could potentially use http/2 checks here
+		resp, title, technologies, err := chrm.Preflight(url,false)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
