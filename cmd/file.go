@@ -44,6 +44,11 @@ $ gowitness file -f <( shuf domains ) --no-http`,
 			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
 		}
 
+		// parse headers
+		if err = chrm.PrepareHeaderJSONMap(); err != nil {
+			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
+		}
+
 		for scanner.Scan() {
 			candidate := scanner.Text()
 			if candidate == "" {

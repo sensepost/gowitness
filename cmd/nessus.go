@@ -73,6 +73,11 @@ $ gowitness nessus -file output.nessus --port 80 --port 8080`,
 			log.Fatal().Err(err).Msg("failed to prepare the screenshot path")
 		}
 
+		// parse headers
+		if err = chrm.PrepareHeaderJSONMap(); err != nil {
+			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
+		}
+
 		// prepare db
 		db, err := db.Get()
 		if err != nil {
