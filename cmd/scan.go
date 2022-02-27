@@ -71,9 +71,7 @@ $ gowitness --log-level debug scan --threads 20 --ports 80,443,8080 --no-http --
 		}
 
 		// parse headers
-		if err = chrm.PrepareHeaderJSONMap(); err != nil {
-			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
-		}
+		chrm.PrepareHeaderMap()
 
 		// prepare db
 		db, err := db.Get()

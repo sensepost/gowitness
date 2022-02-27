@@ -43,9 +43,7 @@ $ gowitness single --destination ~/screenshots -o twitter.png https://twitter.co
 		}
 
 		// parse headers
-		if err = chrm.PrepareHeaderJSONMap(); err != nil {
-			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
-		}
+		chrm.PrepareHeaderMap()
 
 		p := &lib.Processor{
 			Logger:             log,

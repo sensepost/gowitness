@@ -66,9 +66,7 @@ $ gowitness nmap --nmap-file nmap.xml -s -n http`,
 		}
 
 		// parse headers
-		if err = chrm.PrepareHeaderJSONMap(); err != nil {
-			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
-		}
+		chrm.PrepareHeaderMap()
 
 		// prepare db
 		db, err := db.Get()

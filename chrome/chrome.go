@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/sensepost/gowitness/storage"
@@ -27,8 +27,8 @@ type Chrome struct {
 	FullPage    bool
 	ChromePath  string
 	Proxy       string
-	Headers		[]string
-	HeadersMap 	map[string]interface{}
+	Headers     []string
+	HeadersMap  map[string]interface{}
 }
 
 var wappalyzerClient *wappalyzer.Wappalyze
@@ -46,6 +46,7 @@ func NewChrome() *Chrome {
 
 // Preflight will preflight a url
 func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string, technologies []string, err error) {
+
 	// purposefully ignore bad certs
 	transport := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
@@ -74,7 +75,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 
 	// set the preflight headers (type assertion for value)
 	for k, v := range chrome.HeadersMap {
-		req.Header.Set(k,v.(string))
+		req.Header.Set(k, v.(string))
 	}
 
 	req.Close = true
@@ -186,12 +187,12 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 			}()
 		}
 	})
-	
+
 	if chrome.FullPage {
 		// straight from: https://github.com/chromedp/examples/blob/849108f7da9f743bcdaef449699ed57cb4053379/screenshot/main.go
 
 		// additional headers
-		if len(chrome.HeadersMap) > 0{
+		if len(chrome.HeadersMap) > 0 {
 			if err := chromedp.Run(ctx, chromedp.Tasks{
 				network.Enable(),
 				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
@@ -215,7 +216,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		// normal viewport screenshot
 
 		// additional headers
-		if len(chrome.HeadersMap) > 0{
+		if len(chrome.HeadersMap) > 0 {
 			if err := chromedp.Run(ctx, chromedp.Tasks{
 				network.Enable(),
 				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
@@ -239,21 +240,25 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	return buf, nil
 }
 
-// initalize the headers Map from the JSON string
+// initalize the headers Map. we do this given the format chromedp wants
 // Ref:
 // 	https://github.com/chromedp/examples/blob/master/headers/main.go
-func (chrome *Chrome) PrepareHeaderJSONMap() error {
-	if len(chrome.Headers) > 0{
-		// initialize the map
-		chrome.HeadersMap = make(map[string]interface{})
-		// split each header string and append to the map
-		for _, header := range chrome.Headers{
-			headerSlice := strings.SplitN(header,":",2)
-			// add header to the map
-			if len(headerSlice) == 2{
-				chrome.HeadersMap[headerSlice[0]] = headerSlice[1]
-			}
+func (chrome *Chrome) PrepareHeaderMap() {
+
+	if len(chrome.Headers) <= 0 {
+		return
+	}
+
+	// initialize the map
+	chrome.HeadersMap = make(map[string]interface{})
+
+	// split each header string and append to the map
+	for _, header := range chrome.Headers {
+
+		headerSlice := strings.SplitN(header, ":", 2)
+		// add header to the map
+		if len(headerSlice) == 2 {
+			chrome.HeadersMap[headerSlice[0]] = headerSlice[1]
 		}
 	}
-	return nil
 }

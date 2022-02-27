@@ -45,9 +45,7 @@ $ gowitness file -f <( shuf domains ) --no-http`,
 		}
 
 		// parse headers
-		if err = chrm.PrepareHeaderJSONMap(); err != nil {
-			log.Fatal().Err(err).Msg("additional header JSON parsing failed, check the format")
-		}
+		chrm.PrepareHeaderMap()
 
 		for scanner.Scan() {
 			candidate := scanner.Text()
