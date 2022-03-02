@@ -24,6 +24,7 @@ type URL struct {
 	Headers      []Header
 	TLS          TLS
 	Technologies []Technologie
+	Filter       Filter
 }
 
 // AddHeader adds a new header to a URL
@@ -50,7 +51,8 @@ func (url *URL) MarshallCSV() (res []string) {
 		url.Proto,
 		strconv.Itoa(int(url.ContentLength)),
 		url.Title,
-		url.Filename}
+		url.Filename,
+		url.Filter.Notes}
 }
 
 // MarshallJSON returns values as a slice
@@ -64,6 +66,7 @@ func (url *URL) MarshallJSON() ([]byte, error) {
 		ContentLength  int64  `json:"content_length"`
 		Title          string `json:"title"`
 		Filename       string `json:"file_name"`
+		Note           string `json:"note"`
 	}
 
 	tmp.URL = url.URL
@@ -74,6 +77,7 @@ func (url *URL) MarshallJSON() ([]byte, error) {
 	tmp.ContentLength = url.ContentLength
 	tmp.Title = url.Title
 	tmp.Filename = url.Filename
+	tmp.Note = url.Filter.Notes
 
 	return json.Marshal(&tmp)
 }
@@ -129,4 +133,32 @@ type TLSCertificateDNSName struct {
 
 	TLSCertificateID uint
 	Name             string
+}
+
+// UI Report Filters
+type Filter struct {
+	gorm.Model
+	
+	URLID 			uint
+	Notes			string
+	GenericName		string
+	Visible			bool
+	Tagmaps			[]Tagmap
+}
+
+// Tagmap used to identify valid IDs
+type Tagmap struct {
+	gorm.Model
+
+	FILTERID		uint
+	TagID			uint
+}
+
+// Tag structure used without foreignkey to 
+// only provide 'unique' tags in the DB
+type Tag struct {
+	gorm.Model
+
+	Name			string
+	Color			string
 }

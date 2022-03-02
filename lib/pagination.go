@@ -20,12 +20,17 @@ type PaginationPage struct {
 	NextPage      int
 	NextPageRange []int
 	Ordered       bool
+	ShowHidden    bool
+	OnlyShowNotes bool
+	FiltTagMap    *map[interface{}]interface{}
+	FiltRespCodes *map[string]bool
 }
 
 // Filter describes a column filter
 type Filter struct {
 	Column string
-	Value  string
+	Value  interface{}
+	Oper   string
 }
 
 // Pagination has options for a Page
@@ -35,6 +40,7 @@ type Pagination struct {
 	Limit    int
 	OrderBy  []string
 	FilterBy []Filter
+	JoinsBy  []Filter
 }
 
 // Page pages a dataset
@@ -52,6 +58,7 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 	if p.Limit == 0 {
 		p.Limit = 21
 	}
+
 	if len(p.OrderBy) > 0 {
 		for _, order := range p.OrderBy {
 			db = db.Order(order)
@@ -61,12 +68,27 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 		pagination.Ordered = false
 	}
 
-	if len(p.FilterBy) > 0 {
-		for _, filter := range p.FilterBy {
-			db = db.Where(filter.Column+" LIKE ?", "%"+filter.Value+"%")
+	// joins query
+	if len(p.JoinsBy) > 0 {
+		for _, filter := range p.JoinsBy{
+			db = db.Joins("LEFT JOIN " + filter.Column + " on " + filter.Value.(string))
 		}
 	}
 
+	// where query
+	if len(p.FilterBy) > 0 {
+		for _, filter := range p.FilterBy {
+			if filter.Oper == "LIKE"{
+				db = db.Where(filter.Column + " " + filter.Oper + " ?", "%" + filter.Value.(string) + "%")
+			} else {
+				db = db.Where(filter.Column + " " + filter.Oper + " ?", filter.Value)
+			}
+		}
+	}
+	// Need a specific select in order to prevent Model() from pulling the wrong IDs. This is probably due to an error
+	// with the way the join is currently built. Maybe preload w/ an inline where clause could fix this
+	db = db.Select("urls.id,urls.url, urls.final_url, urls.response_code, urls.response_reason, urls.proto, urls.content_length,urls.title, urls.filename, urls.perception_hash")
+	
 	db.Model(data).Count(&count)
 
 	if p.CurrPage == 1 {
@@ -75,7 +97,7 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 		offset = (p.CurrPage - 1) * p.Limit
 	}
 
-	if err := db.Limit(p.Limit).Offset(offset).Preload("Technologies").Find(data).Error; err != nil {
+	if err := db.Limit(p.Limit).Offset(offset).Preload("Technologies").Preload("Filter").Preload("Filter.Tagmaps").Find(data).Error; err != nil {
 		return nil, err
 	}
 
@@ -96,13 +118,13 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 
 	if p.CurrPage >= pagination.Pages {
 		pagination.NextPage = p.CurrPage
+		pagination.PrevPageRange = makeSizedRange(1, pagination.NextPage-1, 5)
+		pagination.NextPageRange = []int{}
 	} else {
 		pagination.NextPage = p.CurrPage + 1
+		pagination.PrevPageRange = makeSizedRange(1, pagination.NextPage-2, 5)
+		pagination.NextPageRange = makeSizedRange(pagination.NextPage, pagination.Pages, 5)
 	}
-
-	pagination.PrevPageRange = makeSizedRange(1, pagination.NextPage-2, 5)
-	pagination.NextPageRange = makeSizedRange(pagination.NextPage, pagination.Pages, 5)
-
 	return &pagination, nil
 }
 

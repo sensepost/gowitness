@@ -22,21 +22,11 @@ var reportListCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to get a db handle")
 		}
-
-		rows, err := db.Scopes(storage.OrderPerception(options.PerceptionSort)).
-			Model(&storage.URL{}).Rows()
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to get rows")
-		}
-		defer rows.Close()
-
+		
+		// using Find to perform preloading of filters
 		var data []storage.URL
-		for rows.Next() {
-			url := &storage.URL{}
-			db.ScanRows(rows, url)
-			data = append(data, *url)
-		}
-
+		db.Scopes(storage.OrderPerception(options.PerceptionSort)).Model(data).Preload("Filter").Find(&data)
+		
 		if options.ReportJSON {
 			outputJSON(&data)
 			return

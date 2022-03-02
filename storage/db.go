@@ -33,7 +33,7 @@ func (db *Db) Get() (*gorm.DB, error) {
 	}
 
 	if !db.SkipMigration {
-		conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{})
+		conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &Filter{}, &Tagmap{}, &Tag{})
 	}
 
 	return conn, nil

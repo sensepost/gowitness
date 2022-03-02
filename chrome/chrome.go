@@ -108,6 +108,7 @@ func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Respo
 		ContentLength:  resp.ContentLength,
 		Filename:       filename,
 		Title:          title,
+		Filter:         storage.Filter{Visible: true},
 	}
 
 	// append headers

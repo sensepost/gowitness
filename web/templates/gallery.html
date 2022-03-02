@@ -1,19 +1,23 @@
 {{ define "gallery" }}
 {{ template "header" }}
 <!-- Page title -->
-<div class="page-header">
+<div class="page-header mt-3">
   <div class="row align-items-center">
-    <div class="col-auto">
-      <h2 class="page-title">
-        Gallery
-      </h2>
-    </div>
-    <div class="col-auto">
-      <div class="text-muted text-h5 mt-2">{{ .Offset }}-{{ .Range }} of {{ .Count }} screenshots</div>
+    <div class="col ml-auto d-print-none">
+      <div class="btn-list">
+        <div>
+          <h2 class="page-title">
+            Gallery
+          </h2>
+        </div>
+        <div class="text-muted text-h5">
+          <p class="mt-2">{{ .Offset }}-{{ .Range }} of {{ .Count }} screenshots</p>
+        </div>
+      </div>
     </div>
     <!-- Page title actions -->
     <div class="col-auto ml-auto d-print-none">
-      <div class="d-flex">
+      <div class="btn-list">
         <div class="mr-3">
           <form action="/gallery" method="get">
             <div class="input-icon">
@@ -25,12 +29,12 @@
           </form>
         </div>
         {{ if .Ordered }}
-        <a href="/?perception_sort=false&limit={{ .Limit }}&page={{ .Page }}" class="btn btn-primary">
+        <a href="/?perception_sort=false&limit={{.Limit}}&page={{.Page}}{{ range $code, $checked := .FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := .FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if .ShowHidden}}&hide=true{{end}}{{ if .OnlyShowNotes}}&onlynotes=true{{end}}" class="btn btn-primary">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><rect width="6" height="6" x="14" y="5" rx="1"></rect><line x1="4" y1="7" x2="10" y2="7"></line><line x1="4" y1="11" x2="10" y2="11"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="4" y1="19" x2="20" y2="19"></line></svg>
           Disable Perception Sorting
         </a>
         {{ else }}
-        <a href="/?perception_sort=true&limit={{ .Limit }}&page={{ .Page }}" class="btn btn-primary">
+        <a href="/?perception_sort=true&limit={{.Limit}}&page={{.Page}}{{ range $code, $checked := .FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := .FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if .ShowHidden}}&hide=true{{end}}{{ if .OnlyShowNotes}}&onlynotes=true{{end}}" class="btn btn-primary">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><rect width="6" height="6" x="4" y="5" rx="1"></rect><line x1="14" y1="7" x2="20" y2="7"></line><line x1="14" y1="11" x2="20" y2="11"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="4" y1="19" x2="20" y2="19"></line></svg>
           Enable Perception Sorting
         </a>
@@ -39,11 +43,177 @@
     </div>
   </div>
 </div>
+<!-- Sub Header Content -->
+<div class="container mt-2 rounded bg-dark">
+  <div class="row justify-content-between">
+    <form class="row mt-2" action="/" method="get">
+      <input type="hidden" name="limit" value="{{ .Limit }}"/>
+      <input type="hidden" name="perception_sort" value="{{.Ordered}}"/>
+      <input type="hidden" name="page" value="1"/>
+      {{ range $code, $checked := $.FiltRespCodes }} {{ if $checked }} <input type="hidden" name="code" value="{{$code}}"/>{{ end }}{{ end }}
+      {{ range $tag, $checked := $.FiltTagMap }} {{ if $checked }} <input type="hidden" name="tag" value="{{$tag.Color}}"/>{{ end }}{{ end }}
+      <div class="col-sm-6 col-lg-4">
+        <div class="d-flex justify-content-center">
+        <label class="form-check form-switch">
+          <input class="form-check-input" name="hide" type="checkbox" onChange="submit()" {{ if .ShowHidden}} checked="" {{end}}>
+          <span class="form-check-label">Hide Marked Items</span>
+        </label>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-4">
+        <div class="d-flex justify-content-center">
+          <label class="form-check form-switch">
+            <input class="form-check-input" name="onlynotes" type="checkbox" onChange="submit()" {{ if .OnlyShowNotes}} checked="" {{end}}>
+            <span class="form-check-label">Only Show Hosts with Notes</span>
+          </label>
+        </div>
+      </div>
 
-<div class="row">
-
+      <div class="col-sm-6 col-lg-4">
+        <div class="d-flex justify-content-center">
+          <div class="btn-group-toggle" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox">
+              <span class="form-check-label">Response Codes & Tags</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="collapse mt-2" id="collapseFilters">
+    <form action="/" method="get">
+      <input type="hidden" name="page" value="{{ .Page }}"/>
+      <input type="hidden" name="limit" value="{{ .Limit }}"/>
+      <input type="hidden" name="perception_sort" value="{{ .Ordered}}"/>
+      <input type="hidden" name="hide" value="{{ .ShowHidden }}"/>
+      <input type="hidden" name="onlynotes" value="{{ .OnlyShowNotes}}"/>
+      <div class="row">
+        <div class="col-sm-6 col-lg-4">
+          <div class="d-flex justify-content-center">
+            <label class="form-label">HTTP Status Codes</label>
+          </div>
+            <div class="d-flex justify-content-center">
+              <div class="form-selectgroup">
+                {{ range $code, $checked := .FiltRespCodes }}
+                  <label class="form-selectgroup-item">
+                    <input type="checkbox" name="code" value="{{$code}}"  onChange="submit()" class="form-selectgroup-input" {{ if $checked }} checked="true" {{ end }}>
+                    <span class="form-selectgroup-label">{{$code}}</span>
+                  </label>
+                {{ end }}
+              </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <div class="d-flex justify-content-center">
+            <label class="form-label">Tags</label>
+          </div>
+          <div class="d-flex justify-content-center btn-list">
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="tagdropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tags" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M7.859 6h-2.834a2.025 2.025 0 0 0 -2.025 2.025v2.834c0 .537 .213 1.052 .593 1.432l6.116 6.116a2.025 2.025 0 0 0 2.864 0l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-6.117 -6.116a2.025 2.025 0 0 0 -1.431 -.593z"></path>
+                  <path d="M17.573 18.407l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-7.117 -7.116"></path>
+                  <path d="M6 9h-.01"></path>
+                </svg>
+                Select Tags
+              </button>
+                <div class="dropdown-menu" id="tagdropdown">
+                  {{ range $tag, $checked := .FiltTagMap }}
+                  <label class="dropdown-item">
+                    <input class="form-check-input m-0 me-2" type="checkbox" name="tag" value="{{$tag.Color}}" onChange="submit()" {{ if $checked }} checked="true" {{ end }}>
+                    {{if $tag.Name }}{{$tag.Name}} {{ else }}<span class="text-muted">(empty)</span> {{ end }}
+                    <span class="badge bg-{{$tag.Color}} ms-auto">&nbsp;&nbsp;&nbsp;</span>
+                  </label>
+                  {{ end }}
+                </div>
+            </div>
+            <div class="ml-2">
+              <a class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#modal-update-tags">
+                Customize Tags
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm mt-3">
+          <div class="d-flex justify-content-center flex-wrap">
+            <a href="/?perception_sort={{.Ordered}}&limit={{.Limit}}&page={{.Page}}" class="btn btn-danger">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <line x1="4" y1="7" x2="20" y2="7"></line>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path>
+                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path>
+              </svg>
+              Clear All Filters
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="modal fade" id="modal-update-tags" tabindex="-1" style="display: none;" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border border-white">
+          <form action="/updatetags" method="post">
+            <input type="hidden" name="page" value="{{ .Page }}"/>
+            <input type="hidden" name="limit" value="{{ .Limit }}"/>
+            <input type="hidden" name="perception_sort" value="{{ .Ordered}}"/>
+            <input type="hidden" name="hide" value="{{ .ShowHidden}}"/>
+            <input type="hidden" name="onlynotes" value="{{ .OnlyShowNotes}}"/>
+            <div class="modal-header">
+              <h5 class="modal-title">Customize Tags</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">  
+              <div class="mb-3">
+                  {{ range $tag, $checked := .FiltTagMap }}
+                  <div class="row align-items-center">
+                    <div class="col-auto ml-auto d-print-none">
+                      <label class="form-colorinput">
+                        <input name="tagcbox" type="checkbox" data-bs-toggle="collapse" data-bs-target="#tag-c-{{$tag.Color}}" value="{{$tag.Color}}" class="form-colorinput-input form-selectgroup-input">
+                        <span class="form-colorinput-color bg-{{$tag.Color}}"></span>
+                      </label>
+                    </div>
+                    <div class="col ml-auto d-print-none">
+                      <div class="input-group">
+                        <span class="input-group-text">{{$tag.Color}}</span>
+                        <input name="tag" type="text" class="form-control" value="{{ $tag.Name}}">
+                        <input name="tagid" type="hidden" class="form-control" value="{{ $tag.ID}}">
+                      </div>
+                    </div>
+                </div>
+                  {{ end }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M5 12l5 5l10 -10"></path>
+                </svg>
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page Card Content -->
+<div class="page-body mt-4">
+  <div class="row">
   {{ $length := len .Records }} {{ if eq $length 0 }}
-
     <div class="container-xl d-flex flex-column justify-content-center">
       <div class="empty">
         <p class="empty-title h3">No results found</p>
@@ -53,12 +223,10 @@
         </p>
       </div>
     </div>
-
   {{ else }}
-
-    {{ range .Records}}
-
-    <div class="col-sm-6 col-lg-4">
+  {{ with $pg := .}}
+  {{ range .Records}}
+    <div class="col-sm-6 col-lg-4 mb-1">
       <div class="card card-sm">
         <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
           <img loading="lazy" src="/screenshots/{{ .Filename }}" 
@@ -71,14 +239,70 @@
                 <a href="{{ .URL }}" target="_blank">{{ .URL }}</a>
               </div>
               <div class="text-muted">{{ .Title }}</div>
-              <div>              
+              <div class="mt-1">              
                 {{ range .Technologies }}
-                <span class="badge bg-blue">{{ .Value}}</span>
+                <span class="badge bg-blue mb-1">{{ .Value}}</span>
+                {{ end }}
+              </div>
+              <div>
+                {{ range $tm := .Filter.Tagmaps }}
+                  {{ range $tag, $checked := $pg.FiltTagMap }}
+                    {{ if eq $tag.ID $tm.TagID}}
+                    <span class="badge bg-{{$tag.Color}} mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tag" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <circle cx="8.5" cy="8.5" r="1" fill="currentColor"></circle>
+                        <path d="M4 7v3.859c0 .537 .213 1.052 .593 1.432l8.116 8.116a2.025 2.025 0 0 0 2.864 0l4.834 -4.834a2.025 2.025 0 0 0 0 -2.864l-8.117 -8.116a2.025 2.025 0 0 0 -1.431 -.593h-3.859a3 3 0 0 0 -3 3z"></path>
+                      </svg>
+                    {{if $tag.Name }}{{ $tag.Name}} {{else}}&nbsp;&nbsp;&nbsp;&nbsp;{{end}}</span>
+                    {{ end }}
+                  {{ end }}
                 {{ end }}
               </div>
             </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex justify-content-around">
+            <form action="/updaterecord" method="post">
+              <input type="hidden" name="id" value="{{ .ID }}"/>
+              <input type="hidden" name="page" value="{{ $pg.Page }}"/>
+              <input type="hidden" name="limit" value="{{ $pg.Limit }}"/>
+              <input type="hidden" name="perception_sort" value="{{ $pg.Ordered}}"/>
+              <input type="hidden" name="hide" value="{{ $pg.ShowHidden }}"/>
+              <input type="hidden" name="onlynotes" value="{{ $pg.OnlyShowNotes}}"/>
+              <input type="hidden" name="action" value="togglevisibility"/>
+              {{ range $code, $checked := $pg.FiltRespCodes }} {{ if $checked }} <input type="hidden" name="code" value="{{$code}}"/>{{ end }}{{ end }}
+              {{ range $tag, $checked := $pg.FiltTagMap }} {{ if $checked }} <input type="hidden" name="tag" value="{{$tag.Color}}"/>{{ end }}{{ end }}
+
+              <button type="submit" class="btn btn-sm btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-eye-off" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <line x1="3" y1="3" x2="21" y2="21"></line>
+                  <path d="M10.584 10.587a2 2 0 0 0 2.828 2.83"></path>
+                  <path d="M9.363 5.365a9.466 9.466 0 0 1 2.637 -.365c4 0 7.333 2.333 10 7c-.778 1.361 -1.612 2.524 -2.503 3.488m-2.14 1.861c-1.631 1.1 -3.415 1.651 -5.357 1.651c-4 0 -7.333 -2.333 -10 -7c1.369 -2.395 2.913 -4.175 4.632 -5.341"></path>
+               </svg>
+                Hide
+              </button>
+            </form>
+            <button class="btn btn-sm btn-info ml-2" data-bs-toggle="modal" data-bs-target="#modal-notes{{ .ID }}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-note" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <line x1="13" y1="20" x2="20" y2="13"></line>
+                <path d="M13 20v-6a1 1 0 0 1 1 -1h6v-7a2 2 0 0 0 -2 -2h-12a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7"></path>
+             </svg>
+              Notes
+            </button>
             <div class="ml-auto">
               <a href="/details?id={{ .ID }}" class="btn btn-light btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <circle cx="15" cy="15" r="4"></circle>
+                  <path d="M18.5 18.5l2.5 2.5"></path>
+                  <path d="M4 6h16"></path>
+                  <path d="M4 12h4"></path>
+                  <path d="M4 18h4"></path>
+               </svg>
                 View
               </a>
             </div>
@@ -86,35 +310,106 @@
         </div>
       </div>
     </div>
-
-    {{ end }}
-
-  {{ end }}
-
+    <div class="modal fade" id="modal-notes{{ .ID }}" tabindex="-1" style="display: none;" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content border border-white">
+            <form action="/updaterecord" method="post">
+              <input type="hidden" name="id" value="{{ .ID }}"/>
+              <input type="hidden" name="page" value="{{ $pg.Page }}"/>
+              <input type="hidden" name="limit" value="{{ $pg.Limit }}"/>
+              <input type="hidden" name="perception_sort" value="{{ $pg.Ordered}}"/>
+              <input type="hidden" name="hide" value="{{ $pg.ShowHidden}}"/>
+              <input type="hidden" name="onlynotes" value="{{ $pg.OnlyShowNotes}}"/>
+              <input type="hidden" name="action" value="gallery"/>
+              {{ range $code, $checked := $pg.FiltRespCodes }} {{ if $checked }} <input type="hidden" name="code" value="{{$code}}"/>{{ end }}{{ end }}
+              {{ range $tag, $checked := $pg.FiltTagMap }} {{ if $checked }} <input type="hidden" name="ftag" value="{{$tag.Color}}"/>{{ end }}{{ end }}
+              <div class="modal-header">
+                <h5 class="modal-title">Additional Details - All Fields Are Optional</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row mb-3 align-items-end">
+                  <div class="col">
+                    <label class="form-label">Generic Name</label>
+                    <input name="genericname" type="text" class="form-control" value="{{ .Filter.GenericName }}">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div>
+                    <label class="form-label">Additional Notes</label>
+                    <textarea name="notes" class="form-control">{{ .Filter.Notes }}</textarea>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="row g-2 form-selectgroup">
+                    <div class="dropdown">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" id="tagdropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tags" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                          <path d="M7.859 6h-2.834a2.025 2.025 0 0 0 -2.025 2.025v2.834c0 .537 .213 1.052 .593 1.432l6.116 6.116a2.025 2.025 0 0 0 2.864 0l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-6.117 -6.116a2.025 2.025 0 0 0 -1.431 -.593z"></path>
+                          <path d="M17.573 18.407l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-7.117 -7.116"></path>
+                          <path d="M6 9h-.01"></path>
+                      </svg>
+                        Select Tags
+                      </button>
+                      <div class="dropdown-menu" id="tagdropdown">
+                        {{ range $tag, $checked := $pg.FiltTagMap }}
+                        <label class="dropdown-item">
+                          <input class="form-check-input m-0 me-2" type="checkbox" name="tag" value="{{$tag.Color}}">
+                          {{$tag.Name}}
+                          <span class="badge bg-{{$tag.Color}} ms-auto">&nbsp;&nbsp;&nbsp;</span>
+                        </label>
+                        {{ end }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                </svg>
+              Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>{{ end }}{{ end }}{{ end }}
+  </div>
 </div>
+<!-- Footer -->
 <div class="d-flex">
-  <ul class="pagination ml-auto">
+  <ul class="pagination ml-auto flex-wrap">
     <li class="page-item {{ if le .Page 1 }}disabled{{ end }}">
-      <a class="page-link" href="/?{{ if .Ordered }}perception_sort=true&{{ end }}limit={{ .Limit }}&page={{ .PrevPage }}" tabindex="-1">
+      <a class="page-link" href="/?perception_sort={{.Ordered}}&limit={{.Limit}}&page={{.PrevPage}}{{ range $code, $checked := .FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := .FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if .ShowHidden}}&hide=true{{end}}{{ if .OnlyShowNotes}}&onlynotes=true{{end}}" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18" /></svg>
         prev
       </a>
     </li>
+    {{ with $pg := .}}
     {{ range $p := .PrevPageRange }}
-      <li class="page-item">
-        <a class="page-link" href="/?{{ if $.Ordered }}perception_sort=true&{{ end }}limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a>
-      </li>
-    {{ end }}
-
-    <li class="page-item active"><a class="page-link" href="#">{{ .Page }}</a></li>
-
-    {{ range $p := .NextPageRange }}
-      <li class="page-item">
-        <a class="page-link" href="/?{{ if $.Ordered }}perception_sort=true&{{ end }}limit={{ $.Limit }}&page={{ $p }}">{{ $p }}</a>
-      </li>
-    {{ end }}
     <li class="page-item">
-      <a class="page-link" href="/?{{ if .Ordered }}perception_sort=true&{{ end }}limit={{ .Limit }}&page={{ .NextPage }}">
+      <a class="page-link" href="/?perception_sort={{$pg.Ordered}}&limit={{$pg.Limit}}&page={{$p}}{{ range $code, $checked := $pg.FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := $pg.FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if $pg.ShowHidden}}&hide=true{{end}}{{ if $pg.OnlyShowNotes}}&onlynotes=true{{end}}">{{ $p }}</a>
+    </li>
+    {{ end }}
+    <li class="page-item active"><a class="page-link" href="#">{{ .Page }}</a></li>
+    {{ range $p := .NextPageRange }}
+    <li class="page-item">
+      <a class="page-link" href="/?perception_sort={{$pg.Ordered}}&limit={{$pg.Limit}}&page={{$p}}{{ range $code, $checked := $pg.FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := $pg.FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if $pg.ShowHidden}}&hide=true{{end}}{{ if $pg.OnlyShowNotes}}&onlynotes=true{{end}}">{{ $p }}</a>
+    </li>
+    {{ end }}
+    {{ end }}
+    <li class="page-item {{ if ge .Page .Pages }}disabled{{ end }}">
+      <a class="page-link" href="/?perception_sort={{.Ordered}}&limit={{.Limit}}&page={{.NextPage}}{{ range $code, $checked := .FiltRespCodes}}{{if $checked }}&code={{$code}}{{end}}{{end}}{{ range $tag, $checked := .FiltTagMap}}{{if $checked }}&tag={{$tag.Color}}{{end}}{{end}}{{ if .ShowHidden}}&hide=true{{end}}{{ if .OnlyShowNotes}}&onlynotes=true{{end}}">
         next <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="9 6 15 12 9 18" /></svg>
       </a>
     </li>

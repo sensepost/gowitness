@@ -18,6 +18,8 @@ import (
 var (
 	tmpl *template.Template
 	rsDB *gorm.DB
+	TagFilterMap   map[interface{}]interface{}
+	RespCodeFilter map[string]bool
 )
 
 // reportServeCmd represents the reportServe command
@@ -52,9 +54,12 @@ warning though, that also means that someone may request a URL like file:///etc/
 		// db
 		dbh, err := db.Get()
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not gt db handle")
+			log.Fatal().Err(err).Msg("could not get db handle")
 		}
 		rsDB = dbh
+
+		// initialize the filter DB values
+		initializeFilterValues(rsDB)
 
 		log.Info().Str("path", db.Path).Msg("db path")
 		log.Info().Str("path", options.ScreenshotPath).Msg("screenshot path")
@@ -65,6 +70,8 @@ warning though, that also means that someone may request a URL like file:///etc/
 		http.HandleFunc("/table/", tableHandler)
 		http.HandleFunc("/details", detailHandler)
 		http.HandleFunc("/submit", submitHandler)
+		http.HandleFunc("/updaterecord", updateRecordHandler)
+		http.HandleFunc("/updatetags", updateTagValues)
 
 		// static assets & screenshots
 		assetFs, err := fs.Sub(Assets, "web")
@@ -172,12 +179,31 @@ func detailHandler(w http.ResponseWriter, r *http.Request) {
 		Preload("TLS.TLSCertificates").
 		Preload("TLS.TLSCertificates.DNSNames").
 		Preload("Technologies").
+		Preload("Filter").
+		Preload("Filter.Tagmaps").
 		First(&url, id)
 
-	// fmt.Printf("%+v\n", url)
+	// populate the selected tags off of the url's tagmap ids
+	for k, _ := range TagFilterMap{
+		TagFilterMap[k] = 0
+	}
+	for _, tagid := range url.Filter.Tagmaps{
+		for key, _ := range TagFilterMap{
+			if key.(storage.Tag).ID == tagid.TagID{
+				TagFilterMap[key] = 1
+				break
+			}
+		}
+	}
+
+	// return struct for two data types
+	detailTemplateHelper := DetailTemplateHelper{
+		Url:	&url,
+		Tags:	&TagFilterMap,
+	}
 
 	t := tmpl.Lookup("detail.html")
-	err = t.ExecuteTemplate(w, "detail", url)
+	err = t.ExecuteTemplate(w, "detail", detailTemplateHelper)
 	if err != nil {
 		panic(err)
 	}
@@ -211,19 +237,122 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		Limit:    limit,
 	}
 
+	// filter checks to perform joins
+	attemptedTagFilter := false
+	attemptedFilter := false
+	
 	// perception hashing
 	if strings.TrimSpace(r.URL.Query().Get("perception_sort")) == "true" {
 		pager.OrderBy = []string{"perception_hash desc"}
 	}
 
-	// search
-	if strings.TrimSpace(r.URL.Query().Get("search")) != "" {
+	// visibility filter, this statement requires that every URL already have a filter defined
+	vis := strings.TrimSpace(r.URL.Query().Get("hide"))
+	if  vis == "on" || vis == "true" {
 		pager.FilterBy = append(pager.FilterBy, lib.Filter{
-			Column: "title",
-			Value:  r.URL.Query().Get("search"),
+			Column: "filters.visible",
+			Value:  "1",
+			Oper:	"=",
+		})
+
+		attemptedFilter = true
+	}
+
+	// Notes Filtering
+	onlyshownotes := strings.TrimSpace(r.URL.Query().Get("onlynotes"))
+	if onlyshownotes == "on" || onlyshownotes == "true"{
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "filters.notes",
+			Value:  "",
+			Oper:	"<>",
+		})
+		attemptedFilter = true
+	}
+
+	// clear the selected tags
+	for k, _ := range TagFilterMap{
+		TagFilterMap[k] = 0
+	}
+
+	tags := r.URL.Query()["tag"]
+	// find the matches from the DB
+	var tagmatchids []uint
+	for _, tag := range tags{
+		for key, _ := range TagFilterMap{
+			if key.(storage.Tag).Color == tag{
+				tagmatchids = append(tagmatchids,uint(key.(storage.Tag).ID))
+				TagFilterMap[key] = 1
+			}
+		}
+	}
+
+	// signal the tagmap joins
+	if len(tagmatchids) > 0{
+		attemptedTagFilter = true
+	}
+
+	// Setup the Filter Table JOINS to do Intersect queries
+	if attemptedFilter || attemptedTagFilter{
+		pager.JoinsBy = append(pager.JoinsBy, lib.Filter{
+			Column: "filters",
+			Value:	"filters.url_id = urls.id",
+		})
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "filters.deleted_at",
+			Value:  nil,
+			Oper:	"IS",
 		})
 	}
 
+	// Setup the Tagmap Table JOINS to do Intersect queries
+	if attemptedTagFilter{
+		pager.JoinsBy = append(pager.JoinsBy, lib.Filter{
+			Column: "tagmaps",
+			Value:	"tagmaps.filter_id = filters.id",
+		})
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "tagmaps.tag_id",
+			Value:  tagmatchids,
+			Oper:	"IN",
+		})
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "tagmaps.deleted_at",
+			Value:  nil,
+			Oper:	"IS",
+		})
+	}
+
+	// clear the response code filters
+	for k, _ := range RespCodeFilter{
+		RespCodeFilter[k] = false
+	}
+
+	// HTTP Response Code Filtering
+	codes := r.URL.Query()["code"]
+	var thecodes []string
+	if len(codes) > 0{
+		for _, code := range codes {
+			thecodes = append(thecodes,strings.TrimSpace(code))
+			RespCodeFilter[code] = true
+		}
+
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "urls.response_code",
+			Value:  thecodes,
+			Oper:	"IN",
+		})
+	}
+
+	// Search Filtering
+	if strings.TrimSpace(r.URL.Query().Get("search")) != "" {
+		pager.FilterBy = append(pager.FilterBy, lib.Filter{
+			Column: "urls.title",
+			Value:  r.URL.Query().Get("search"),
+			Oper:	"LIKE",
+		})
+	}
+
+	// Get the page data
 	var urls []storage.URL
 	page, err := pager.Page(&urls)
 	if err != nil {
@@ -231,12 +360,150 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fmt.Printf("%+v\n", currPage)
+	// Additional page modifications for filtering. "on" is for the default checkbox
+	// value before the 'true' is added via the filter handler
+	if vis == "on" || vis == "true"{
+		page.ShowHidden = true
+	}
+
+	if onlyshownotes == "on" || onlyshownotes == "true" {
+		page.OnlyShowNotes = true
+	}
+	
+	// page map references
+	page.FiltTagMap = &TagFilterMap
+	page.FiltRespCodes = &RespCodeFilter
 
 	t := tmpl.Lookup("gallery.html")
 	err = t.ExecuteTemplate(w, "gallery", page)
 	if err != nil {
 		panic(err)
+	}
+}
+
+// updateRecordHandler updates a database record from the form values of gallery
+func updateTagValues(w http.ResponseWriter, r *http.Request){
+	switch r.Method{
+		case "GET":
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+		case "POST":
+			r.ParseForm()
+			
+			// upadate the tags in the database
+			for ind, tag := range r.Form["tag"]{
+				tagstr := strings.TrimSpace(tag)
+				if tag != ""{
+					rsDB.Model(storage.Tag{}).Table("tags").Where("id = ?",ind+1).Update("name",tagstr)
+				}
+			}
+
+			// update the 'global' tags
+			var dbtags []storage.Tag
+			rsDB.Table("tags").Find(&dbtags)
+
+			// remake the filter map, exiting one should be sent into gc
+			TagFilterMap = make(map[interface{}]interface{})
+			for _, tg := range dbtags{
+				TagFilterMap[tg] = 0
+			}
+	
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+		}
+}
+
+// updateRecordHandler updates a database record from the form values of gallery
+func updateRecordHandler(w http.ResponseWriter, r *http.Request){
+	switch r.Method{
+		case "GET":
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+		case "POST":
+			// parse the incoming form
+			r.ParseForm()
+
+			// check for a valid ID
+			id, err := strconv.Atoi(r.FormValue("id"))
+			if err != nil {
+				http.Error(w, "ID Not sent With Request", http.StatusInternalServerError)
+				return
+			}
+
+			// find or create a filter
+			var filter storage.Filter
+			rsDB.Where("url_id = ?",id).FirstOrCreate(&filter)
+			filter.URLID = uint(id)
+
+			// setup the return URL paramaters
+			action := strings.TrimSpace(r.FormValue("action"))
+			var redirecturl string
+
+			switch action {
+				case "detail":
+					redirecturl = "/details?id=" + r.FormValue("id")
+				case "togglevisibility", "gallery":
+					// page
+					currPage, limit := getPageLimitFromForm(r)
+
+					redirecturl = "/?perception_sort=" + r.FormValue("perception_sort") + "&page=" + currPage + "&limit=" + limit
+
+					// get codes
+					for _, code := range r.Form["code"] {
+						redirecturl += "&code=" + code
+					}
+
+					// get already set filter tags
+					for _, tag := range r.Form["ftag"] {
+						redirecturl += "&tag=" + tag
+					}
+
+					// get show only
+					if r.FormValue("onlynotes") == "true" {
+						redirecturl += "&onlynotes=true"
+					} else {
+						redirecturl += "&onlynotes=false"
+					}
+
+					// get visibility flag
+					if action == "togglevisibility" || r.FormValue("hide") == "true" {
+						redirecturl += "&hide=true"
+					} else {
+						redirecturl += "&hide=false"
+					}	
+			}			
+
+			// Finish the toggle visibility action here
+			if action == "togglevisibility" {
+				filter.Visible = false
+				rsDB.Save(&filter)
+				http.Redirect(w, r, redirecturl, http.StatusMovedPermanently)
+				return
+			}
+
+			// The remainder of this action assumes an update to the filter record
+			filter.GenericName = r.FormValue("genericname")
+			filter.Notes = r.FormValue("notes")
+
+			// Tags from form
+			var tags []storage.Tag
+			rsDB.Where("color IN ?",r.Form["tag"]).Find(&tags)
+
+			// Not sure if this is the best way to handle 'changes'. Deleting all the old records,
+			// then adding new ones. Seems like a waste of a query, but not sure how to replace/add values
+			// without being a whole set of multiple queries
+			var tagmaps []storage.Tagmap
+			rsDB.Where("filter_id = ?", filter.ID).Delete(&tagmaps)
+
+			// add the selected tag IDs to the filter
+			for _, tag := range tags{
+				filter.Tagmaps = append(filter.Tagmaps,storage.Tagmap{
+					TagID:	tag.ID,
+				})
+			}
+
+			// Save the record
+			rsDB.Save(&filter)
+			
+			// Return to the expected page
+			http.Redirect(w, r, redirecturl, http.StatusMovedPermanently)
 	}
 }
 
@@ -263,4 +530,50 @@ func getPageLimit(r *http.Request) (page int, limit int, err error) {
 	}
 
 	return
+}
+
+// getPageLimit gets the limit and page query string values from a request
+func getPageLimitFromForm(r *http.Request) (page string, limit string) {
+
+	page = strings.TrimSpace(r.FormValue("page"))
+	limit = strings.TrimSpace(r.FormValue("limit"))
+
+	if page == "" {
+		page = "-1"
+	}
+	if limit == "" {
+		limit = "0"
+	}
+	return
+}
+
+func initializeFilterValues(rsDB *gorm.DB) error {
+	// setup universe of filters from the database
+	var codes []int
+	rsDB.Table("urls").Distinct("response_code").Order("response_code").Find(&codes)
+	RespCodeFilter = make(map[string]bool)
+	for _, c := range codes{
+		// checking against '0' in case a preflight/chromedp error.
+		if c != 0 {
+			cstr := strconv.Itoa(c)
+			RespCodeFilter[cstr] = false
+		}
+	}
+
+	// populate the tags table if not already in the DB
+	TagFilterMap = make(map[interface{}]interface{})
+	tagcolors := [11]string{"azure","indigo","purple","pink","red","orange","yellow","lime","green","teal","cyan"}
+	for _, color := range tagcolors{
+		var tag storage.Tag
+		rsDB.Table("tags").FirstOrCreate(&tag,storage.Tag{Color: color,Name: ""})
+		TagFilterMap[tag] = 0
+	}
+
+	return nil
+}
+
+// Structure to help render detail page objects
+type DetailTemplateHelper struct {
+	Url		*storage.URL
+	Tags	*map[interface{}]interface{}
 }
