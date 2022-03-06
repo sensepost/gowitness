@@ -1,8 +1,10 @@
 package chrome
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -90,8 +92,11 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 	}
 
 	defer resp.Body.Close()
-	title, _ = GetHTMLTitle(resp.Body)
-	technologies, _ = GetTechnologies(resp)
+
+	body, _ := io.ReadAll(resp.Body)
+
+	title, _ = GetHTMLTitle(bytes.NewReader(body))
+	technologies = GetTechnologies(resp.Header, body)
 
 	return
 }
