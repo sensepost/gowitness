@@ -193,56 +193,34 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		}
 	})
 
-	if chrome.FullPage {
-		// straight from: https://github.com/chromedp/examples/blob/849108f7da9f743bcdaef449699ed57cb4053379/screenshot/main.go
-
-		// additional headers
-		if len(chrome.HeadersMap) > 0 {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				network.Enable(),
-				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.FullScreenshot(&buf, 100),
-			}); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.FullScreenshot(&buf, 100),
-			}); err != nil {
-				return nil, err
-			}
-		}
-
-	} else {
-		// normal viewport screenshot
-
-		// additional headers
-		if len(chrome.HeadersMap) > 0 {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				network.Enable(),
-				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.CaptureScreenshot(&buf),
-			}); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.CaptureScreenshot(&buf),
-			}); err != nil {
-				return nil, err
-			}
-		}
+	err := chromedp.Run(ctx, buildTasks(chrome, url, &buf))
+	if err != nil {
+		return nil, err
 	}
 
 	return buf, nil
+}
+
+// builds the chromedp tasks slice in a bit cleaner fashion with the various logic
+func buildTasks(chrome *Chrome, url *url.URL, buf *[]byte) chromedp.Tasks {
+	var actions chromedp.Tasks
+
+	if len(chrome.HeadersMap) > 0 {
+		actions = append(actions, network.Enable(), network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)))
+	}
+
+	actions = append(actions, chromedp.Navigate(url.String()))
+	if chrome.Delay > 0 {
+		actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay)*time.Second))
+	}
+
+	if chrome.FullPage {
+		actions = append(actions, chromedp.FullScreenshot(buf, 100))
+	} else {
+		actions = append(actions, chromedp.CaptureScreenshot(buf))
+	}
+
+	return actions
 }
 
 // initalize the headers Map. we do this given the format chromedp wants
