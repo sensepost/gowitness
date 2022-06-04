@@ -106,11 +106,13 @@ func (chrome *Chrome) Preflight(url *url.URL) (result *PreflightResult, err erro
 	result.URL = url
 	result.HTTPResponse = resp
 
-	// fill in wappalyzer information if we have a client to do so
+	// if we cant perform wappalyzer lookups, then return
 	if chrome.wappalyzer.err != nil {
-		result.HTTPTitle = chrome.wappalyzer.HTMLTitle(body)
-		result.HTTPTechnologies = chrome.wappalyzer.Technologies(req.Header, body)
+		return
 	}
+
+	result.HTTPTitle = chrome.wappalyzer.HTMLTitle(body)
+	result.HTTPTechnologies = chrome.wappalyzer.Technologies(req.Header, body)
 
 	return
 }
