@@ -270,7 +270,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	return buf, nil
 }
 
-// builds the chromedp tasks slice in a bit cleaner fashion with the various logic
+// buildTasks builds the chromedp tasks slice
 func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chromedp.Tasks {
 	var actions chromedp.Tasks
 
