@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"image/png"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 
 	"github.com/corona10/goimagehash"
@@ -28,12 +27,13 @@ type Processor struct {
 	// file name & file path
 	fn string
 	fp string
+
 	// preflight response
-	response     *http.Response
-	title        string
-	technologies []string
+	preflightResult *chrome.PreflightResult
+
 	// persistence id
 	urlid uint
+
 	// screenshot
 	screenshot *[]byte
 }
@@ -89,19 +89,20 @@ func (p *Processor) init() {
 // preflight invokes the Chrome preflight helper
 func (p *Processor) preflight() (err error) {
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("preflighting")
-	p.response, p.title, p.technologies, err = p.Chrome.Preflight(p.URL)
+
+	p.preflightResult, err = p.Chrome.Preflight(p.URL)
 	if err != nil {
 		return
 	}
 
 	var l *zerolog.Event
-	if p.response.StatusCode == 200 {
+	if p.preflightResult.HTTPResponse.StatusCode == 200 {
 		l = p.Logger.Info()
 	} else {
 		l = p.Logger.Warn()
 	}
-	l.Str("url", p.URL.String()).Int("statuscode", p.response.StatusCode).
-		Str("title", p.title).Msg("preflight result")
+	l.Str("url", p.URL.String()).Int("statuscode", p.preflightResult.HTTPResponse.StatusCode).
+		Str("title", p.preflightResult.HTTPTitle).Msg("preflight result")
 
 	return
 }
@@ -114,7 +115,7 @@ func (p *Processor) persistPreflight() (err error) {
 	}
 
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("storing preflight data")
-	if p.urlid, err = p.Chrome.StorePreflight(p.URL, p.Db, p.response, p.title, p.technologies, p.fn); err != nil {
+	if p.urlid, err = p.Chrome.StorePreflight(p.Db, p.preflightResult, p.fn); err != nil {
 		return
 	}
 

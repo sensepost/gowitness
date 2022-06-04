@@ -117,7 +117,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		fn := lib.SafeFileName(url.String())
 		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
 
-		resp, title, technologies, err := chrm.Preflight(url)
+		preflight, err := chrm.Preflight(url)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -125,7 +125,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 
 		var rid uint
 		if rsDB != nil {
-			if rid, err = chrm.StorePreflight(url, rsDB, resp, title, technologies, fn); err != nil {
+			if rid, err = chrm.StorePreflight(rsDB, preflight, fn); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

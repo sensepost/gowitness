@@ -1,7 +1,6 @@
 package chrome
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"io"
@@ -13,7 +12,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
 )
@@ -31,23 +29,31 @@ type Chrome struct {
 	Proxy       string
 	Headers     []string
 	HeadersMap  map[string]interface{}
+
+	// wappalyzer client
+	wappalyzer *Wappalyzer
 }
 
-var wappalyzerClient *wappalyzer.Wappalyze
-
-func InitWappalyzer() error {
-	var err error
-	wappalyzerClient, err = wappalyzer.New()
-	return err
+// PreflightResult contains the results of a preflight run
+type PreflightResult struct {
+	URL              *url.URL
+	HTTPResponse     *http.Response
+	HTTPTitle        string
+	HTTPTechnologies []string
 }
 
 // NewChrome returns a new initialised Chrome struct
 func NewChrome() *Chrome {
-	return &Chrome{}
+	return &Chrome{
+		wappalyzer: NewWappalyzer(),
+	}
 }
 
 // Preflight will preflight a url
-func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string, technologies []string, err error) {
+func (chrome *Chrome) Preflight(url *url.URL) (result *PreflightResult, err error) {
+
+	// init a new preflight result
+	result = &PreflightResult{}
 
 	// purposefully ignore bad certs
 	transport := &http.Transport{
@@ -59,7 +65,7 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 		var erri error
 		proxyURL, erri := url.Parse(chrome.Proxy)
 		if erri != nil {
-			return nil, "", nil, erri
+			return
 		}
 		transport.Proxy = http.ProxyURL(proxyURL)
 	}
@@ -86,53 +92,61 @@ func (chrome *Chrome) Preflight(url *url.URL) (resp *http.Response, title string
 	defer cancel()
 	req = req.WithContext(ctx)
 
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return
 	}
 
 	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
 
-	body, _ := io.ReadAll(resp.Body)
+	result.URL = url
+	result.HTTPResponse = resp
 
-	title, _ = GetHTMLTitle(bytes.NewReader(body))
-	technologies = GetTechnologies(resp.Header, body)
+	// fill in wappalyzer information if we have a client to do so
+	if chrome.wappalyzer.err != nil {
+		result.HTTPTitle = chrome.wappalyzer.HTMLTitle(body)
+		result.HTTPTechnologies = chrome.wappalyzer.Technologies(req.Header, body)
+	}
 
 	return
 }
 
 // StorePreflight will store preflight info to a DB
-func (chrome *Chrome) StorePreflight(url *url.URL, db *gorm.DB, resp *http.Response, title string, technologies []string, filename string) (uint, error) {
+func (chrome *Chrome) StorePreflight(db *gorm.DB, preflight *PreflightResult, filename string) (uint, error) {
 
 	record := &storage.URL{
-		URL:            url.String(),
-		FinalURL:       resp.Request.URL.String(),
-		ResponseCode:   resp.StatusCode,
-		ResponseReason: resp.Status,
-		Proto:          resp.Proto,
-		ContentLength:  resp.ContentLength,
+		URL:            preflight.URL.String(),
+		FinalURL:       preflight.HTTPResponse.Request.URL.String(),
+		ResponseCode:   preflight.HTTPResponse.StatusCode,
+		ResponseReason: preflight.HTTPResponse.Status,
+		Proto:          preflight.HTTPResponse.Proto,
+		ContentLength:  preflight.HTTPResponse.ContentLength,
+		Title:          preflight.HTTPTitle,
 		Filename:       filename,
-		Title:          title,
 	}
 
 	// append headers
-	for k, v := range resp.Header {
+	for k, v := range preflight.HTTPResponse.Header {
 		hv := strings.Join(v, ", ")
 		record.AddHeader(k, hv)
 	}
 
-	for _, v := range technologies {
+	for _, v := range preflight.HTTPTechnologies {
 		record.AddTechnologie(v)
 	}
 
 	// get TLS info, if any
-	if resp.TLS != nil {
+	if preflight.HTTPResponse.TLS != nil {
 		record.TLS = storage.TLS{
-			Version:    resp.TLS.Version,
-			ServerName: resp.TLS.ServerName,
+			Version:    preflight.HTTPResponse.TLS.Version,
+			ServerName: preflight.HTTPResponse.TLS.ServerName,
 		}
 
-		for _, cert := range resp.TLS.PeerCertificates {
+		for _, cert := range preflight.HTTPResponse.TLS.PeerCertificates {
 			tlsCert := &storage.TLSCertificate{
 				SubjectCommonName:  cert.Subject.CommonName,
 				IssuerCommonName:   cert.Issuer.CommonName,
