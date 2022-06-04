@@ -14,9 +14,9 @@ require (
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.4.0
-	github.com/spf13/viper v1.10.0 // indirect
 	github.com/tomsteele/go-nmap v0.0.0-20191202052157-3507e0b03523
 	golang.org/x/net v0.0.0-20220531201128-c960675eff93
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/sqlite v1.3.2
 	gorm.io/gorm v1.23.5
 )
