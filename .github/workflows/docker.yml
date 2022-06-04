@@ -25,8 +25,8 @@ jobs:
           addLatest: true
           tags: latest
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }} 
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Publish latest and version tag to Github Repo (only on tag event)
@@ -36,8 +36,8 @@ jobs:
           addLatest: true
           tags: ${{ steps.get_version.outputs.VERSION }}, latest
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: mr-smithers-excellent/docker-build-push@v5
         name: Publish latest tag to Docker Repo (only on master branch push)
