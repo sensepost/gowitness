@@ -3,12 +3,14 @@ package chrome
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
@@ -190,75 +192,107 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 	}
 
 	actx, acancel := chromedp.NewExecAllocator(context.Background(), options...)
-	ctx, cancel := chromedp.NewContext(actx)
 	defer acancel()
-	defer cancel()
+	browserCtx, cancelBrowserCtx := chromedp.NewContext(actx)
+	defer cancelBrowserCtx()
+
+	// create the initial context to act as the 'tab', where we will perform the initial navigation
+	// if this context loads successfully, then the screenshot will have been captured
+	//
+	//		Note:	You're not supposed to delay the initial run context, so we use WithTimeout
+	//				 https://pkg.go.dev/github.com/chromedp/chromedp#Run
+
+	tabCtx, cancelTabCtx := context.WithTimeout(browserCtx, time.Duration(chrome.Timeout)*time.Second)
+	defer cancelTabCtx()
+
+	// Run the initial browser
+	if err := chromedp.Run(browserCtx); err != nil {
+		return nil, err
+	}
 
 	var buf []byte
 
+	// prevent browser crashes from locking the context (prevents hanging)
+	chromedp.ListenTarget(browserCtx, func(ev interface{}) {
+		if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+			cancelBrowserCtx()
+		}
+	})
+
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
+		if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+			cancelTabCtx()
+		}
+	})
+
 	// squash JavaScript dialog boxes such as alert();
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
 		if _, ok := ev.(*page.EventJavascriptDialogOpening); ok {
 			go func() {
-				if err := chromedp.Run(ctx,
+				if err := chromedp.Run(tabCtx,
 					page.HandleJavaScriptDialog(true),
 				); err != nil {
-					panic(err)
+					cancelTabCtx()
 				}
 			}()
 		}
 	})
 
-	if chrome.FullPage {
-		// straight from: https://github.com/chromedp/examples/blob/849108f7da9f743bcdaef449699ed57cb4053379/screenshot/main.go
+	// perform navigation on the tab context and attempt to take a clean screenshot
+	err := chromedp.Run(tabCtx, buildTasks(chrome, url, true, &buf))
 
-		// additional headers
-		if len(chrome.HeadersMap) > 0 {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				network.Enable(),
-				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.FullScreenshot(&buf, 100),
-			}); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.FullScreenshot(&buf, 100),
-			}); err != nil {
-				return nil, err
-			}
-		}
+	if errors.Is(err, context.DeadlineExceeded) {
+		// if the context timeout exceeded (e.g. on a long page load) then
+		// just take the screenshot this will take a screenshot of whatever
+		// loaded before failing
 
-	} else {
-		// normal viewport screenshot
+		// create a new tab context for this scenario, since our previous
+		// context expired using a context timeout delay again to help
+		// prevent hanging scenarios
+		newTabCtx, cancelNewTabCtx := context.WithTimeout(browserCtx, time.Duration(chrome.Timeout)*time.Second)
+		defer cancelNewTabCtx()
 
-		// additional headers
-		if len(chrome.HeadersMap) > 0 {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				network.Enable(),
-				network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)),
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.CaptureScreenshot(&buf),
-			}); err != nil {
-				return nil, err
+		// listen for crashes on this backup context as well
+		chromedp.ListenTarget(newTabCtx, func(ev interface{}) {
+			if _, ok := ev.(*inspector.EventTargetCrashed); ok {
+				cancelNewTabCtx()
 			}
-		} else {
-			if err := chromedp.Run(ctx, chromedp.Tasks{
-				chromedp.Navigate(url.String()),
-				chromedp.Sleep(time.Duration(chrome.Delay) * time.Second),
-				chromedp.CaptureScreenshot(&buf),
-			}); err != nil {
-				return nil, err
-			}
-		}
+		})
+
+		// attempt to capture the screenshot of the tab and replace error accordingly
+		err = chromedp.Run(newTabCtx, buildTasks(chrome, url, false, &buf))
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return buf, nil
+}
+
+// builds the chromedp tasks slice in a bit cleaner fashion with the various logic
+func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chromedp.Tasks {
+	var actions chromedp.Tasks
+
+	if len(chrome.HeadersMap) > 0 {
+		actions = append(actions, network.Enable(), network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)))
+	}
+
+	if doNavigate {
+		actions = append(actions, chromedp.Navigate(url.String()))
+		if chrome.Delay > 0 {
+			actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay)*time.Second))
+		}
+		actions = append(actions, chromedp.Stop())
+	}
+
+	if chrome.FullPage {
+		actions = append(actions, chromedp.FullScreenshot(buf, 100))
+	} else {
+		actions = append(actions, chromedp.CaptureScreenshot(buf))
+	}
+
+	return actions
 }
 
 // initalize the headers Map. we do this given the format chromedp wants
