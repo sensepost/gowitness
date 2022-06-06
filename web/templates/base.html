@@ -1,112 +1,194 @@
-{{ define "top" }}
+{{ define "header" }}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title>🔍 gowitness - a golang screenshotting tool by @leonjza</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-    <meta name="msapplication-TileColor" content="#206bc4"/>
-    <meta name="theme-color" content="#206bc4"/>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="mobile-web-app-capable" content="yes"/>
-    <meta name="HandheldFriendly" content="True"/>
-    <meta name="MobileOptimized" content="320"/>
-    <meta name="robots" content="noindex,nofollow,noarchive"/>
 
-    <!-- CSS files -->
-    <link href="/assets/css/tabler.min.css" rel="stylesheet"/>
-    <link href="/assets/css/demo.min.css" rel="stylesheet"/>
-    <style>
-      body {
-      	display: none;
-      }
-    </style>
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>🔍 gowitness - a golang screenshotting tool by @leonjza</title>
+  <meta name="msapplication-TileColor" content="#206bc4" />
+  <meta name="theme-color" content="#206bc4" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+  <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+  <meta name="description" content="gowitness - a golang, web screenshot utility using Chrome Headless" />
+  <meta name="twitter:site" content="@leonjza">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="gowitness">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:site_name" content="Tabler">
+  <meta property="og:type" content="object">
+  <meta property="og:title" content="gowitness">
+  <meta property="og:description" content="gowitness - a golang, web screenshot utility using Chrome Headless">
+  <!-- CSS files -->
+  <link href="/assets/css/tabler.min.css" rel="stylesheet" />
+</head>
 
-  <body class="antialiased theme-dark">
-    <div class="page">
-      
-      <!-- navigation -->
-      <header class="navbar navbar-expand-md navbar-dark">
-        <div class="container-xl">
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <a href="/" class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pr-0 pr-md-3">
-            🔍 gowitness
+<body class=" layout-fluid theme-dark">
+  <div class="page">
+
+    <!-- top nav bar -->
+    <header class="navbar navbar-expand-md navbar-light d-print-none">
+      <div class="container-xl">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
+          <a href="/">
+            🔍 gowitness - a golang, web screenshot utility using Chrome Headless
           </a>
-          <div class="collapse navbar-collapse" id="navbar-menu">
-            <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
-              <ul class="navbar-nav">
+        </h1>
+        <div class="navbar-nav flex-row order-md-last">
+          <div class="d-none d-md-flex">
+            <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Enable dark mode"
+              data-bs-toggle="tooltip" data-bs-placement="bottom">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+              </svg>
+            </a>
+            <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode"
+              data-bs-toggle="tooltip" data-bs-placement="bottom">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <circle cx="12" cy="12" r="4" />
+                <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
 
-                <li class="nav-item">
-                  <a class="nav-link" href="/" >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><rect x="8" y="8" width="8" height="8" rx="1"></rect><line x1="3" y1="8" x2="4" y2="8"></line><line x1="3" y1="16" x2="4" y2="16"></line><line x1="8" y1="3" x2="8" y2="4"></line><line x1="16" y1="3" x2="16" y2="4"></line><line x1="20" y1="8" x2="21" y2="8"></line><line x1="20" y1="16" x2="21" y2="16"></line><line x1="8" y1="20" x2="8" y2="21"></line><line x1="16" y1="20" x2="16" y2="21"></line></svg>
+    <!-- second nav bar -->
+    <div class="navbar-expand-md">
+      <div class="collapse navbar-collapse" id="navbar-menu">
+        <div class="navbar navbar-light">
+          <div class="container-xl">
+            <ul class="navbar-nav">
+
+              <li class="nav-item">
+                <a class="nav-link" href="/">
+                  <span class="nav-link-icon d-md-none d-lg-inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                      stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <polyline points="9 11 12 14 20 6" />
+                      <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+                    </svg>
+                  </span>
                   <span class="nav-link-title">
                     Gallery View
                   </span>
-                  </a>
-                </li>
+                </a>
+              </li>
 
-                <li class="nav-item">
-                  <a class="nav-link" href="/table" >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><line x1="4" y1="6" x2="9.5" y2="6"></line><line x1="4" y1="10" x2="9.5" y2="10"></line><line x1="4" y1="14" x2="9.5" y2="14"></line><line x1="4" y1="18" x2="9.5" y2="18"></line><line x1="14.5" y1="6" x2="20" y2="6"></line><line x1="14.5" y1="10" x2="20" y2="10"></line><line x1="14.5" y1="14" x2="20" y2="14"></line><line x1="14.5" y1="18" x2="20" y2="18"></line></svg>
+              <li class="nav-item">
+                <a class="nav-link" href="/table">
+                  <span class="nav-link-icon d-md-none d-lg-inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list" width="24"
+                      height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                      <line x1="9" y1="6" x2="20" y2="6"></line>
+                      <line x1="9" y1="12" x2="20" y2="12"></line>
+                      <line x1="9" y1="18" x2="20" y2="18"></line>
+                      <line x1="5" y1="6" x2="5" y2="6.01"></line>
+                      <line x1="5" y1="12" x2="5" y2="12.01"></line>
+                      <line x1="5" y1="18" x2="5" y2="18.01"></line>
+                    </svg>
+                  </span>
                   <span class="nav-link-title">
                     Table View
                   </span>
-                  </a>
-                </li>
+                </a>
+              </li>
 
-                <li class="nav-item">
-                  <a class="nav-link" href="/submit" >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"></path><polyline points="13 3 13 10 19 10 11 21 11 14 5 14 13 3"></polyline></svg>
-                  <span class="nav-link-title">
-                    Submit URL
+              <li class="nav-item">
+                <a class="nav-link" href="/submit">
+                  <span class="nav-link-icon d-md-none d-lg-inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-plus" width="24"
+                      height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <line x1="9" y1="12" x2="15" y2="12"></line>
+                      <line x1="12" y1="9" x2="12" y2="15"></line>
+                    </svg>
                   </span>
+                  <span class="nav-link-title">
+                    Submit New URL
+                  </span>
+                </a>
+              </li>
+
+            </ul>
+
+            <!-- search -->
+            <div class="my-2 my-md-0 flex-grow-1 flex-md-grow-0 order-first order-md-last">
+              <form action="." method="get">
+                <div class="input-icon">
+                  <span class="input-icon-addon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                      stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <circle cx="10" cy="10" r="7" />
+                      <line x1="21" y1="21" x2="15" y2="15" />
+                    </svg>
+                  </span>
+                  <input type="text" value="" class="form-control" placeholder="Search…"
+                    aria-label="Search screenshots">
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-wrapper">
+{{ end }}
+
+<!-- main content in child templates here -->
+
+{{ define "footer" }}
+      <footer class="footer footer-transparent d-print-none">
+        <div class="container-xl">
+          <div class="row text-center align-items-center flex-row-reverse">
+            <div class="col-lg-auto ms-lg-auto">
+              <ul class="list-inline list-inline-dots mb-0">
+                <li class="list-inline-item"><a href="https://github.com/sensepost/gowitness" target="_blank"
+                    class="link-secondary" rel="noopener">Source code</a></li>
+                <li class="list-inline-item">
+                  <a href="https://twitter.com/leonjza" target="_blank" class="link-secondary" rel="noopener">
+                    Made with
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-pink icon-filled icon-inline" width="24"
+                      height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428m0 0a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                    </svg>
+                    by @leonjza
                   </a>
                 </li>
-
               </ul>
             </div>
           </div>
         </div>
-      </header>
+      </footer>
+    </div>
 
-      <div class="content">
-        <div class="container-xl">
+  </div> <!-- class=page -->
+  <script src="/assets/js/tabler.min.js"></script>
+</body>
 
-{{ end }}
-
-{{ define "bottom" }}
-
-        </div>
-        <footer class="footer footer-transparent">
-          <div class="container">
-            <div class="row text-center align-items-center flex-row-reverse">
-              <div class="col-lg-auto ml-lg-auto">
-                <ul class="list-inline list-inline-dots mb-0">
-                  <li class="list-inline-item"><a href="https://twitter.com/leonjza" class="link-secondary">Twitter</a></li>
-                  <li class="list-inline-item"><a href="https://github.com/sensepost/gowitness" target="_blank" class="link-secondary">Source code</a></li>
-                  <li class="list-inline-item"><a href="https://tabler.io/" target="_blank" class="link-secondary">Tabler UI</a></li>
-                </ul>
-              </div>
-              <div class="col-12 col-lg-auto mt-3 mt-lg-0">
-                gowitness
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div> <!-- ./page -->
-
-    <!-- Tabler Core -->
-    <script src="/assets/js/tabler.min.js"></script>
-    <script>
-      document.body.style.display = "block"
-    </script>
-  </body>
 </html>
 {{ end }}
