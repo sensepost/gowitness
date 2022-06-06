@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -40,9 +41,11 @@ $ gowitness server --addr 0.0.0.0:8080`,
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the server command help for more information")
 		}
 
-		http.HandleFunc("/", handler)
+		r := gin.Default()
+		r.GET("/", handler)
+
 		log.Info().Str("address", options.ServerAddr).Msg("server listening")
-		if err := http.ListenAndServe(options.ServerAddr, nil); err != nil {
+		if err := r.Run(options.ServerAddr); err != nil {
 			log.Fatal().Err(err).Msg("webserver failed")
 		}
 	},
@@ -56,32 +59,43 @@ func init() {
 }
 
 // handler is the HTTP handler for the web service this command exposes
-func handler(w http.ResponseWriter, r *http.Request) {
-	rawURL := strings.TrimSpace(r.URL.Query().Get("url"))
+func handler(c *gin.Context) {
+	rawURL := strings.TrimSpace(c.Query("url"))
 	if rawURL == "" {
-		http.Error(w, "url parameter missing. eg ?url=https://google.com", http.StatusNotAcceptable)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "url parameter missing. eg ?url=https://google.com",
+		})
 		return
 	}
 
 	url, err := url.Parse(rawURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
 	if !options.AllowInsecureURIs {
 		if !strings.HasPrefix(url.Scheme, "http") {
-			http.Error(w, "only http(s) urls are accepted", http.StatusNotAcceptable)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "only http(s) urls are accepted",
+			})
 			return
 		}
 	}
 
 	buf, err := chrm.Screenshot(url)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/png")
-	w.Write(buf)
+	c.Data(http.StatusOK, "image/png", buf)
 }

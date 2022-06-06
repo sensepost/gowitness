@@ -1,5 +1,5 @@
-{{ define "table" }}
-{{ template "header" }}
+{{ template "top" . }}
+
 <!-- Page title -->
 <div class="page-header">
   <div class="row align-items-center">
@@ -23,7 +23,7 @@
           </tr>
         </thead>
         <tbody>
-          {{ range .}}
+          {{ range .Data}}
           <tr>
             <td class="text-muted">
               <a href="{{ .URL }}">{{ .URL }}</a>
@@ -33,7 +33,7 @@
               {{ .Title }}
             </td>
             <td>
-              <a href="/details?id={{ .ID }}">Detail</a>
+              <a href="/details/{{ .ID }}">Detail</a>
             </td>
           </tr>
           {{ end }}
@@ -42,5 +42,5 @@
     </div>
   </div>
 </div>
-{{ template "footer" }}
-{{ end }}
+
+{{ template "bottom" . }}

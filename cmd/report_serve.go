@@ -13,10 +13,11 @@ import (
 	"github.com/sensepost/gowitness/storage"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
-	tmpl *template.Template
 	rsDB *gorm.DB
 )
 
@@ -47,8 +48,6 @@ warning though, that also means that someone may request a URL like file:///etc/
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the report serve command help for more information")
 		}
 
-		tmpl = template.Must(template.ParseFS(Templates, "web/templates/*.html"))
-
 		// db
 		dbh, err := db.Get()
 		if err != nil {
@@ -59,24 +58,37 @@ warning though, that also means that someone may request a URL like file:///etc/
 		log.Info().Str("path", db.Path).Msg("db path")
 		log.Info().Str("path", options.ScreenshotPath).Msg("screenshot path")
 
+		if options.Debug {
+			gin.SetMode(gin.DebugMode)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
+
+		r := gin.Default()
+
+		tmpl := template.Must(template.New("").ParseFS(Templates, "web/templates/*.html"))
+		r.SetHTMLTemplate(tmpl)
+
 		// routes
-		// messing with the trailing /'s breaks routing in confusing ways :<
-		http.HandleFunc("/", indexHandler)
-		http.HandleFunc("/table/", tableHandler)
-		http.HandleFunc("/details", detailHandler)
-		http.HandleFunc("/submit", submitHandler)
+		r.GET("/", indexHandler)
+		r.GET("/table", tableHandler)
+		r.GET("/details/:id", detailHandler)
+		r.GET("/submit", getSubmitHandler)
+		r.POST("/submit", submitHandler)
 
 		// static assets & screenshots
-		assetFs, err := fs.Sub(Assets, "web")
+		assetFs, err := fs.Sub(Assets, "web/assets")
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not fs.Sub Assets")
 		}
-		// assetsFs := http.FileServer(http.FS(Assets))
-		http.Handle("/assets/", http.FileServer(http.FS(assetFs)))
-		http.Handle("/screenshots/", http.StripPrefix("/screenshots", http.FileServer(http.Dir(options.ScreenshotPath))))
 
+		// assets & screenshots
+		r.StaticFS("/assets/", http.FS(assetFs))
+		r.StaticFS("/screenshots", http.Dir(options.ScreenshotPath))
+
+		// boot the http server
 		log.Info().Str("address", options.ServerAddr).Msg("server listening")
-		if err := http.ListenAndServe(options.ServerAddr, nil); err != nil {
+		if err := r.Run(options.ServerAddr); err != nil {
 			log.Fatal().Err(err).Msg("webserver failed")
 		}
 	},
@@ -89,79 +101,92 @@ func init() {
 	reportServeCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
 }
 
+// getSubmitHandler handles generating the view to submit urls
+func getSubmitHandler(c *gin.Context) {
+
+	c.HTML(http.StatusOK, "submit.html", nil)
+}
+
 // submitHandler handles url submissions
-func submitHandler(w http.ResponseWriter, r *http.Request) {
+func submitHandler(c *gin.Context) {
 
-	switch r.Method {
-	case "GET":
-		t := tmpl.Lookup("submit.html")
-		err := t.ExecuteTemplate(w, "submit", nil)
-		if err != nil {
-			panic(err)
-		}
-	case "POST":
-		// prepare target
-		url, err := url.Parse(strings.TrimSpace(r.FormValue("url")))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if !options.AllowInsecureURIs {
-			if !strings.HasPrefix(url.Scheme, "http") {
-				http.Error(w, "only http(s) urls are accepted", http.StatusNotAcceptable)
-				return
-			}
-		}
-
-		fn := lib.SafeFileName(url.String())
-		fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
-
-		preflight, err := chrm.Preflight(url)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var rid uint
-		if rsDB != nil {
-			if rid, err = chrm.StorePreflight(rsDB, preflight, fn); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		buf, err := chrm.Screenshot(url)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if rid > 0 {
-			http.Redirect(w, r, "/details?id="+strconv.Itoa(int(rid)), http.StatusMovedPermanently)
-			return
-		}
-
-		http.Redirect(w, r, "/submit", http.StatusMovedPermanently)
+	// prepare target
+	url, err := url.Parse(strings.TrimSpace(c.PostForm("url")))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
 	}
+
+	if !options.AllowInsecureURIs {
+		if !strings.HasPrefix(url.Scheme, "http") {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "only http(s) urls are accepted",
+			})
+			return
+		}
+	}
+
+	fn := lib.SafeFileName(url.String())
+	fp := lib.ScreenshotPath(fn, url, options.ScreenshotPath)
+
+	preflight, err := chrm.Preflight(url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var rid uint
+	if rsDB != nil {
+		if rid, err = chrm.StorePreflight(rsDB, preflight, fn); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+	}
+
+	buf, err := chrm.Screenshot(url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if rid > 0 {
+		c.Redirect(http.StatusMovedPermanently, "/details/"+strconv.Itoa(int(rid)))
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, "/submit")
 }
 
 // detailHandler gets all of the details for a particular url id
-func detailHandler(w http.ResponseWriter, r *http.Request) {
+func detailHandler(c *gin.Context) {
 
-	d := strings.TrimSpace(r.URL.Query().Get("id"))
-	if d == "" {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
-		return
-	}
-	id, err := strconv.Atoi(d)
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -174,34 +199,31 @@ func detailHandler(w http.ResponseWriter, r *http.Request) {
 		Preload("Technologies").
 		First(&url, id)
 
-	// fmt.Printf("%+v\n", url)
-
-	t := tmpl.Lookup("detail.html")
-	err = t.ExecuteTemplate(w, "detail", url)
-	if err != nil {
-		panic(err)
-	}
+	c.HTML(http.StatusOK, "detail.html", gin.H{
+		"Data": url,
+	})
 }
 
 // tableHandler handles the URL table view
-func tableHandler(w http.ResponseWriter, r *http.Request) {
+func tableHandler(c *gin.Context) {
 
 	var urls []storage.URL
 	rsDB.Find(&urls)
 
-	t := tmpl.Lookup("table.html")
-	err := t.ExecuteTemplate(w, "table", urls)
-	if err != nil {
-		panic(err)
-	}
+	c.HTML(http.StatusOK, "table.html", gin.H{
+		"Data": urls,
+	})
 }
 
 // indexHandler handles the index page. this is the main gallery view
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(c *gin.Context) {
 
-	currPage, limit, err := getPageLimit(r)
+	currPage, limit, err := getPageLimit(c)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -212,39 +234,38 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// perception hashing
-	if strings.TrimSpace(r.URL.Query().Get("perception_sort")) == "true" {
+	if strings.TrimSpace(c.Query("perception_sort")) == "true" {
 		pager.OrderBy = []string{"perception_hash desc"}
 	}
 
 	// search
-	if strings.TrimSpace(r.URL.Query().Get("search")) != "" {
+	if strings.TrimSpace(c.Query("search")) != "" {
 		pager.FilterBy = append(pager.FilterBy, lib.Filter{
 			Column: "title",
-			Value:  r.URL.Query().Get("search"),
+			Value:  c.Query("search"),
 		})
 	}
 
 	var urls []storage.URL
 	page, err := pager.Page(&urls)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
-	// fmt.Printf("%+v\n", currPage)
-
-	t := tmpl.Lookup("gallery.html")
-	err = t.ExecuteTemplate(w, "gallery", page)
-	if err != nil {
-		panic(err)
-	}
+	c.HTML(http.StatusOK, "gallery.html", gin.H{
+		"Data": page,
+	})
 }
 
 // getPageLimit gets the limit and page query string values from a request
-func getPageLimit(r *http.Request) (page int, limit int, err error) {
+func getPageLimit(c *gin.Context) (page int, limit int, err error) {
 
-	pageS := strings.TrimSpace(r.URL.Query().Get("page"))
-	limitS := strings.TrimSpace(r.URL.Query().Get("limit"))
+	pageS := strings.TrimSpace(c.Query("page"))
+	limitS := strings.TrimSpace(c.Query("limit"))
 
 	if pageS == "" {
 		pageS = "-1"

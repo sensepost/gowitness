@@ -1,5 +1,5 @@
-{{ define "detail" }}
-{{ template "header" }}
+{{ template "top" . }}
+
 <!-- Page title -->
 <div class="page-header">
   <div class="row align-items-center">
@@ -9,7 +9,7 @@
       </h2>
     </div>
     <div class="col-auto">
-      <div class="text-muted text-h5 mt-2">{{ .URL }}</div>
+      <div class="text-muted text-h5 mt-2">{{ .Data.URL }}</div>
     </div>
   </div>
 </div>
@@ -18,24 +18,24 @@
 
   <div class="col-sm-6 col-lg-4">
     <div class="card card-sm">
-      <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
-        <img loading="lazy" src="/screenshots/{{ .Filename }}" 
+      <a href="/screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
+        <img loading="lazy" src="/screenshots/{{ .Data.Filename }}" 
              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
       </a>
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="lh-sm">
-            <div>{{ .URL }}</div>
-            <div class="text-muted">{{ .Title }}</div>
+            <div>{{ .Data.URL }}</div>
+            <div class="text-muted">{{ .Data.Title }}</div>
             <div>              
-              {{ range .Technologies }}
+              {{ range .Data.Technologies }}
               <span class="badge bg-blue">{{ .Value}}</span>
               {{ end }}
             </div>
           </div>
           <div class="ml-auto">
             <a href="#" class="text-muted">
-              {{ .ResponseCode}}
+              HTTP {{ .Data.ResponseCode}}
             </a>
           </div>
         </div>
@@ -53,9 +53,9 @@
           </div>
           <div class="card-body">
             <p>
-              <kbd>{{ .URL }}</kbd> responded with <kbd>{{ .ResponseReason}}</kbd>
+              <kbd>{{ .Data.URL }}</kbd> responded with <kbd>{{ .Data.ResponseReason}}</kbd>
               <span>
-                <a href="{{ .URL }}" target="_blank" class="btn-sm btn-light float-right">
+                <a href="{{ .Data.URL }}" target="_blank" class="btn-sm btn-light float-right">
                   Open URL
                 </a>
               </span>
@@ -79,7 +79,7 @@
               </tr>
             </thead>
             <tbody>
-              {{ range .Headers }}
+              {{ range .Data.Headers }}
               <tr>
                 <td class="text-muted text-nowrap">
                   <kbd>{{ .Key }}</kbd>
@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    {{ if .TLS }}
+    {{ if .Data.TLS }}
 
     <div class="card">
       <div class="card-header">
@@ -113,10 +113,10 @@
             <tbody>
               <tr>
                 <td class="text-muted">
-                  <kbd>{{ .TLS.ServerName }}</kbd>
+                  <kbd>{{ .Data.TLS.ServerName }}</kbd>
                 </td>
                 <td class="text-muted">
-                  <kbd>{{ .TLS.Version }}</kbd>
+                  <kbd>{{ .Data.TLS.Version }}</kbd>
                 </td>
               </tr>
             </tbody>
@@ -140,7 +140,7 @@
               </tr>
             </thead>
             <tbody>
-              {{ range .TLS.TLSCertificates }}
+              {{ range .Data.TLS.TLSCertificates }}
               <tr>
                 <td class="text-muted">
                   <kbd>{{ .SubjectCommonName }}</kbd>
@@ -175,5 +175,4 @@
   </div>
 </div>
 
-{{ template "footer" }}
-{{ end }}
+{{ template "bottom" . }}
