@@ -66,7 +66,7 @@ warning though, that also means that someone may request a URL like file:///etc/
 
 		r := gin.Default()
 
-		tmpl := template.Must(template.New("").ParseFS(Templates, "web/templates/*.html"))
+		tmpl := template.Must(template.New("").ParseFS(Embedded, "web/templates/*.html"))
 		r.SetHTMLTemplate(tmpl)
 
 		// routes
@@ -77,7 +77,7 @@ warning though, that also means that someone may request a URL like file:///etc/
 		r.POST("/submit", submitHandler)
 
 		// static assets & screenshots
-		assetFs, err := fs.Sub(Assets, "web/assets")
+		assetFs, err := fs.Sub(Embedded, "web/assets")
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not fs.Sub Assets")
 		}

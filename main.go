@@ -7,15 +7,12 @@ import (
 )
 
 var (
-	//go:embed web/assets/*
+	//go:embed web/assets/* web/templates/*
 	assets embed.FS
-	//go:embed web/templates/*
-	templates embed.FS
 )
 
 func main() {
-	cmd.Assets = assets
-	cmd.Templates = templates
+	cmd.Embedded = assets
 
 	cmd.Execute()
 }
