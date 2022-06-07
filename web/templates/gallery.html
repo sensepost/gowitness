@@ -19,7 +19,7 @@
       <div class="col-12 col-md-auto ms-auto d-print-none">
         <div class="btn-list">
           {{ if .Data.Ordered }}
-          <a href="/?perception_sort=false&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
+          <a href="/gallery?perception_sort=false&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
             class="btn btn-primary d-none d-sm-inline-block">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-sort-ascending-2" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -33,7 +33,7 @@
             Disable Perception Sort
           </a>
           {{ else }}
-          <a href="/?perception_sort=true&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
+          <a href="/gallery?perception_sort=true&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
             class="btn btn-primary d-none d-sm-inline-block">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-sort-descending-2" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -126,7 +126,7 @@
         <!-- first page -->
         <li class="page-item {{ if le .Data.Page 1 }}disabled{{ end }}">
           <a class="page-link"
-            href="/?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ .Data.PrevPage }}"
+            href="/gallery?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ .Data.PrevPage }}"
             tabindex="-1" {{ if le .Data.Page 1 }}aria-disabled="true" {{ end }}>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
               stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -141,7 +141,7 @@
         {{ range $p := .Data.PrevPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href="/?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
+            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
             {{ $p }}
           </a>
         </li>
@@ -156,7 +156,7 @@
         {{ range $p := .Data.NextPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href="/?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
+            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
             {{ $p }}
           </a>
         </li>
@@ -165,7 +165,7 @@
         <!-- next -->
         <li class="page-item {{ if eq .Data.Page .Data.NextPage }}disabled{{ end }}">
           <a class="page-link"
-            href="/?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ .Data.NextPage }}">
+            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ .Data.NextPage }}">
             next
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
               stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
