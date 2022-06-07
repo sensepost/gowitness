@@ -75,7 +75,7 @@ $ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 
 		r := gin.Default()
 
-		tmpl := template.Must(template.New("").ParseFS(Embedded, "web/templates/*.html"))
+		tmpl := template.Must(template.New("").ParseFS(Embedded, "web/ui-templates/*.html"))
 		r.SetHTMLTemplate(tmpl)
 
 		// web ui routes
