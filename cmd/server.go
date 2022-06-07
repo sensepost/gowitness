@@ -27,6 +27,9 @@ var serverCmd = &cobra.Command{
 	Short: "Starts a webserver that serves the report interface, api and screenshot tool",
 	Long: `Starts a webserver that serves the report interface, api and screenshot tool.
 
+The report server is availabe in the root path, aka /.
+The API is available from the /api path.
+
 The global database and screenshot paths should be set to the same as
 what they were when a scan was run. The report server also has the ability
 to screenshot ad-hoc URLs provided to the submission page.
@@ -43,12 +46,10 @@ or fronting this server with an authentication aware reverse proxy.
 Allowed URLs, by default, need to start with http:// or https://. If you need
 this restriction lifted, add the --allow-insecure-uri / -A flag. A word of 
 warning though, that also means that someone may request a URL like file:///etc/passwd.
-
-Assuming the server is hosted on localhost, an HTTP GET request to
-take a screenshot of google.com would be:
-	http://localhost:7171/?url=https://www.google.com`,
+`,
 	Example: `$ gowitness server
-$ gowitness server --addr 0.0.0.0:8080`,
+$ gowitness server --addr 0.0.0.0:8080
+$ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
@@ -77,7 +78,7 @@ $ gowitness server --addr 0.0.0.0:8080`,
 		tmpl := template.Must(template.New("").ParseFS(Embedded, "web/templates/*.html"))
 		r.SetHTMLTemplate(tmpl)
 
-		// routes
+		// web ui routes
 		r.GET("/", dashboardHandler)
 		r.GET("/gallery", galleryHandler)
 		r.GET("/table", tableHandler)
@@ -85,7 +86,7 @@ $ gowitness server --addr 0.0.0.0:8080`,
 		r.GET("/submit", getSubmitHandler)
 		r.POST("/submit", submitHandler)
 
-		// static assets & screenshots
+		// static assets & raw screenshot files
 		assetFs, err := fs.Sub(Embedded, "web/assets")
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not fs.Sub Assets")
@@ -95,10 +96,13 @@ $ gowitness server --addr 0.0.0.0:8080`,
 		r.StaticFS("/assets/", http.FS(assetFs))
 		r.StaticFS("/screenshots", http.Dir(options.ScreenshotPath))
 
-		// API
+		// json api routes
 		api := r.Group("/api")
 		{
-			api.GET("/", handler)
+			api.GET("/list", apiURLHandler)
+			api.GET("/detail/:id", apiDetailHandler)
+			api.GET("/detail/:id/screenshot", apiDetailScreenshotHandler)
+			api.POST("/screenshot", apiScreenshotHandler)
 		}
 
 		log.Info().Str("address", options.ServerAddr).Msg("server listening")
@@ -114,6 +118,9 @@ func init() {
 	serverCmd.Flags().StringVarP(&options.ServerAddr, "address", "a", "localhost:7171", "server listening address")
 	serverCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
 }
+
+// reporting web ui handlers
+// --
 
 // dashboardHandler handles dashboard requests
 func dashboardHandler(c *gin.Context) {
@@ -333,18 +340,89 @@ func getPageLimit(c *gin.Context) (page int, limit int, err error) {
 	return
 }
 
-// handler is the HTTP handler for the web service this command exposes
-func handler(c *gin.Context) {
-	rawURL := strings.TrimSpace(c.Query("url"))
-	if rawURL == "" {
+// API request handlers follow here
+// --
+
+// apiURLHandler returns the list of URLS in the database
+func apiURLHandler(c *gin.Context) {
+
+	// use gorm SmartSelect Fields to filter URL
+	type apiURL struct {
+		ID           uint64
+		URL          string
+		FinalURL     string
+		ResponseCode int
+		Title        string
+	}
+
+	var urls []apiURL
+	rsDB.Model(&storage.URL{}).Find(&urls)
+
+	c.JSON(http.StatusOK, urls)
+}
+
+// apiDetailHandler handles a detail request for screenshot information
+func apiDetailHandler(c *gin.Context) {
+
+	var url storage.URL
+	rsDB.
+		Preload("Headers").
+		Preload("TLS").
+		Preload("TLS.TLSCertificates").
+		Preload("TLS.TLSCertificates.DNSNames").
+		Preload("Technologies").
+		First(&url, c.Param("id"))
+
+	if url.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, url)
+}
+
+// apiDetailScreenshotHandler serves the screenshot for a specific url id
+func apiDetailScreenshotHandler(c *gin.Context) {
+	var url storage.URL
+	rsDB.First(&url, c.Param("id"))
+
+	if url.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	p := options.ScreenshotPath + "/" + url.Filename
+
+	screenshot, err := ioutil.ReadFile(p)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": "url parameter missing. eg ?url=https://google.com",
+			"stauts": "errir",
+			"error":  err.Error(),
+		})
+	}
+
+	c.Data(http.StatusOK, "image/png", screenshot)
+}
+
+// apiScreenshot takes a screenshot of a URL
+func apiScreenshotHandler(c *gin.Context) {
+
+	type Request struct {
+		URL string `json:"url"`
+		// set oneshot to "true" if you just want to see the screenshot, and not add it to the report
+		OneShot string `json:"oneshot"`
+	}
+
+	var requestData Request
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "error",
+			"error":  err.Error(),
 		})
 		return
 	}
 
-	url, err := url.Parse(rawURL)
+	targetURL, err := url.Parse(requestData.URL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -354,7 +432,7 @@ func handler(c *gin.Context) {
 	}
 
 	if !options.AllowInsecureURIs {
-		if !strings.HasPrefix(url.Scheme, "http") {
+		if !strings.HasPrefix(targetURL.Scheme, "http") {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
 				"message": "only http(s) urls are accepted",
@@ -363,8 +441,26 @@ func handler(c *gin.Context) {
 		}
 	}
 
-	buf, err := chrm.Screenshot(url)
-	if err != nil {
+	// prepare request headers
+	chrm.PrepareHeaderMap()
+
+	// deliver a oneshot screenshot to the user
+	if requestData.OneShot == "true" {
+		buf, err := chrm.Screenshot(targetURL)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.Data(http.StatusOK, "image/png", buf)
+		return
+	}
+
+	// queue a fetch session for the url
+	if err = options.PrepareScreenshotPath(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -372,5 +468,19 @@ func handler(c *gin.Context) {
 		return
 	}
 
-	c.Data(http.StatusOK, "image/png", buf)
+	go func(u *url.URL) {
+		p := &lib.Processor{
+			Logger:         options.Logger,
+			Db:             rsDB,
+			Chrome:         chrm,
+			URL:            u,
+			ScreenshotPath: options.ScreenshotPath,
+		}
+
+		p.Gowitness()
+	}(targetURL)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status": "created",
+	})
 }
