@@ -14,7 +14,7 @@ import (
 // reportListCmd represents the reportList command
 var reportListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List entries in the gowitness database in various formats",
+	Short: "list entries in the gowitness database in various formats",
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 

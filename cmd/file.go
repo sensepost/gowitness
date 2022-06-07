@@ -14,7 +14,7 @@ import (
 // fileCmd represents the file command
 var fileCmd = &cobra.Command{
 	Use:   "file [input]",
-	Short: "screenshot URLs sourced from a file or stdin",
+	Short: "Screenshot URLs sourced from a file or stdin",
 	Long: `Screenshot URLs sourced from a file or stdin.
 
 URLs in the source file should be newline separated. Invalid URLs are simply
