@@ -20,6 +20,9 @@ var reportExportCmd = &cobra.Command{
 	Short: "Export an HTML report of all screenshots",
 	Long: `Export an HTML report of all screenshots.
 
+The exported report will be a completely offline viewable (as in, there is
+no need for the embedded report server). The file name that needs to be
+specified will be the target for the final ZIP file that will be created.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
