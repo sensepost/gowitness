@@ -21,9 +21,12 @@ type URL struct {
 	Filename       string
 	PerceptionHash string
 
+	TLS TLS
+
 	Headers      []Header
-	TLS          TLS
 	Technologies []Technologie
+	Console      []ConsoleLog
+	Network      []NetworkLog
 }
 
 // AddHeader adds a new header to a URL
@@ -83,6 +86,7 @@ type Header struct {
 	gorm.Model
 
 	URLID uint
+
 	Key   string
 	Value string
 }
@@ -92,6 +96,7 @@ type Technologie struct {
 	gorm.Model
 
 	URLID uint
+
 	Value string
 }
 
@@ -99,7 +104,8 @@ type Technologie struct {
 type TLS struct {
 	gorm.Model
 
-	URLID           uint
+	URLID uint
+
 	Version         uint16
 	ServerName      string
 	TLSCertificates []TLSCertificate
@@ -109,7 +115,8 @@ type TLS struct {
 type TLSCertificate struct {
 	gorm.Model
 
-	TLSID              uint
+	TLSID uint
+
 	Raw                []byte
 	DNSNames           []TLSCertificateDNSName
 	SubjectCommonName  string
@@ -129,4 +136,28 @@ type TLSCertificateDNSName struct {
 
 	TLSCertificateID uint
 	Name             string
+}
+
+// ConsoleLog contains the console log, and exceptions emitted
+type ConsoleLog struct {
+	gorm.Model
+
+	URLID uint
+
+	Type  string
+	Value string
+}
+
+// NetworkLog contains Chrome networks events that were emitted
+type NetworkLog struct {
+	gorm.Model
+
+	URLID uint
+
+	RequestID  string
+	StatusCode int64
+	URL        string
+	FinalURL   string
+	IP         string
+	Error      string
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/storage"
 	"gorm.io/gorm"
@@ -36,12 +37,39 @@ type Chrome struct {
 	wappalyzer *Wappalyzer
 }
 
+type ConsoleLog struct {
+	URLID uint
+
+	Type  string
+	Value string
+}
+
+type NetworkLog struct {
+	URLID uint
+
+	RequestID  string
+	StatusCode int64
+	URL        string
+	FinalURL   string // may differ from URL if there were redirects
+	IP         string
+	Error      string
+}
+
 // PreflightResult contains the results of a preflight run
 type PreflightResult struct {
 	URL              *url.URL
 	HTTPResponse     *http.Response
 	HTTPTitle        string
 	HTTPTechnologies []string
+}
+
+// ScreenshotResult contains the results of a screenshot
+type ScreenshotResult struct {
+	Screenshot []byte
+
+	// logging
+	ConsoleLog []ConsoleLog
+	NetworkLog []NetworkLog
 }
 
 // NewChrome returns a new initialised Chrome struct
@@ -119,8 +147,8 @@ func (chrome *Chrome) Preflight(url *url.URL) (result *PreflightResult, err erro
 	return
 }
 
-// StorePreflight will store preflight info to a DB
-func (chrome *Chrome) StorePreflight(db *gorm.DB, preflight *PreflightResult, filename string) (uint, error) {
+// StoreRequest will store request info to the DB
+func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, screenshot *ScreenshotResult, filename string) (uint, error) {
 
 	record := &storage.URL{
 		URL:            preflight.URL.String(),
@@ -166,14 +194,37 @@ func (chrome *Chrome) StorePreflight(db *gorm.DB, preflight *PreflightResult, fi
 		}
 	}
 
+	// add console logs
+	for _, log := range screenshot.ConsoleLog {
+		record.Console = append(record.Console, storage.ConsoleLog{
+			Type:  log.Type,
+			Value: log.Value,
+		})
+	}
+
+	// add network logs
+	for _, log := range screenshot.NetworkLog {
+		record.Network = append(record.Network, storage.NetworkLog{
+			RequestID:  log.RequestID,
+			StatusCode: log.StatusCode,
+			URL:        log.URL,
+			FinalURL:   log.FinalURL,
+			IP:         log.IP,
+			Error:      log.Error,
+		})
+	}
+
 	db.Create(record)
 	return record.ID, nil
 }
 
-// Screenshot takes a screenshot of a URL and saves it to destination
+// Screenshot takes a screenshot of a URL, optionally saving network and console events.
 // Ref:
 // 	https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go
-func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
+func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err error) {
+
+	// prepare a new screenshotResult
+	result = &ScreenshotResult{}
 
 	// setup chromedp default options
 	options := []chromedp.ExecAllocatorOption{}
@@ -210,8 +261,6 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		return nil, err
 	}
 
-	var buf []byte
-
 	// prevent browser crashes from locking the context (prevents hanging)
 	chromedp.ListenTarget(browserCtx, func(ev interface{}) {
 		if _, ok := ev.(*inspector.EventTargetCrashed); ok {
@@ -238,8 +287,66 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		}
 	})
 
+	// log console.* events, as well as any thrown exceptions
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *runtime.EventConsoleAPICalled:
+
+			// use a buffer to read each arg passed to the console.* call
+			buf := ""
+			for _, arg := range ev.Args {
+				buf += string(arg.Value)
+			}
+
+			result.ConsoleLog = append(result.ConsoleLog, ConsoleLog{
+				Type:  "console." + string(ev.Type),
+				Value: buf,
+			})
+
+		case *runtime.EventExceptionThrown:
+			result.ConsoleLog = append(result.ConsoleLog, ConsoleLog{
+				Type:  "exception",
+				Value: ev.ExceptionDetails.Error(),
+			})
+		}
+	})
+
+	// keep a keyed reference so we can map network logs to requestid's and
+	// update them as responses are received
+	networkLog := make(map[string]NetworkLog)
+
+	// log network events
+	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *network.EventRequestWillBeSent:
+			// record a fresh request that will be sent
+			networkLog[string(ev.RequestID)] = NetworkLog{
+				RequestID: string(ev.RequestID),
+				URL:       ev.Request.URL,
+			}
+		case *network.EventResponseReceived:
+			// update the networkLog map with updated information about response
+			if entry, ok := networkLog[string(ev.RequestID)]; ok {
+				entry.StatusCode = ev.Response.Status
+				entry.FinalURL = ev.Response.URL
+				entry.IP = ev.Response.RemoteIPAddress
+
+				// upsert
+				networkLog[string(ev.RequestID)] = entry
+			}
+		case *network.EventLoadingFailed:
+			// update the network map with the error experienced
+			if entry, ok := networkLog[string(ev.RequestID)]; ok {
+				entry.Error = ev.ErrorText
+
+				// upsert
+				networkLog[string(ev.RequestID)] = entry
+			}
+		}
+	})
+
 	// perform navigation on the tab context and attempt to take a clean screenshot
-	err := chromedp.Run(tabCtx, buildTasks(chrome, url, true, &buf))
+	err = chromedp.Run(tabCtx, buildTasks(chrome, url, true, &result.Screenshot))
 
 	if errors.Is(err, context.DeadlineExceeded) {
 		// if the context timeout exceeded (e.g. on a long page load) then
@@ -260,14 +367,19 @@ func (chrome *Chrome) Screenshot(url *url.URL) ([]byte, error) {
 		})
 
 		// attempt to capture the screenshot of the tab and replace error accordingly
-		err = chromedp.Run(newTabCtx, buildTasks(chrome, url, false, &buf))
+		err = chromedp.Run(newTabCtx, buildTasks(chrome, url, false, &result.Screenshot))
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return buf, nil
+	// append the networklog
+	for _, log := range networkLog {
+		result.NetworkLog = append(result.NetworkLog, log)
+	}
+
+	return result, nil
 }
 
 // buildTasks builds the chromedp tasks slice

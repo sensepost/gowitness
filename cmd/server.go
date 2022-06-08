@@ -196,18 +196,7 @@ func submitHandler(c *gin.Context) {
 		return
 	}
 
-	var rid uint
-	if rsDB != nil {
-		if rid, err = chrm.StorePreflight(rsDB, preflight, fn); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status":  "error",
-				"message": err.Error(),
-			})
-			return
-		}
-	}
-
-	buf, err := chrm.Screenshot(url)
+	result, err := chrm.Screenshot(url)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -216,7 +205,18 @@ func submitHandler(c *gin.Context) {
 		return
 	}
 
-	if err := ioutil.WriteFile(fp, buf, 0644); err != nil {
+	var rid uint
+	if rsDB != nil {
+		if rid, err = chrm.StoreRequest(rsDB, preflight, result, fn); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+	}
+
+	if err := ioutil.WriteFile(fp, result.Screenshot, 0644); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -251,6 +251,8 @@ func detailHandler(c *gin.Context) {
 		Preload("TLS.TLSCertificates").
 		Preload("TLS.TLSCertificates.DNSNames").
 		Preload("Technologies").
+		Preload("Console").
+		Preload("Network").
 		First(&url, id)
 
 	c.HTML(http.StatusOK, "detail.html", gin.H{
@@ -446,7 +448,7 @@ func apiScreenshotHandler(c *gin.Context) {
 
 	// deliver a oneshot screenshot to the user
 	if requestData.OneShot == "true" {
-		buf, err := chrm.Screenshot(targetURL)
+		result, err := chrm.Screenshot(targetURL)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -455,7 +457,7 @@ func apiScreenshotHandler(c *gin.Context) {
 			return
 		}
 
-		c.Data(http.StatusOK, "image/png", buf)
+		c.Data(http.StatusOK, "image/png", result.Screenshot)
 		return
 	}
 

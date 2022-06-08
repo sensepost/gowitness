@@ -22,48 +22,127 @@
   <div class="container-xl">
     <div class="row">
 
-      <div class="col-sm-6 col-md-6 col-lg-6 col-xl-4">
+      <!-- left column -->
+      <div class="col-sm-12 col-md-4 col-lg-5 col-xl-5">
+        <div class="row row-cards">
 
-        <div class="card card-sm">
-          <a href="/screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
-            <img loading="lazy" src="/screenshots/{{ .Data.Filename }}"
-              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
-          </a>
+          <div class="col-12">
+            <div class="card card-sm">
+              <a href="/screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
+                <img loading="lazy" src="/screenshots/{{ .Data.Filename }}"
+                  onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
+              </a>
 
-          <div class="card-body">
-
-            <div class="d-flex align-items-center">
-              <div>
-                <div>{{ .Data.URL }}</div>
-                <div class="text-muted">{{ .Data.Title }}</div>
-                <div>
-                  {{ range .Data.Technologies }}
-                  <span class="badge bg-blue">{{ .Value}}</span>
-                  {{ end }}
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div>{{ .Data.URL }}</div>
+                    <div class="text-muted">{{ .Data.Title }}</div>
+                    <div>
+                      {{ range .Data.Technologies }}
+                      <span class="badge bg-blue">{{ .Value}}</span>
+                      {{ end }}
+                    </div>
+                  </div>
+                  <div class="ms-auto text-muted">
+                    HTTP {{ .Data.ResponseCode}}
+                  </div>
                 </div>
               </div>
-              <div class="ms-auto">
-                <a href="#" class="text-muted">
-                  HTTP {{ .Data.ResponseCode}}
-                </a>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Console Log</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .Data.Console }}
+                    <tr>
+                      <td class="text-muted text-nowrap">
+                        {{ .Type }}
+                      </td>
+                      <td class="text-muted">
+                        <pre>{{ .Value }}</pre>
+                      </td>
+                    </tr>
+                    {{ end }}
+                  </tbody>
+                </table>
               </div>
             </div>
-
           </div>
+
+          {{ if .Data.TLS }}
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">TLS Information</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-vcenter">
+                  <thead>
+                    <tr>
+                      <th>Subject CN</th>
+                      <th>Issuer CN</th>
+                      <th>Sig Algorithm</th>
+                      <th>DNS Names</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .Data.TLS.TLSCertificates }}
+                    <tr>
+                      <td>
+                        {{ .SubjectCommonName }}
+                      </td>
+                      <td class="text-muted">
+                        {{ .IssuerCommonName }}
+                      </td>
+                      <td class="text-muted">
+                        {{ .SignatureAlgorithm }}
+                      </td>
+                      {{ $out := .}}
+                      {{ if .DNSNames }}
+                      <td>
+                        <ul>
+                          {{ range .DNSNames }}
+                          <li>"{{ .Name }}" </li>
+                          {{ end }}
+                        </ul>
+                      </td>
+                    </tr>
+                    {{ end }}
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+
         </div>
       </div>
 
-
-      <div class="col-sm-6 col-lg-8">
-        <div class="row">
-          <div class="col-md-12">
+      <!-- right column -->
+      <div class="col-sm-12 col-md-8 col-lg-7 col-xl-7">
+        <div class="row row-cards">
+          <div class="col-12">
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Summary</h3>
               </div>
               <div class="card-body">
                 <p>
-                  <kbd>{{ .Data.URL }}</kbd> responded with <kbd>{{ .Data.ResponseReason}}</kbd>
+                  <kbd>{{ .Data.URL }}</kbd> responded with <kbd>{{ .Data.ResponseReason }}</kbd>
                   <span>
                     <a href="{{ .Data.URL }}" target="_blank" class="btn-sm btn-light float-right">
                       Open URL
@@ -73,118 +152,74 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Response Headers</h3>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-vcenter">
-                <thead>
-                  <tr>
-                    <th>Key</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{ range .Data.Headers }}
-                  <tr>
-                    <td class="text-muted text-nowrap">
-                      <kbd>{{ .Key }}</kbd>
-                    </td>
-                    <td class="text-muted">
-                      <kbd>{{ .Value }}</kbd>
-                    </td>
-                  </tr>
-                  {{ end }}
-                </tbody>
-              </table>
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Response Headers</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .Data.Headers }}
+                    <tr>
+                      <td class="text-muted text-nowrap">
+                        <kbd>{{ .Key }}</kbd>
+                      </td>
+                      <td class="text-muted">
+                        <kbd>{{ .Value }}</kbd>
+                      </td>
+                    </tr>
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        {{ if .Data.TLS }}
-
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">TLS Information</h3>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-vcenter">
-                <thead>
-                  <tr>
-                    <th>ServerName</th>
-                    <th>Version</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="text-muted">
-                      <kbd>{{ .Data.TLS.ServerName }}</kbd>
-                    </td>
-                    <td class="text-muted">
-                      <kbd>{{ .Data.TLS.Version }}</kbd>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Network Log</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-vcenter card-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>IP</th>
+                      <th>URL</th>
+                      <th>Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .Data.Network }}
+                    <tr>
+                      <td class="text-muted text-nowrap">
+                        {{ .StatusCode }}
+                      </td>
+                      <td class="text-muted">
+                        {{ .IP }}
+                      </td>
+                      <td class="text-nowrap">{{ .URL }}</td>
+                      <td>{{ .Error }}</td>
+                    </tr>
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
         </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">TLS Certificates</h3>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-vcenter">
-                <thead>
-                  <tr>
-                    <th>Subject CN</th>
-                    <th>Issuer CN</th>
-                    <th>Sig Algorithm</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{ range .Data.TLS.TLSCertificates }}
-                  <tr>
-                    <td class="text-muted">
-                      <kbd>{{ .SubjectCommonName }}</kbd>
-                    </td>
-                    <td class="text-muted">
-                      <kbd>{{ .IssuerCommonName }}</kbd>
-                    </td>
-                    <td class="text-muted">
-                      <kbd>{{ .SignatureAlgorithm }}</kbd>
-                    </td>
-                  </tr>
-                  {{ $out := .}}
-                  {{ if .DNSNames }}
-                  <tr>
-                    <td colspan="3" class="text-muted">
-                      DNS Names for {{ $out.SubjectCommonName }}:
-                      {{ range .DNSNames }}
-                      <kbd>"{{ .Name }}" </kbd>
-                      {{ end }}
-                    </td>
-                  </tr>
-                  {{ end }}
-                  {{ end }}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {{ end }}
-
       </div>
     </div>
   </div>
-</div>
 
-{{ template "footer" . }}
+  {{ template "footer" . }}

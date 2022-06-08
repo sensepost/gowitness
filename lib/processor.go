@@ -30,12 +30,11 @@ type Processor struct {
 
 	// preflight response
 	preflightResult *chrome.PreflightResult
+	// screenshot
+	screenshotResult *chrome.ScreenshotResult
 
 	// persistence id
 	urlid uint
-
-	// screenshot
-	screenshot *[]byte
 }
 
 // Gowitness processes a URL by:
@@ -53,13 +52,13 @@ func (p *Processor) Gowitness() (err error) {
 		return
 	}
 
-	if err = p.persistPreflight(); err != nil {
-		log.Error().Err(err).Msg("failed to store preflight information")
+	if err = p.takeScreenshot(); err != nil {
+		log.Error().Err(err).Msg("failed to take screenshot")
 		return
 	}
 
-	if err = p.takeScreenshot(); err != nil {
-		log.Error().Err(err).Msg("failed to take screenshot")
+	if err = p.persistRequest(); err != nil {
+		log.Error().Err(err).Msg("failed to store request information")
 		return
 	}
 
@@ -107,15 +106,15 @@ func (p *Processor) preflight() (err error) {
 	return
 }
 
-// persistPreflight dispatches the StorePreflight function
-func (p *Processor) persistPreflight() (err error) {
+// persistRequest dispatches the StorePreflight function
+func (p *Processor) persistRequest() (err error) {
 
 	if p.Db == nil {
 		return
 	}
 
-	p.Logger.Debug().Str("url", p.URL.String()).Msg("storing preflight data")
-	if p.urlid, err = p.Chrome.StorePreflight(p.Db, p.preflightResult, p.fn); err != nil {
+	p.Logger.Debug().Str("url", p.URL.String()).Msg("storing request data")
+	if p.urlid, err = p.Chrome.StoreRequest(p.Db, p.preflightResult, p.screenshotResult, p.fn); err != nil {
 		return
 	}
 
@@ -125,12 +124,11 @@ func (p *Processor) persistPreflight() (err error) {
 // takeScreenshot dispatches the takeScreenshot function
 func (p *Processor) takeScreenshot() (err error) {
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("screenshotting")
-	buf, err := p.Chrome.Screenshot(p.URL)
+
+	p.screenshotResult, err = p.Chrome.Screenshot(p.URL)
 	if err != nil {
 		return
 	}
-
-	p.screenshot = &buf
 
 	return
 }
@@ -143,7 +141,7 @@ func (p *Processor) storePerceptionHash() (err error) {
 	}
 
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("calculating perception hash")
-	img, err := png.Decode(bytes.NewReader(*p.screenshot))
+	img, err := png.Decode(bytes.NewReader(p.screenshotResult.Screenshot))
 	if err != nil {
 		return
 	}
@@ -164,7 +162,7 @@ func (p *Processor) storePerceptionHash() (err error) {
 // writeScreenshot writes the screenshot buffer to disk
 func (p *Processor) writeScreenshot() (err error) {
 	p.Logger.Debug().Str("url", p.URL.String()).Str("path", p.fn).Msg("saving screenshot buffer")
-	if err = ioutil.WriteFile(p.fp, *p.screenshot, 0644); err != nil {
+	if err = ioutil.WriteFile(p.fp, p.screenshotResult.Screenshot, 0644); err != nil {
 		return
 	}
 
