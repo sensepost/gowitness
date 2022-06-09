@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -144,9 +145,18 @@ type ConsoleLog struct {
 
 	URLID uint
 
+	Time  time.Time
 	Type  string
 	Value string
 }
+
+// RequestType are network log types
+type RequestType int
+
+const (
+	HTTP RequestType = 0
+	WS
+)
 
 // NetworkLog contains Chrome networks events that were emitted
 type NetworkLog struct {
@@ -154,10 +164,12 @@ type NetworkLog struct {
 
 	URLID uint
 
-	RequestID  string
-	StatusCode int64
-	URL        string
-	FinalURL   string
-	IP         string
-	Error      string
+	RequestID   string
+	RequestType RequestType
+	StatusCode  int64
+	URL         string
+	FinalURL    string
+	IP          string
+	Time        time.Time
+	Error       string
 }

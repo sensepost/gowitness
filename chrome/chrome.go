@@ -47,12 +47,13 @@ type ConsoleLog struct {
 type NetworkLog struct {
 	URLID uint
 
-	RequestID  string
-	StatusCode int64
-	URL        string
-	FinalURL   string // may differ from URL if there were redirects
-	IP         string
-	Error      string
+	RequestID   string
+	RequestType storage.RequestType
+	StatusCode  int64
+	URL         string
+	FinalURL    string // may differ from URL if there were redirects
+	IP          string
+	Error       string
 }
 
 // PreflightResult contains the results of a preflight run
@@ -205,12 +206,13 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 	// add network logs
 	for _, log := range screenshot.NetworkLog {
 		record.Network = append(record.Network, storage.NetworkLog{
-			RequestID:  log.RequestID,
-			StatusCode: log.StatusCode,
-			URL:        log.URL,
-			FinalURL:   log.FinalURL,
-			IP:         log.IP,
-			Error:      log.Error,
+			RequestID:   log.RequestID,
+			RequestType: log.RequestType,
+			StatusCode:  log.StatusCode,
+			URL:         log.URL,
+			FinalURL:    log.FinalURL,
+			IP:          log.IP,
+			Error:       log.Error,
 		})
 	}
 
@@ -318,11 +320,13 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 	// log network events
 	chromedp.ListenTarget(tabCtx, func(ev interface{}) {
 		switch ev := ev.(type) {
+		// http
 		case *network.EventRequestWillBeSent:
 			// record a fresh request that will be sent
 			networkLog[string(ev.RequestID)] = NetworkLog{
-				RequestID: string(ev.RequestID),
-				URL:       ev.Request.URL,
+				RequestID:   string(ev.RequestID),
+				RequestType: storage.HTTP,
+				URL:         ev.Request.URL,
 			}
 		case *network.EventResponseReceived:
 			// update the networkLog map with updated information about response
@@ -331,7 +335,6 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 				entry.FinalURL = ev.Response.URL
 				entry.IP = ev.Response.RemoteIPAddress
 
-				// upsert
 				networkLog[string(ev.RequestID)] = entry
 			}
 		case *network.EventLoadingFailed:
@@ -339,7 +342,25 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 			if entry, ok := networkLog[string(ev.RequestID)]; ok {
 				entry.Error = ev.ErrorText
 
-				// upsert
+				networkLog[string(ev.RequestID)] = entry
+			}
+		// websockets
+		case *network.EventWebSocketCreated:
+			networkLog[string(ev.RequestID)] = NetworkLog{
+				RequestID:   string(ev.RequestID),
+				RequestType: storage.WS,
+				URL:         ev.URL,
+			}
+		case *network.EventWebSocketHandshakeResponseReceived:
+			if entry, ok := networkLog[string(ev.RequestID)]; ok {
+				entry.StatusCode = ev.Response.Status
+
+				networkLog[string(ev.RequestID)] = entry
+			}
+		case *network.EventWebSocketFrameError:
+			if entry, ok := networkLog[string(ev.RequestID)]; ok {
+				entry.Error = ev.ErrorMessage
+
 				networkLog[string(ev.RequestID)] = entry
 			}
 		}

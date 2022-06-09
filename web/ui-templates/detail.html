@@ -52,6 +52,8 @@
             </div>
           </div>
 
+          {{ $length := len .Data.Console }}
+          {{ if gt $length 0 }}
           <div class="col-12">
             <div class="card">
               <div class="card-header">
@@ -81,6 +83,7 @@
               </div>
             </div>
           </div>
+          {{ end }}
 
           {{ if .Data.TLS }}
           <div class="col-12">
@@ -89,7 +92,7 @@
                 <h3 class="card-title">TLS Information</h3>
               </div>
               <div class="table-responsive">
-                <table class="table table-sm table-vcenter">
+                <table class="table table-sm table-vcenter card-table">
                   <thead>
                     <tr>
                       <th>Subject CN</th>
@@ -119,8 +122,8 @@
                           {{ end }}
                         </ul>
                       </td>
+                      {{ end }}
                     </tr>
-                    {{ end }}
                     {{ end }}
                   </tbody>
                 </table>
@@ -169,11 +172,11 @@
                   <tbody>
                     {{ range .Data.Headers }}
                     <tr>
-                      <td class="text-muted text-nowrap">
-                        <kbd>{{ .Key }}</kbd>
+                      <td class="text-nowrap">
+                        {{ .Key }}
                       </td>
                       <td class="text-muted">
-                        <kbd>{{ .Value }}</kbd>
+                        {{ .Value }}
                       </td>
                     </tr>
                     {{ end }}
@@ -192,23 +195,43 @@
                 <table class="table table-sm table-vcenter card-table">
                   <thead>
                     <tr>
-                      <th>Status</th>
+                      <th>Type</th>
+                      <th>Code</th>
                       <th>IP</th>
-                      <th>URL</th>
                       <th>Error</th>
+                      <th>URL</th>
                     </tr>
                   </thead>
                   <tbody>
                     {{ range .Data.Network }}
                     <tr>
+                      <td>
+                        {{ if (eq .RequestType 0) }}
+                        HTTP
+                        {{ else if (eq .RequestType 1) }}
+                        WS
+                        {{ end }}
+                      </td>
                       <td class="text-muted text-nowrap">
+                        {{ if (eq 0 .StatusCode)}}
+                        <!-- no status code. -->
+                        {{ else }}
+                        {{ if and (ge .StatusCode 200) (le .StatusCode 299) }}
+                        <span class="badge bg-green">{{ .StatusCode }}</span>
+                        {{ else if and (ge .StatusCode 300) (le .StatusCode 399) }}
+                        <span class="badge bg-blue">{{ .StatusCode }}</span>
+                        {{ else if and (ge .StatusCode 400) (le .StatusCode 600) }}
+                        <span class="badge bg-red">{{ .StatusCode }}</span>
+                        {{ else }}
                         {{ .StatusCode }}
+                        {{ end }}
+                        {{ end }}
                       </td>
                       <td class="text-muted">
                         {{ .IP }}
                       </td>
-                      <td class="text-nowrap">{{ .URL }}</td>
                       <td>{{ .Error }}</td>
+                      <td class="text-nowrap">{{ .URL }}</td>
                     </tr>
                     {{ end }}
                   </tbody>
