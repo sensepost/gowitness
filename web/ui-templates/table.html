@@ -28,20 +28,21 @@
           <table class="table table-hover table-sm table-vcenter card-table">
             <thead>
               <tr>
-                <th>URL</th>
+                <th></th>
                 <th>Code</th>
+                <th>Orignal URL</th>
+                <th>Final URL</th>
                 <th>Network Logs</th>
                 <th>Console Logs</th>
                 <th>Technologies</th>
                 <th>Title</th>
-                <th class="w-1"></th>
               </tr>
             </thead>
             <tbody>
               {{ range .Data}}
               <tr>
-                <td class="text-muted">
-                  <a href="{{ .URL }}">{{ .URL }}</a>
+                <td>
+                  <a href="/details/{{ .ID }}">Detail</a>
                 </td>
                 <td class="text-muted">
                   {{ if (eq 0 .ResponseCode)}}
@@ -60,6 +61,12 @@
                   {{ end }}
                   {{ end }}
                 </td>
+                <td class="text-muted">
+                  <a href="{{ .URL }}" target="_blank">{{ .URL }}</a>
+                </td>
+                <td class="text-muted">
+                  <a href="{{ .FinalURL }}" target="_blank">{{ .URL }}</a>
+                </td>
                 <td>
                   {{ $length := len .Network }}
                   {{ $length }}
@@ -75,9 +82,7 @@
                 <td class="text-muted">
                   {{ .Title }}
                 </td>
-                <td>
-                  <a href="/details/{{ .ID }}">Detail</a>
-                </td>
+
               </tr>
               {{ end }}
             </tbody>
