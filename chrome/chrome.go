@@ -395,6 +395,9 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 		return nil, err
 	}
 
+	// close the tab so that we dont receive more network events
+	cancelTabCtx()
+
 	// append the networklog
 	for _, log := range networkLog {
 		result.NetworkLog = append(result.NetworkLog, log)
