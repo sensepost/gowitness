@@ -32,6 +32,7 @@
                 <th>Code</th>
                 <th>Network Logs</th>
                 <th>Console Logs</th>
+                <th>Technologies</th>
                 <th>Title</th>
                 <th class="w-1"></th>
               </tr>
@@ -65,6 +66,10 @@
                 </td>
                 <td>
                   {{ $length := len .Console }}
+                  {{ $length }}
+                </td>
+                <td>
+                  {{ $length := len .Technologies }}
                   {{ $length }}
                 </td>
                 <td class="text-muted">

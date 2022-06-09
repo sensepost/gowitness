@@ -61,9 +61,8 @@
                 <img loading="lazy" src="/screenshots/{{ .Data.Filename }}"
                   onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
               </a>
-
-              <div class="card-body">
-                <div class="d-flex align-items-center">
+              <div class="card-footer">
+                <div class="d-flex">
                   <div>
                     <div>{{ .Data.URL }}</div>
                     <div class="text-muted">{{ .Data.Title }}</div>
@@ -73,9 +72,7 @@
                       {{ end }}
                     </div>
                   </div>
-                  <div class="ms-auto text-muted">
-                    HTTP {{ .Data.ResponseCode}}
-                  </div>
+                  <a href="{{ .Data.URL }}" target="_blank" class="btn btn-primary ms-auto">Visit URL</a>
                 </div>
               </div>
             </div>
@@ -120,42 +117,45 @@
               <div class="card-header">
                 <h3 class="card-title">TLS Information</h3>
               </div>
-              <div class="table-responsive">
-                <table class="table table-sm table-vcenter card-table">
-                  <thead>
-                    <tr>
-                      <th>Subject CN</th>
-                      <th>Issuer CN</th>
-                      <th>Sig Algorithm</th>
-                      <th>DNS Names</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{ range .Data.TLS.TLSCertificates }}
-                    <tr>
-                      <td>
-                        {{ .SubjectCommonName }}
-                      </td>
-                      <td class="text-muted">
-                        {{ .IssuerCommonName }}
-                      </td>
-                      <td class="text-muted">
-                        {{ .SignatureAlgorithm }}
-                      </td>
-                      {{ $out := .}}
-                      {{ if .DNSNames }}
-                      <td>
-                        <ul>
-                          {{ range .DNSNames }}
-                          <li>"{{ .Name }}" </li>
-                          {{ end }}
-                        </ul>
-                      </td>
+              <div class="card-body p-0">
+
+                <div class="table-responsive">
+                  <table class="table table-sm table-vcenter card-table">
+                    <thead>
+                      <tr>
+                        <th>Subject CN</th>
+                        <th>Issuer CN</th>
+                        <th>Sig Algorithm</th>
+                        <th>DNS Names</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{ range .Data.TLS.TLSCertificates }}
+                      <tr>
+                        <td>
+                          {{ .SubjectCommonName }}
+                        </td>
+                        <td class="text-muted">
+                          {{ .IssuerCommonName }}
+                        </td>
+                        <td class="text-muted">
+                          {{ .SignatureAlgorithm }}
+                        </td>
+                        {{ $out := .}}
+                        {{ if .DNSNames }}
+                        <td>
+                          <ul>
+                            {{ range .DNSNames }}
+                            <li>"{{ .Name }}" </li>
+                            {{ end }}
+                          </ul>
+                        </td>
+                        {{ end }}
+                      </tr>
                       {{ end }}
-                    </tr>
-                    {{ end }}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -167,26 +167,31 @@
       <!-- right column -->
       <div class="col-sm-12 col-md-8 col-lg-7 col-xl-7">
         <div class="row row-cards">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Summary</h3>
-              </div>
-              <div class="card-body">
-                <p>
-                  <kbd>{{ .Data.URL }}</kbd> responded with <kbd>{{ .Data.ResponseReason }}</kbd>
-                  <span>
-                    <a href="{{ .Data.URL }}" target="_blank" class="btn-sm btn-light float-right">
-                      Open URL
-                    </a>
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
 
           <div class="col-12">
             <div class="card">
+              <div class="ribbon
+              {{ if and (ge .Data.ResponseCode 200) (le .Data.ResponseCode 299) }}
+              bg-green
+              {{ else if and (ge .Data.ResponseCode 300) (le .Data.ResponseCode 399) }}
+              bg-blue
+              {{ else if and (ge .Data.ResponseCode 400) (le .Data.ResponseCode 500) }}
+              bg-yellow
+              {{ else if and (ge .Data.ResponseCode 500) (le .Data.ResponseCode 600) }}
+              bg-red
+              {{ end }}
+              ">HTTP {{ .Data.ResponseCode }}</div>
+              <div class="card-status-top 
+              {{ if and (ge .Data.ResponseCode 200) (le .Data.ResponseCode 299) }}
+              bg-success
+              {{ else if and (ge .Data.ResponseCode 300) (le .Data.ResponseCode 399) }}
+              bg-primary
+              {{ else if and (ge .Data.ResponseCode 400) (le .Data.ResponseCode 500) }}
+              bg-warning
+              {{ else if and (ge .Data.ResponseCode 500) (le .Data.ResponseCode 600) }}
+              bg-danger
+              {{ end }}
+              "></div>
               <div class="card-header">
                 <h3 class="card-title">Response Headers</h3>
               </div>
@@ -218,7 +223,7 @@
           <div class="col-12">
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">Network Log</h3>
+                <h3 class="card-title">Network Logs</h3>
               </div>
               <div class="table-responsive">
                 <table class="table table-sm table-vcenter card-table">

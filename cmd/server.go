@@ -18,7 +18,8 @@ import (
 )
 
 var (
-	rsDB *gorm.DB
+	rsDB  *gorm.DB
+	theme string = "dark" // or light
 )
 
 // serverCmd represents the server command
@@ -74,8 +75,12 @@ $ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 		}
 
 		r := gin.Default()
+		r.Use(themeChooser(&theme))
 
-		tmpl := template.Must(template.New("").ParseFS(Embedded, "web/ui-templates/*.html"))
+		funcMap := template.FuncMap{
+			"GetTheme": getTheme,
+		}
+		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(Embedded, "web/ui-templates/*.html"))
 		r.SetHTMLTemplate(tmpl)
 
 		// web ui routes
@@ -117,6 +122,65 @@ func init() {
 
 	serverCmd.Flags().StringVarP(&options.ServerAddr, "address", "a", "localhost:7171", "server listening address")
 	serverCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
+}
+
+// middleware
+// --
+
+// getTheme gets the current theme choice
+func getTheme() string {
+	return theme
+}
+
+// themeChooser is a middleware to set the theme to use in the base template
+func themeChooser(choice *string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// parse the query string as preference. this will indicate a theme switch
+		q := c.Query("theme")
+		if q == "light" {
+			d := "light"
+			*choice = d
+
+			// set the cookie for next time
+			c.SetCookie("gowitness_theme", "light", 604800, "/", "", false, false)
+			return
+		}
+
+		if q == "dark" {
+			d := "dark"
+			*choice = d
+
+			// set the cookie for next time
+			c.SetCookie("gowitness_theme", "dark", 604800, "/", "", false, false)
+			return
+		}
+
+		// if ?theme was invalid, read the cookie value.
+
+		cookie, err := c.Cookie("gowitness_theme")
+		if err != nil {
+			d := "dark"
+			*choice = d
+
+			// set the cookie for next time
+			c.SetCookie("gowitness_theme", "dark", 604800, "/", "", false, false)
+			return
+		}
+
+		if cookie == "light" {
+			d := "light"
+			*choice = d
+		}
+
+		if cookie == "dark" {
+			d := "dark"
+			*choice = d
+		}
+
+		// no change with an invalid value
+		return
+	}
 }
 
 // reporting web ui handlers
@@ -282,7 +346,7 @@ func detailHandler(c *gin.Context) {
 func tableHandler(c *gin.Context) {
 
 	var urls []storage.URL
-	rsDB.Preload("Network").Preload("Console").Find(&urls)
+	rsDB.Preload("Network").Preload("Console").Preload("Technologies").Find(&urls)
 
 	c.HTML(http.StatusOK, "table.html", gin.H{
 		"Data": urls,
