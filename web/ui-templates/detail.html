@@ -14,6 +14,35 @@
           URL Details
         </h2>
       </div>
+
+      <div class="col-12 col-md-auto ms-auto d-print-none">
+        <div class="btn-list">
+          <a href="/details/{{ .Previous }}"
+            class="btn d-none d-sm-inline-block {{ if eq .Previous 0 }}disabled{{ end }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-left" width="24"
+              height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <polyline points="11 7 6 12 11 17"></polyline>
+              <polyline points="17 7 12 12 17 17"></polyline>
+            </svg>
+            Previous
+          </a>
+
+          <a href="/details/{{ .Next }}"
+            class="btn btn-primary d-none d-sm-inline-block {{ if eq .Next .Max }}disabled{{ end }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-right" width="24"
+              height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <polyline points="7 7 12 12 7 17"></polyline>
+              <polyline points="13 7 18 12 13 17"></polyline>
+            </svg>
+            Next
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -220,10 +249,12 @@
                         <span class="badge bg-green">{{ .StatusCode }}</span>
                         {{ else if and (ge .StatusCode 300) (le .StatusCode 399) }}
                         <span class="badge bg-blue">{{ .StatusCode }}</span>
-                        {{ else if and (ge .StatusCode 400) (le .StatusCode 600) }}
+                        {{ else if and (ge .StatusCode 400) (le .StatusCode 500) }}
+                        <span class="badge bg-yellow">{{ .StatusCode }}</span>
+                        {{ else if and (ge .StatusCode 500) (le .StatusCode 600) }}
                         <span class="badge bg-red">{{ .StatusCode }}</span>
                         {{ else }}
-                        {{ .StatusCode }}
+                        <span class="badge">{{ .StatusCode }}</span>
                         {{ end }}
                         {{ end }}
                       </td>

@@ -255,8 +255,26 @@ func detailHandler(c *gin.Context) {
 		Preload("Network").
 		First(&url, id)
 
+	// get pagination limits
+	var max uint
+	rsDB.Model(storage.URL{}).Select("max(id)").First(&max)
+
+	previous := url.ID
+	next := url.ID
+
+	if previous > 0 {
+		previous = previous - 1
+	}
+
+	if next < max {
+		next = next + 1
+	}
+
 	c.HTML(http.StatusOK, "detail.html", gin.H{
-		"Data": url,
+		"Data":     url,
+		"Previous": previous,
+		"Next":     next,
+		"Max":      max,
 	})
 }
 
@@ -264,7 +282,7 @@ func detailHandler(c *gin.Context) {
 func tableHandler(c *gin.Context) {
 
 	var urls []storage.URL
-	rsDB.Find(&urls)
+	rsDB.Preload("Network").Preload("Console").Find(&urls)
 
 	c.HTML(http.StatusOK, "table.html", gin.H{
 		"Data": urls,
