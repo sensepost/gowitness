@@ -41,10 +41,10 @@ type Options struct {
 	ScreenshotFileName string
 
 	// Nessus
-	NessusPluginContains	[]string
-	NessusServiceNames		[]string
-	NessusPluginOutput		[]string
-	NessusPorts				[]int
+	NessusPluginContains []string
+	NessusServiceNames   []string
+	NessusPluginOutput   []string
+	NessusPorts          []int
 
 	// Nmap
 	NmapFile            string

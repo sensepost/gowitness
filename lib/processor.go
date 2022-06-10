@@ -82,6 +82,14 @@ func (p *Processor) init() {
 	} else {
 		p.fn = SafeFileName(p.URL.String())
 	}
+
+	// set the extention depending on the screenshot format
+	if p.Chrome.AsPDF {
+		p.fn = p.fn + ".pdf"
+	} else {
+		p.fn = p.fn + ".png"
+	}
+
 	p.fp = ScreenshotPath(p.fn, p.URL, p.ScreenshotPath)
 }
 
@@ -140,6 +148,11 @@ func (p *Processor) storePerceptionHash() (err error) {
 		return
 	}
 
+	// ignore pdf's
+	if p.Chrome.AsPDF {
+		return
+	}
+
 	p.Logger.Debug().Str("url", p.URL.String()).Msg("calculating perception hash")
 	img, err := png.Decode(bytes.NewReader(p.screenshotResult.Screenshot))
 	if err != nil {
@@ -161,7 +174,8 @@ func (p *Processor) storePerceptionHash() (err error) {
 
 // writeScreenshot writes the screenshot buffer to disk
 func (p *Processor) writeScreenshot() (err error) {
-	p.Logger.Debug().Str("url", p.URL.String()).Str("path", p.fn).Msg("saving screenshot buffer")
+
+	p.Logger.Debug().Str("url", p.URL.String()).Str("path", p.fp).Msg("saving screenshot buffer")
 	if err = ioutil.WriteFile(p.fp, p.screenshotResult.Screenshot, 0644); err != nil {
 		return
 	}

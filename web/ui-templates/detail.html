@@ -57,10 +57,15 @@
 
           <div class="col-12">
             <div class="card card-sm">
+              {{ if .Data.IsPDF }}
+              <embed class="card-img-top" src="/screenshots/{{ .Data.Filename }}" type="application/pdf" frameBorder="0"
+                scrolling="auto" height="100%" width="100%"></embed>
+              {{ else }}
               <a href="/screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
                 <img loading="lazy" src="/screenshots/{{ .Data.Filename }}"
                   onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
               </a>
+              {{ end }}
               <div class="card-footer">
                 <div class="d-flex">
                   <div>

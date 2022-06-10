@@ -33,6 +33,9 @@ type Chrome struct {
 	Headers     []string
 	HeadersMap  map[string]interface{}
 
+	// save screenies as PDF's instead
+	AsPDF bool
+
 	// wappalyzer client
 	wappalyzer *Wappalyzer
 }
@@ -163,6 +166,7 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 		ContentLength:  preflight.HTTPResponse.ContentLength,
 		Title:          preflight.HTTPTitle,
 		Filename:       filename,
+		IsPDF:          chrome.AsPDF,
 	}
 
 	// append headers
@@ -434,6 +438,20 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 	// grab the dom
 	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
 
+	// should we print as pdf?
+	if chrome.AsPDF {
+		actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) error {
+			var err error
+			*buf, _, err = page.PrintToPDF().
+				WithDisplayHeaderFooter(true).
+				Do(ctx)
+			return err
+		}))
+
+		return actions
+	}
+
+	// otherwise screenshot as png
 	if chrome.FullPage {
 		actions = append(actions, chromedp.FullScreenshot(buf, 100))
 	} else {

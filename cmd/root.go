@@ -68,6 +68,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceVar(&chrm.Headers, "header", []string{}, "Additional HTTP header to set. Supports multiple --header flags")
 	rootCmd.PersistentFlags().StringVarP(&options.ScreenshotPath, "screenshot-path", "P", "screenshots", "store path for screenshots (use . for pwd)")
 	rootCmd.PersistentFlags().BoolVarP(&chrm.FullPage, "fullpage", "F", false, "take fullpage screenshots")
+	rootCmd.PersistentFlags().BoolVarP(&chrm.AsPDF, "pdf", "", false, "save screenshots as pdf")
 	rootCmd.PersistentFlags().Int64Var(&chrm.Timeout, "timeout", 10, "preflight check timeout")
 	rootCmd.PersistentFlags().StringVarP(&chrm.ChromePath, "chrome-path", "", "", "path to chrome executable to use")
 	rootCmd.PersistentFlags().StringVarP(&chrm.Proxy, "proxy", "p", "", "http/socks5 proxy to use. Use format proto://address:port")

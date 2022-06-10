@@ -20,6 +20,7 @@ type URL struct {
 	ContentLength  int64
 	Title          string
 	Filename       string
+	IsPDF          bool
 	PerceptionHash string
 	DOM            string
 

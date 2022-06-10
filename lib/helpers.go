@@ -14,6 +14,7 @@ import (
 func ScreenshotPath(destination string, url *url.URL, path string) string {
 
 	var fname, dst string
+
 	if destination == "" {
 		fname = SafeFileName(url.String())
 		dst = filepath.Join(path, fname)
@@ -49,7 +50,7 @@ func SafeFileName(str string) string {
 		name = strings.Replace(name, "--", "-", -1)
 	}
 
-	return name + `.png`
+	return name
 }
 
 // PortsFromString returns a slice of ports parsed from a string
