@@ -83,6 +83,9 @@ func (p *Processor) init() {
 		p.fn = SafeFileName(p.URL.String())
 	}
 
+	// limit filename length
+	p.fn = TruncateString(p.fn, 30)
+
 	// set the extention depending on the screenshot format
 	if p.Chrome.AsPDF {
 		p.fn = p.fn + ".pdf"

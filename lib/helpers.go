@@ -123,3 +123,18 @@ func SliceContainsString(s []string, e string) bool {
 
 	return false
 }
+
+// TruncateString truncates a string for l characters
+func TruncateString(s string, l int) string {
+
+	if len(s) <= l {
+		return s
+	}
+
+	var n string
+	for _, char := range s {
+		n = n + string(char)
+	}
+
+	return n
+}
