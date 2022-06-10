@@ -29,6 +29,7 @@
             <thead>
               <tr>
                 <th></th>
+                <th>Probed At</th>
                 <th>Code</th>
                 <th>Orignal URL</th>
                 <th>Final URL</th>
@@ -44,6 +45,7 @@
                 <td>
                   <a href="/details/{{ .ID }}">Detail</a>
                 </td>
+                <td>{{ .CreatedAt.Format "Jan 02, 2006 15:04:05" }}</td>
                 <td class="text-muted">
                   {{ if (eq 0 .ResponseCode)}}
                   <!-- no status code. -->
