@@ -23,6 +23,25 @@ Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTrun
 
 For installation information and other documentation, please refer to the wiki [here](https://github.com/sensepost/gowitness/wiki).
 
+## screenshots
+
+![dark](images/gowitness-detail.png)
+
+## credits
+
+`gowitness` would not have been posssible without these amazing projects:
+
+- [chromedp](https://github.com/chromedp/chromedp)
+- [tabler](https://github.com/tabler/tabler)
+- [zerolog](https://github.com/rs/zerolog)
+- [cobra](https://github.com/spf13/cobra)
+- [gorm](https://github.com/go-gorm/gorm)
+- [go-nmae](https://github.com/lair-framework/go-nmap)
+- [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo)
+- [goimagehash](https://github.com/corona10/goimagehash)
+
+And many more!
+
 ## license
 
 `gowitness` is licensed under a [GNU General Public v3 License](https://www.gnu.org/licenses/gpl-3.0.en.html). Permissions beyond the scope of this license may be available at <http://sensepost.com/contact/>.
