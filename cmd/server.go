@@ -550,6 +550,8 @@ func apiDetailHandler(c *gin.Context) {
 		Preload("TLS.TLSCertificates").
 		Preload("TLS.TLSCertificates.DNSNames").
 		Preload("Technologies").
+		Preload("Console").
+		Preload("Network").
 		First(&url, c.Param("id"))
 
 	if url.ID == 0 {
