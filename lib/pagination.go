@@ -22,19 +22,12 @@ type PaginationPage struct {
 	Ordered       bool
 }
 
-// Filter describes a column filter
-type Filter struct {
-	Column string
-	Value  string
-}
-
 // Pagination has options for a Page
 type Pagination struct {
 	DB       *gorm.DB
 	CurrPage int
 	Limit    int
 	OrderBy  []string
-	FilterBy []Filter
 }
 
 // Page pages a dataset
@@ -59,12 +52,6 @@ func (p *Pagination) Page(data interface{}) (*PaginationPage, error) {
 		pagination.Ordered = true
 	} else {
 		pagination.Ordered = false
-	}
-
-	if len(p.FilterBy) > 0 {
-		for _, filter := range p.FilterBy {
-			db = db.Where(filter.Column+" LIKE ?", "%"+filter.Value+"%")
-		}
 	}
 
 	db.Model(data).Count(&count)

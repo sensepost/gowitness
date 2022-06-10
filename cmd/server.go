@@ -90,6 +90,7 @@ $ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 		r.GET("/details/:id", detailHandler)
 		r.GET("/submit", getSubmitHandler)
 		r.POST("/submit", submitHandler)
+		r.POST("/search", searchHandler)
 
 		// static assets & raw screenshot files
 		assetFs, err := fs.Sub(Embedded, "web/assets")
@@ -376,14 +377,6 @@ func galleryHandler(c *gin.Context) {
 		pager.OrderBy = []string{"perception_hash desc"}
 	}
 
-	// search
-	if strings.TrimSpace(c.Query("search")) != "" {
-		pager.FilterBy = append(pager.FilterBy, lib.Filter{
-			Column: "title",
-			Value:  c.Query("search"),
-		})
-	}
-
 	var urls []storage.URL
 	page, err := pager.Page(&urls)
 	if err != nil {
@@ -396,6 +389,76 @@ func galleryHandler(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "gallery.html", gin.H{
 		"Data": page,
+	})
+}
+
+// searchHandler handles report searching
+func searchHandler(c *gin.Context) {
+
+	query := c.PostForm("search_query")
+
+	if query == "" {
+		c.HTML(http.StatusOK, "search.html", nil)
+		return
+	}
+
+	// sql friendly string search
+	search := "%" + query + "%"
+
+	// urls
+	var urls []storage.URL
+	rsDB.
+		Where("URL LIKE ?", search).
+		Or("Title LIKE?", search).
+		Find(&urls)
+
+	// urgh, for these relations it seems like we need to count
+	// and then select? :|
+
+	// technologies
+	var technologies []storage.URL
+	var technologiesCount int64
+	rsDB.Model(storage.Technologie{}).Where("Value LIKE ?", search).Count(&technologiesCount)
+	if technologiesCount > 0 {
+		rsDB.Preload("Technologies", "Value LIKE ?", search).Find(&technologies)
+	}
+
+	// headers
+	var headers []storage.URL
+	var headersCount int64
+	rsDB.Model(storage.Header{}).Where("Key LIKE ? OR Value LIKE ?", search, search).Count(&headersCount)
+	fmt.Println(headersCount)
+	if headersCount > 0 {
+		rsDB.Preload("Headers", "Key LIKE ? OR Value LIKE ?", search, search).Find(&headers)
+	}
+
+	// console logs
+	var console []storage.URL
+	var consoleCount int64
+	rsDB.Model(storage.ConsoleLog{}).Where("Type LIKE ? OR Value LIKE ?", search, search).Count(&consoleCount)
+	if consoleCount > 0 {
+		rsDB.Preload("Console", "Type LIKE ? OR Value LIKE ?", search, search).Find(&console)
+	}
+
+	// network logs
+	var network []storage.URL
+	var networkCount int64
+	rsDB.Model(storage.NetworkLog{}).Where("URL LIKE ? OR IP LIKE ? OR Error LIKE ?", search, search, search).Count(&networkCount)
+	if networkCount > 0 {
+		rsDB.Preload("Network", "URL LIKE ? OR IP LIKE ? OR Error LIKE ?", search, search, search).Find(&network)
+	}
+
+	c.HTML(http.StatusOK, "search.html", gin.H{
+		"Term":         query,
+		"URLS":         urls,
+		"Tech":         technologies,
+		"TechCount":    technologiesCount,
+		"Headers":      headers,
+		"HeadersCount": headersCount,
+		"Console":      console,
+		"ConsoleCount": consoleCount,
+		"Network":      network,
+		"NetworkCount": networkCount,
 	})
 }
 
