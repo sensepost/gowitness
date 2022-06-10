@@ -427,7 +427,6 @@ func searchHandler(c *gin.Context) {
 	var headers []storage.URL
 	var headersCount int64
 	rsDB.Model(storage.Header{}).Where("Key LIKE ? OR Value LIKE ?", search, search).Count(&headersCount)
-	fmt.Println(headersCount)
 	if headersCount > 0 {
 		rsDB.Preload("Headers", "Key LIKE ? OR Value LIKE ?", search, search).Find(&headers)
 	}
