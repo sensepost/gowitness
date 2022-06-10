@@ -9,8 +9,11 @@ import (
 // Db is the SQLite3 db handler ype
 type Db struct {
 	Path          string
-	Disabled      bool
 	SkipMigration bool
+
+	// cli flags
+	Disabled bool
+	Debug    bool
 }
 
 // NewDb sets up a new DB
@@ -25,9 +28,14 @@ func (db *Db) Get() (*gorm.DB, error) {
 		return nil, nil
 	}
 
-	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Error),
-	})
+	var config = &gorm.Config{}
+	if db.Debug {
+		config.Logger = logger.Default.LogMode(logger.Info)
+	} else {
+		config.Logger = logger.Default.LogMode(logger.Error)
+	}
+
+	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), config)
 	if err != nil {
 		return nil, err
 	}

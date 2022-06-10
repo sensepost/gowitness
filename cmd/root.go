@@ -59,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&options.DisableLogging, "disable-logging", false, "disable all logging")
 	// global
 	rootCmd.PersistentFlags().BoolVar(&db.Disabled, "disable-db", false, "disable all database operations")
+	rootCmd.PersistentFlags().BoolVar(&db.Debug, "debug-db", false, "enable debug logging for all database operations")
 	rootCmd.PersistentFlags().StringVarP(&db.Path, "db-path", "D", "gowitness.sqlite3", "destination for the gowitness database")
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionX, "resolution-x", "X", 1440, "screenshot resolution x")
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionY, "resolution-y", "Y", 900, "screenshot resolution y")
