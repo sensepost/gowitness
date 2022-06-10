@@ -79,6 +79,9 @@ $ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 
 		funcMap := template.FuncMap{
 			"GetTheme": getTheme,
+			"Contains": func(full string, search string) bool {
+				return strings.Contains(full, search)
+			},
 		}
 		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(Embedded, "web/ui-templates/*.html"))
 		r.SetHTMLTemplate(tmpl)
@@ -88,6 +91,7 @@ $ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
 		r.GET("/gallery", galleryHandler)
 		r.GET("/table", tableHandler)
 		r.GET("/details/:id", detailHandler)
+		r.GET("/details/:id/dom", detailDOMDownloadHandler)
 		r.GET("/submit", getSubmitHandler)
 		r.POST("/submit", submitHandler)
 		r.POST("/search", searchHandler)
@@ -339,11 +343,36 @@ func detailHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "detail.html", gin.H{
+		"ID":       id,
 		"Data":     url,
 		"Previous": previous,
 		"Next":     next,
 		"Max":      max,
 	})
+}
+
+// detailDOMDownloadHandler downloads the DOM as a text
+func detailDOMDownloadHandler(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var url storage.URL
+	if err := rsDB.First(&url, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.Writer.Header().Set("Content-Disposition", `attachment; filename="`+url.Filename+`.txt"`)
+	c.String(http.StatusOK, url.DOM)
 }
 
 // tableHandler handles the URL table view
@@ -412,7 +441,8 @@ func searchHandler(c *gin.Context) {
 	var urls []storage.URL
 	rsDB.
 		Where("URL LIKE ?", search).
-		Or("Title LIKE?", search).
+		Or("Title LIKE ?", search).
+		Or("DOM LIKE ?", search).
 		Find(&urls)
 
 	// urgh, for these relations it seems like we need to count

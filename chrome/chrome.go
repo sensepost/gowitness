@@ -68,6 +68,7 @@ type PreflightResult struct {
 // ScreenshotResult contains the results of a screenshot
 type ScreenshotResult struct {
 	Screenshot []byte
+	DOM        string
 
 	// logging
 	ConsoleLog []ConsoleLog
@@ -154,6 +155,7 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 
 	record := &storage.URL{
 		URL:            preflight.URL.String(),
+		DOM:            screenshot.DOM,
 		FinalURL:       preflight.HTTPResponse.Request.URL.String(),
 		ResponseCode:   preflight.HTTPResponse.StatusCode,
 		ResponseReason: preflight.HTTPResponse.Status,
@@ -371,7 +373,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 	})
 
 	// perform navigation on the tab context and attempt to take a clean screenshot
-	err = chromedp.Run(tabCtx, buildTasks(chrome, url, true, &result.Screenshot))
+	err = chromedp.Run(tabCtx, buildTasks(chrome, url, true, &result.Screenshot, &result.DOM))
 
 	if errors.Is(err, context.DeadlineExceeded) {
 		// if the context timeout exceeded (e.g. on a long page load) then
@@ -392,7 +394,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 		})
 
 		// attempt to capture the screenshot of the tab and replace error accordingly
-		err = chromedp.Run(newTabCtx, buildTasks(chrome, url, false, &result.Screenshot))
+		err = chromedp.Run(newTabCtx, buildTasks(chrome, url, false, &result.Screenshot, &result.DOM))
 	}
 
 	if err != nil {
@@ -411,7 +413,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 }
 
 // buildTasks builds the chromedp tasks slice
-func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chromedp.Tasks {
+func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom *string) chromedp.Tasks {
 	var actions chromedp.Tasks
 
 	if len(chrome.HeadersMap) > 0 {
@@ -428,6 +430,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chro
 
 	// add a small sleep to wait for images and other things
 	actions = append(actions, chromedp.Sleep(time.Second*3))
+
+	// grab the dom
+	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
 
 	if chrome.FullPage {
 		actions = append(actions, chromedp.FullScreenshot(buf, 100))

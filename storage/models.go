@@ -21,6 +21,7 @@ type URL struct {
 	Title          string
 	Filename       string
 	PerceptionHash string
+	DOM            string
 
 	TLS TLS
 

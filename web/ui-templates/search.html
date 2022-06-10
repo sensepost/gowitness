@@ -25,18 +25,19 @@
         <div class="box">
           <div class="card">
             <div class="card-header">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapseURL" aria-expanded="true">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseURL"
+                aria-expanded="true">
                 <span><b>{{ $urlLength }}</b> URL Results</span>
               </button>
             </div>
-            <div id="collapseURL" class="card-body">
+            <div id="collapseURL" class="card-body collapse show">
               <div class="table-responsive">
                 <table class="table table-hover table-sm table-vcenter card-table">
                   <thead>
                     <tr>
                       <th></th>
                       <th>Code</th>
+                      <th>In DOM</th>
                       <th>Orignal URL</th>
                       <th>Final URL</th>
                       <th>Title</th>
@@ -63,6 +64,11 @@
                         {{ else }}
                         <span class="badge">{{ .ResponseCode }}</span>
                         {{ end }}
+                        {{ end }}
+                      </td>
+                      <td>
+                        {{ if Contains .DOM $.Term }}
+                        <span class="badge">Yes</span>
                         {{ end }}
                       </td>
                       <td class="text-muted">
