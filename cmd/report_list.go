@@ -14,7 +14,22 @@ import (
 // reportListCmd represents the reportList command
 var reportListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list entries in the gowitness database in various formats",
+	Short: "List entries in the gowitness database in various formats",
+	Long: `List entries in the gowitness database in various formats.
+
+Export formats include CSV (via the --csv / -c flag) as well as JSON (via
+the --json / -j flag).
+
+When using the JSON format you could chain the results with an invocation of
+[1]jq to further filter the data. For example, to get only URL's for which
+the status code was an HTTP 200:
+
+gowitness report list -j | jq -r ". | select(.response_code==200) | .final_url"
+
+[1] https://stedolan.github.io/jq/`,
+	Example: `$ gowitness report list
+$ gowitness report list --json
+$ gowitness report list --csv --sort`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
