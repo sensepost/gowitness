@@ -48,6 +48,7 @@ type NetworkLog struct {
 	URLID uint
 
 	RequestID   string
+	Time        time.Time
 	RequestType storage.RequestType
 	StatusCode  int64
 	URL         string
@@ -207,6 +208,7 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 	for _, log := range screenshot.NetworkLog {
 		record.Network = append(record.Network, storage.NetworkLog{
 			RequestID:   log.RequestID,
+			Time:        log.Time,
 			RequestType: log.RequestType,
 			StatusCode:  log.StatusCode,
 			URL:         log.URL,
@@ -325,6 +327,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 			// record a fresh request that will be sent
 			networkLog[string(ev.RequestID)] = NetworkLog{
 				RequestID:   string(ev.RequestID),
+				Time:        time.Time(*ev.Timestamp),
 				RequestType: storage.HTTP,
 				URL:         ev.Request.URL,
 			}
@@ -354,6 +357,7 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 		case *network.EventWebSocketHandshakeResponseReceived:
 			if entry, ok := networkLog[string(ev.RequestID)]; ok {
 				entry.StatusCode = ev.Response.Status
+				entry.Time = time.Time(*ev.Timestamp)
 
 				networkLog[string(ev.RequestID)] = entry
 			}
@@ -421,6 +425,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte) chro
 		}
 		actions = append(actions, chromedp.Stop())
 	}
+
+	// add a small sleep to wait for images and other things
+	actions = append(actions, chromedp.Sleep(time.Second*3))
 
 	if chrome.FullPage {
 		actions = append(actions, chromedp.FullScreenshot(buf, 100))

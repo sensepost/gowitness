@@ -317,7 +317,10 @@ func detailHandler(c *gin.Context) {
 		Preload("TLS.TLSCertificates.DNSNames").
 		Preload("Technologies").
 		Preload("Console").
-		Preload("Network").
+		Preload("Network", func(db *gorm.DB) *gorm.DB {
+			db = db.Order("Time asc")
+			return db
+		}).
 		First(&url, id)
 
 	// get pagination limits
