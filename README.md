@@ -36,7 +36,7 @@ For installation information and other documentation, please refer to the wiki [
 - [zerolog](https://github.com/rs/zerolog)
 - [cobra](https://github.com/spf13/cobra)
 - [gorm](https://github.com/go-gorm/gorm)
-- [go-nmae](https://github.com/lair-framework/go-nmap)
+- [go-nmap](https://github.com/lair-framework/go-nmap)
 - [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo)
 - [goimagehash](https://github.com/corona10/goimagehash)
 
