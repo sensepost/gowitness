@@ -31,6 +31,7 @@ type Chrome struct {
 	ChromePath  string
 	Proxy       string
 	Headers     []string
+	Only200OK   bool
 	HeadersMap  map[string]interface{}
 
 	// save screenies as PDF's instead

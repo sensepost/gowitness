@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"errors"
 	"image/png"
 	"io/ioutil"
 	"net/url"
@@ -110,6 +111,9 @@ func (p *Processor) preflight() (err error) {
 		l = p.Logger.Info()
 	} else {
 		l = p.Logger.Warn()
+		if p.Chrome.Only200OK {
+			return errors.New("Only success HTTP requests are allowed")
+		}
 	}
 	l.Str("url", p.URL.String()).Int("statuscode", p.preflightResult.HTTPResponse.StatusCode).
 		Str("title", p.preflightResult.HTTPTitle).Msg("preflight result")
