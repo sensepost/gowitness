@@ -38,8 +38,8 @@ It is also possible to filter for services containing a specific string
 with the --service-contains / -w flag. Specifying -w flag as http means
 it would match services like http-alt, http-proxy etc.`,
 	Example: `# WARNING: These scan all exposed service, like SSH
-$ gowitness nmap --nmap-file nmap.xml
-$ gowitness nmap --nmap-file nmap.xml --scan-hostnames
+$ gowitness nmap --file nmap.xml
+$ gowitness nmap --file nmap.xml --scan-hostnames
 
 # These filter services from the nmap file
 $ gowitness nmap --file nmap.xml --service http --service https
@@ -49,7 +49,7 @@ $ gowitness nmap -f nmap.xml --no-http
 $ gowitness nmap -f nmap.xml --no-http --service https --port 8888
 $ gowitness nmap -f nmap.xml --no-https -n http -n http-alt
 $ gowitness nmap -f nmap.xml --port 80 --port 8080
-$ gowitness nmap --nmap-file nmap.xml -s -n http`,
+$ gowitness nmap --file nmap.xml -s -n http`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
