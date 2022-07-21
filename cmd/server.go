@@ -589,7 +589,8 @@ func apiDetailScreenshotHandler(c *gin.Context) {
 func apiScreenshotHandler(c *gin.Context) {
 
 	type Request struct {
-		URL string `json:"url"`
+		URL     string   `json:"url"`
+		Headers []string `json:"headers"`
 		// set oneshot to "true" if you just want to see the screenshot, and not add it to the report
 		OneShot string `json:"oneshot"`
 	}
@@ -623,6 +624,9 @@ func apiScreenshotHandler(c *gin.Context) {
 	}
 
 	// prepare request headers
+	if len(requestData.Headers) > 0 {
+		chrm.Headers = requestData.Headers
+	}
 	chrm.PrepareHeaderMap()
 
 	// deliver a oneshot screenshot to the user
