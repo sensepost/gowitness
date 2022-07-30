@@ -28,6 +28,10 @@ darwin-arm:
 	GOOS=darwin GOARCH=arm64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-darwin-arm64'
 linux:
 	GOOS=linux GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-linux-amd64'
+linux-arm:
+	GOOS=linux GOARCH=arm64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-linux-arm64'
+linux-armhf:
+	GOOS=linux GOARCH=arm GOARM=7 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-linux-armv7'
 windows:
 	GOOS=windows GOARCH=amd64 go build $(LD_FLAGS) -o '$(BIN_DIR)/gowitness-$(APPVER)-windows-amd64.exe'
 
@@ -39,6 +43,8 @@ darwin-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-darwin-arm64-debian10 --build-cmd "make darwin-arm" -p "darwin/arm64"
 linux-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-main --build-cmd "make linux" -p "linux/amd64"
+	$(DOCKER_RELEASE_BUILD_CMD)-arm --build-cmd "make linux-arm" -p "linux/arm64"
+	$(DOCKER_RELEASE_BUILD_CMD)-armhf --build-cmd "make linux-armhf" -p "linux/armv7"
 windows-release:
 	$(DOCKER_RELEASE_BUILD_CMD)-main --build-cmd "make windows" -p "windows/amd64"
 
