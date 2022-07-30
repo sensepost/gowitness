@@ -118,7 +118,7 @@ func init() {
 	nmapCmd.Flags().StringSliceVarP(&options.NmapService, "service", "n", []string{}, "map service name filter. supports multiple --service flags")
 	nmapCmd.Flags().StringVarP(&options.NmapServiceContains, "service-contains", "w", "", "partial service name filter (aka: contains)")
 	nmapCmd.Flags().IntSliceVar(&options.NmapPorts, "port", []int{}, "ports filter. supports multiple --port flags")
-	nmapCmd.Flags().BoolVarP(&options.NmapScanHostanmes, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
+	nmapCmd.Flags().BoolVarP(&options.NmapScanHostnames, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTP, "no-http", "s", false, "do not try using http://")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
 	nmapCmd.Flags().BoolVarP(&options.NmapOpenPortsOnly, "open", "", false, "only select open ports")
@@ -171,7 +171,7 @@ func getNmapURLs() (urls []string, err error) {
 				}
 
 				// add the hostnames if the option has been set
-				if options.NmapScanHostanmes {
+				if options.NmapScanHostnames {
 					for _, hn := range host.Hostnames {
 						urls = append(urls, buildURI(hn.Name, port.PortId)...)
 					}

@@ -127,7 +127,7 @@ func init() {
 	nessusCmd.Flags().StringSliceVar(&options.NessusPluginOutput, "nessus-plugin-output", []string{"web server"}, "nessus plugin output contains filter. supports multiple --pluginoutput flags")
 	nessusCmd.Flags().StringSliceVar(&options.NessusPluginContains, "nessus-plugin-contains", []string{"Service Detection"}, "nessus plugin name contains filer. supports multiple --plugin-contains flags")
 	nessusCmd.Flags().IntSliceVar(&options.NessusPorts, "port", []int{}, "ports filter. supports multiple --port flags")
-	nessusCmd.Flags().BoolVarP(&options.NmapScanHostanmes, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
+	nessusCmd.Flags().BoolVarP(&options.NmapScanHostnames, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
 	nessusCmd.Flags().BoolVarP(&options.NoHTTP, "no-http", "s", false, "do not try using http://")
 	nessusCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
 	nessusCmd.Flags().IntVarP(&options.Threads, "threads", "t", 4, "threads used to run")
@@ -230,7 +230,7 @@ func getNessusURLs() (urls []string, err error) {
 					// identify that the service is a web server
 					if lib.SliceContainsString(options.NessusServiceNames, item.ServiceName) || lib.SliceContainsString(options.NessusPluginOutput, item.PluginOutput) {
 						// add the hostnames if the option has been set
-						if options.NmapScanHostanmes {
+						if options.NmapScanHostnames {
 							if fqdn != "" {
 								nessusHostsMap[fqdn] = item.Port
 							}
