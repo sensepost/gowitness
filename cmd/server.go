@@ -49,8 +49,8 @@ this restriction lifted, add the --allow-insecure-uri / -A flag. A word of
 warning though, that also means that someone may request a URL like file:///etc/passwd.
 `,
 	Example: `$ gowitness server
-$ gowitness server --addr 0.0.0.0:8080
-$ gowitness server --addr 127.0.0.1:9000 --allow-insecure-uri`,
+$ gowitness server --address 0.0.0.0:8080
+$ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
