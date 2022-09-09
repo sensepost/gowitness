@@ -47,7 +47,7 @@
                     {{ range .URLS}}
                     <tr>
                       <td>
-                        <a href="/details/{{ .ID }}">Detail</a>
+                        <a href="./details/{{ .ID }}">Detail</a>
                       </td>
                       <td class="text-muted">
                         {{ if (eq 0 .ResponseCode)}}
@@ -116,7 +116,7 @@
                     {{ range $tech := $url.Technologies}}
                     <tr>
                       <td>
-                        <a href="/details/{{ $url.ID }}">Detail</a>
+                        <a href="./details/{{ $url.ID }}">Detail</a>
                       </td>
                       <td>{{ $url.URL }}</td>
                       <td>{{ $tech.Value }}</td>
@@ -158,7 +158,7 @@
                     {{ range $header := $url.Headers}}
                     <tr>
                       <td>
-                        <a href="/details/{{ $url.ID }}">Detail</a>
+                        <a href="./details/{{ $url.ID }}">Detail</a>
                       </td>
                       <td>{{ $url.URL }}</td>
                       <td class="text-nowrap">{{ .Key }}</td>
@@ -201,7 +201,7 @@
                     {{ range $log := $url.Console }}
                     <tr>
                       <td>
-                        <a href="/details/{{ $url.ID }}">Detail</a>
+                        <a href="./details/{{ $url.ID }}">Detail</a>
                       </td>
                       <td>{{ $url.URL }}</td>
                       <td class="text-nowrap">{{ .Type }}</td>
@@ -248,7 +248,7 @@
                     {{ range $log := $url.Network }}
                     <tr>
                       <td>
-                        <a href="/details/{{ $url.ID }}">Detail</a>
+                        <a href="./details/{{ $url.ID }}">Detail</a>
                       </td>
                       <td>
                         {{ if (eq $log.RequestType 0) }}
