@@ -17,7 +17,7 @@
 
       <div class="col-12 col-md-auto ms-auto d-print-none">
         <div class="btn-list">
-          <a href="./details/{{ .Previous }}"
+          <a href="/details/{{ .Previous }}"
             class="btn d-none d-sm-inline-block {{ if eq .Previous 0 }}disabled{{ end }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-left" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -29,7 +29,7 @@
             Previous
           </a>
 
-          <a href="./details/{{ .Next }}"
+          <a href="/details/{{ .Next }}"
             class="btn btn-primary d-none d-sm-inline-block {{ if eq .Next .Max }}disabled{{ end }}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-right" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -58,12 +58,12 @@
           <div class="col-12">
             <div class="card card-sm">
               {{ if .Data.IsPDF }}
-              <embed class="card-img-top" src="./screenshots/{{ .Data.Filename }}" type="application/pdf" frameBorder="0"
+              <embed class="card-img-top" src="/screenshots/{{ .Data.Filename }}" type="application/pdf" frameBorder="0"
                 scrolling="auto" height="100%" width="100%"></embed>
               {{ else }}
-              <a href="./screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
-                <img loading="lazy" src="./screenshots/{{ .Data.Filename }}"
-                  onerror="this.onerror=null; this.src='./assets/img/blank.png'" class="card-img-top">
+              <a href="/screenshots/{{ .Data.Filename }}" target="_blank" class="d-block">
+                <img loading="lazy" src="/screenshots/{{ .Data.Filename }}"
+                  onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
               </a>
               {{ end }}
               <div class="card-footer">
@@ -172,7 +172,7 @@
                 <h3 class="card-title">DOM Dump</h3>
 
                 <div class="card-actions">
-                  <a href="./details/{{ .ID }}/dom" class="btn btn-primary">
+                  <a href="/details/{{ .ID }}/dom" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24"
                       height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                       stroke-linecap="round" stroke-linejoin="round">
