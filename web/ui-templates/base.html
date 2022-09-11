@@ -14,8 +14,8 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="HandheldFriendly" content="True" />
   <meta name="MobileOptimized" content="320" />
-  <link rel="icon" href="./favicon.ico" type="image/x-icon" />
-  <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+  <link rel="icon" href='{{ URL "/favicon.ico" }}' type="image/x-icon" />
+  <link rel="shortcut icon" href='{{ URL "/favicon.ico" }}' type="image/x-icon" />
   <meta name="description" content="gowitness - a golang, web screenshot utility using Chrome Headless" />
   <meta name="twitter:site" content="@leonjza">
   <meta name="twitter:card" content="summary">
@@ -27,7 +27,7 @@
   <meta property="og:title" content="gowitness">
   <meta property="og:description" content="gowitness - a golang, web screenshot utility using Chrome Headless">
   <!-- CSS files -->
-  <link href="./assets/css/tabler.min.css" rel="stylesheet" />
+  <link href='{{ URL "/assets/css/tabler.min.css" }}' rel="stylesheet" />
 </head>
 
 <body class=" layout-fluid theme-{{ GetTheme }}">
@@ -40,7 +40,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-          <a href="/">
+          <a href='{{ URL "/" }}'>
             🔍 gowitness - a golang, web screenshot utility using Chrome Headless
           </a>
         </h1>
@@ -76,7 +76,7 @@
             <ul class="navbar-nav">
 
               <li class="nav-item">
-                <a class="nav-link" href="/">
+                <a class="nav-link" href='{{ URL "/" }}'>
                   <span class="nav-link-icon d-md-none d-lg-inline-block">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
                       stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -93,7 +93,7 @@
               </li>
 
               <li class="nav-item">
-                <a class="nav-link" href="./gallery">
+                <a class="nav-link" href='{{ URL "/gallery" }}'>
                   <span class="nav-link-icon d-md-none d-lg-inline-block">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
                       stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -109,7 +109,7 @@
               </li>
 
               <li class="nav-item">
-                <a class="nav-link" href="./table">
+                <a class="nav-link" href='{{ URL "/table" }}'>
                   <span class="nav-link-icon d-md-none d-lg-inline-block">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list" width="24"
                       height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -130,7 +130,7 @@
               </li>
 
               <li class="nav-item">
-                <a class="nav-link" href="./submit">
+                <a class="nav-link" href='{{ URL "/submit" }}'>
                   <span class="nav-link-icon d-md-none d-lg-inline-block">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-plus" width="24"
                       height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -151,7 +151,7 @@
 
             <!-- search -->
             <div class="my-2 my-md-0 flex-grow-1 flex-md-grow-0 order-first order-md-last">
-              <form action="./search" method="post">
+              <form action='{{ URL "/search" }}' method="post">
                 <div class="input-icon">
                   <span class="input-icon-addon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
@@ -204,7 +204,7 @@
     </div>
 
   </div> <!-- class=page -->
-  <script src="./assets/js/tabler.min.js"></script>
+  <script src='{{ URL "/assets/js/tabler.min.js" }}'></script>
 </body>
 
 </html>

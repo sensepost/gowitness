@@ -19,7 +19,7 @@
       <div class="col-12 col-md-auto ms-auto d-print-none">
         <div class="btn-list">
           {{ if .Data.Ordered }}
-          <a href="/gallery?perception_sort=false&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
+          <a href='{{ URL "/gallery" }}?perception_sort=false&limit={{ .Data.Limit }}&page={{ .Data.Page }}'
             class="btn btn-primary d-none d-sm-inline-block">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-sort-ascending-2" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -33,7 +33,7 @@
             Disable Perception Sort
           </a>
           {{ else }}
-          <a href="/gallery?perception_sort=true&limit={{ .Data.Limit }}&page={{ .Data.Page }}"
+          <a href='{{ URL "/gallery" }}?perception_sort=true&limit={{ .Data.Limit }}&page={{ .Data.Page }}'
             class="btn btn-primary d-none d-sm-inline-block">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-sort-descending-2" width="24"
               height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -77,12 +77,12 @@
 
         <div class="card card-sm">
           {{ if .IsPDF }}
-          <embed src="/screenshots/{{ .Filename }}" type="application/pdf" frameBorder="0" scrolling="auto"
+          <embed src='{{ URL "/screenshots/" }}{{ .Filename }}' type="application/pdf" frameBorder="0" scrolling="auto"
             height="100%" width="100%"></embed>
           {{ else }}
-          <a href="/screenshots/{{ .Filename }}" target="_blank" class="d-block">
-            <img loading="lazy" src="/screenshots/{{ .Filename }}"
-              onerror="this.onerror=null; this.src='/assets/img/blank.png'" class="card-img-top">
+          <a href='{{ URL "/screenshots/" }}{{ .Filename }}' target="_blank" class="d-block">
+            <img loading="lazy" src='{{ URL "/screenshots/" }}{{ .Filename }}'
+              onerror="this.onerror=null; this.src='{{ URL "/assets/img/blank.png" }}'" class="card-img-top">
           </a>
           {{ end }}
           <div class="card-body">
@@ -98,7 +98,7 @@
                 </div>
               </div>
               <div class="ms-auto">
-                <a href="/details/{{ .ID }}" class="text-muted">
+                <a href='{{ URL "/details/" }}{{ .ID }}' class="text-muted">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
                     stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -130,7 +130,7 @@
         <!-- first page -->
         <li class="page-item {{ if le .Data.Page 1 }}disabled{{ end }}">
           <a class="page-link"
-            href="/gallery?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ .Data.PrevPage }}"
+            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ .Data.PrevPage }}'
             tabindex="-1" {{ if le .Data.Page 1 }}aria-disabled="true" {{ end }}>
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
               stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -145,7 +145,7 @@
         {{ range $p := .Data.PrevPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
+            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ $p }}'>
             {{ $p }}
           </a>
         </li>
@@ -160,7 +160,7 @@
         {{ range $p := .Data.NextPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}">
+            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ $p }}'>
             {{ $p }}
           </a>
         </li>
@@ -169,7 +169,7 @@
         <!-- next -->
         <li class="page-item {{ if eq .Data.Page .Data.NextPage }}disabled{{ end }}">
           <a class="page-link"
-            href="/gallery?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ .Data.NextPage }}">
+            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ .Data.NextPage }}'>
             next
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
               stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

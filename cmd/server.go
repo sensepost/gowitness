@@ -58,6 +58,10 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the server command help for more information")
 		}
 
+		if !strings.HasPrefix(options.BasePath, "/") {
+			log.Warn().Msg("base path does not start with a /")
+		}
+
 		// db
 		dbh, err := db.Get()
 		if err != nil {
@@ -77,10 +81,21 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 		r := gin.Default()
 		r.Use(themeChooser(&theme))
 
+		// add / suffix to the base url so that we can be certain about
+		// the trim in the template helper
+		if !strings.HasSuffix(options.BasePath, "/") {
+			options.BasePath += "/"
+		}
+
+		log.Info().Str("base-path", options.BasePath).Msg("basepath")
+
 		funcMap := template.FuncMap{
 			"GetTheme": getTheme,
 			"Contains": func(full string, search string) bool {
 				return strings.Contains(full, search)
+			},
+			"URL": func(url string) string {
+				return options.BasePath + strings.TrimPrefix(url, "/")
 			},
 		}
 		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(Embedded, "web/ui-templates/*.html"))
@@ -127,6 +142,7 @@ func init() {
 
 	serverCmd.Flags().StringVarP(&options.ServerAddr, "address", "a", "localhost:7171", "server listening address")
 	serverCmd.Flags().BoolVarP(&options.AllowInsecureURIs, "allow-insecure-uri", "A", false, "allow uris that dont start with http(s)")
+	serverCmd.Flags().StringVarP(&options.BasePath, "base-path", "b", "/", "set the servers base path (useful for some reverse proxy setups)")
 }
 
 // middleware

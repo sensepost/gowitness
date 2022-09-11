@@ -21,6 +21,7 @@ type Options struct {
 	NoHTTPS    bool
 	NoHTTP     bool
 	ServerAddr string
+	BasePath   string
 
 	// Server command
 	AllowInsecureURIs bool
