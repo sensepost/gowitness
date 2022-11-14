@@ -145,7 +145,7 @@
         {{ range $p := .Data.PrevPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ $p }}'>
+            href='{{ URL "/gallery" }}?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}'>
             {{ $p }}
           </a>
         </li>
@@ -160,7 +160,7 @@
         {{ range $p := .Data.NextPageRange }}
         <li class="page-item">
           <a class="page-link"
-            href='{{ URL "/gallery" }}?{{ if .Data.Ordered }}perception_sort=true&{{ end }}limit={{ .Data.Limit }}&page={{ $p }}'>
+            href='{{ URL "/gallery" }}?{{ if $.Data.Ordered }}perception_sort=true&{{ end }}limit={{ $.Data.Limit }}&page={{ $p }}'>
             {{ $p }}
           </a>
         </li>
