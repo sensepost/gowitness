@@ -59,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&options.DisableLogging, "disable-logging", false, "disable all logging")
 	// global
 	rootCmd.PersistentFlags().BoolVar(&db.Disabled, "disable-db", false, "disable all database operations")
+	rootCmd.PersistentFlags().IntVarP(&db.Platform, "type", "t", 0, "0 - SQLite, 1 - Postgres")
 	rootCmd.PersistentFlags().BoolVar(&db.Debug, "debug-db", false, "enable debug logging for all database operations")
 	rootCmd.PersistentFlags().StringVarP(&db.Path, "db-path", "D", "gowitness.sqlite3", "destination for the gowitness database")
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionX, "resolution-x", "X", 1440, "screenshot resolution x")
@@ -72,4 +73,5 @@ func init() {
 	rootCmd.PersistentFlags().Int64Var(&chrm.Timeout, "timeout", 10, "preflight check timeout")
 	rootCmd.PersistentFlags().StringVarP(&chrm.ChromePath, "chrome-path", "", "", "path to chrome executable to use")
 	rootCmd.PersistentFlags().StringVarP(&chrm.Proxy, "proxy", "p", "", "http/socks5 proxy to use. Use format proto://address:port")
+
 }

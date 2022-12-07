@@ -57,9 +57,17 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 		if !strings.Contains(options.ServerAddr, "localhost") {
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the server command help for more information")
 		}
+		if db.Platform == storage.Sqlite {
+			if !strings.HasPrefix(options.BasePath, "/") {
+				log.Warn().Msg("base path does not start with a /")
+			}
+		}
 
-		if !strings.HasPrefix(options.BasePath, "/") {
-			log.Warn().Msg("base path does not start with a /")
+		if db.Platform == storage.Postgres {
+			if !strings.HasPrefix(options.BasePath, "postgresql") {
+				log.Warn().Msg("base path does not start with a /")
+			}
+
 		}
 
 		// db
@@ -125,6 +133,7 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 		api := r.Group("/api")
 		{
 			api.GET("/list", apiURLHandler)
+			api.GET("/search", apiSearchHandler)
 			api.GET("/detail/:id", apiDetailHandler)
 			api.GET("/detail/:id/screenshot", apiDetailScreenshotHandler)
 			api.POST("/screenshot", apiScreenshotHandler)
@@ -552,6 +561,21 @@ func apiURLHandler(c *gin.Context) {
 
 	var urls []apiURL
 	rsDB.Model(&storage.URL{}).Find(&urls)
+
+	c.JSON(http.StatusOK, urls)
+}
+
+func apiSearchHandler(c *gin.Context) {
+
+	// use gorm SmartSelect Fields to filter URL
+	search := "%"+c.Query("q")+"%"
+	var urls []storage.URL
+
+	rsDB.
+		Where("URL LIKE ?", search).
+		Or("Title LIKE ?", search).
+		Or("DOM LIKE ?", search).
+		Find(&urls)
 
 	c.JSON(http.StatusOK, urls)
 }

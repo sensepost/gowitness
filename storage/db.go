@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"errors"
 	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -14,7 +16,13 @@ type Db struct {
 	// cli flags
 	Disabled bool
 	Debug    bool
+	Platform int
 }
+
+const (
+	Sqlite = iota
+	Postgres
+)
 
 // NewDb sets up a new DB
 func NewDb() *Db {
@@ -35,16 +43,29 @@ func (db *Db) Get() (*gorm.DB, error) {
 		config.Logger = logger.Default.LogMode(logger.Error)
 	}
 
-	conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), config)
-	if err != nil {
-		return nil, err
-	}
+	switch db.Platform {
+	case Sqlite:
+		conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), config)
+		if err != nil {
+			return nil, err
+		}
 
-	if !db.SkipMigration {
-		conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
-	}
+		if !db.SkipMigration {
+			conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
+		}
+		return conn, nil
+	case Postgres:
+		conn, err := gorm.Open(postgres.Open(db.Path), config)
+		if err != nil {
+			return nil, err
+		}
 
-	return conn, nil
+		if !db.SkipMigration {
+			conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
+		}
+		return conn, nil
+	}
+	return nil, errors.New("invalid db platform")
 }
 
 // OrderPerception orders by perception hash if enabled
