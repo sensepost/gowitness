@@ -167,8 +167,8 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 		Title:          preflight.HTTPTitle,
 		Filename:       filename,
 		IsPDF:          chrome.AsPDF,
+		Screenshot:     screenshot.Screenshot,
 	}
-
 	// append headers
 	for k, v := range preflight.HTTPResponse.Header {
 		hv := strings.Join(v, ", ")
@@ -230,7 +230,8 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 
 // Screenshot takes a screenshot of a URL, optionally saving network and console events.
 // Ref:
-// 	https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go
+//
+//	https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go
 func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err error) {
 
 	// prepare a new screenshotResult
@@ -463,7 +464,8 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 // initalize the headers Map. we do this given the format chromedp wants
 // Ref:
-// 	https://github.com/chromedp/examples/blob/master/headers/main.go
+//
+//	https://github.com/chromedp/examples/blob/master/headers/main.go
 func (chrome *Chrome) PrepareHeaderMap() {
 
 	if len(chrome.Headers) <= 0 {
