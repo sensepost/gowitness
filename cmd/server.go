@@ -568,7 +568,7 @@ func apiURLHandler(c *gin.Context) {
 func apiSearchHandler(c *gin.Context) {
 
 	// use gorm SmartSelect Fields to filter URL
-	search := "%"+c.Query("q")+"%"
+	search := "%" + c.Query("q") + "%"
 	var urls []storage.URL
 
 	rsDB.
