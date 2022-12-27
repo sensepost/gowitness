@@ -3,6 +3,7 @@ package chrome
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"io"
 	"net/http"
@@ -167,7 +168,7 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 		Title:          preflight.HTTPTitle,
 		Filename:       filename,
 		IsPDF:          chrome.AsPDF,
-		Screenshot:     screenshot.Screenshot,
+		Screenshot:     base64.StdEncoding.EncodeToString(screenshot.Screenshot),
 	}
 	// append headers
 	for k, v := range preflight.HTTPResponse.Header {

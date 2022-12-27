@@ -23,7 +23,7 @@ type URL struct {
 	IsPDF          bool
 	PerceptionHash string
 	DOM            string
-	Screenshot     []byte
+	Screenshot     string
 
 	TLS TLS
 
