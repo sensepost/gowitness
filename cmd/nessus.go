@@ -48,16 +48,16 @@ descriptors. The default values are 'www' and 'https', but perhaps using
 Optionally, you may choose to scan the FQDN hostnames with --scan-hostnames.
 This will include both IP address and hostnames into the target list.`,
 	Example: `
-$ gowitness nessus -file output.nessus
-$ gowitness nessus -file output.nessus --scan-hostnames
+$ gowitness nessus --file output.nessus
+$ gowitness nessus --file output.nessus --scan-hostnames
 
 # These options filter services from the nessus file
-$ gowitness nessus -file output.nessus --nessus-plugin-output server
-$ gowitness nessus -file output.nessus --nessus-service www --nessus-service tcp --nessus-service https
-$ gowitness nessus -file output.nessus --no-http
-$ gowitness nessus -file output.nessus --no-http --port 8888
-$ gowitness nessus -file output.nessus --no-https
-$ gowitness nessus -file output.nessus --port 80 --port 8080`,
+$ gowitness nessus --file output.nessus --nessus-plugin-output server
+$ gowitness nessus --file output.nessus --nessus-service www --nessus-service tcp --nessus-service https
+$ gowitness nessus --file output.nessus --no-http
+$ gowitness nessus --file output.nessus --no-http --port 8888
+$ gowitness nessus --file output.nessus --no-https
+$ gowitness nessus --file output.nessus --port 80 --port 8080`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log := options.Logger
 
