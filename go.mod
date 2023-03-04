@@ -1,4 +1,4 @@
-module djallalzoldik/gowitness_js
+module github.com/djallalzoldik/gowitness_js
 
 go 1.19
 
