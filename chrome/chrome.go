@@ -25,6 +25,7 @@ type Chrome struct {
 	ResolutionX int
 	ResolutionY int
 	UserAgent   string
+	JsCode      string
 	Timeout     int64
 	Delay       int
 	FullPage    bool
@@ -437,6 +438,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	// grab the dom
 	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
+	
+	// pass javascript code
+	actions = append(actions,chromedp.Evaluate(chrome.JsCode))
 
 	// should we print as pdf?
 	if chrome.AsPDF {
