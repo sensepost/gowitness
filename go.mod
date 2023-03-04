@@ -1,4 +1,4 @@
-module github.com/sensepost/gowitness
+module djallalzoldik/gowitness_js
 
 go 1.19
 
