@@ -439,8 +439,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 	// grab the dom
 	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
 	
+	var res string
 	// pass javascript code
-	actions = append(actions,chromedp.Evaluate(chrome.JsCode))
+	actions = append(actions,chromedp.Evaluate(chrome.JsCode, &res),)
 
 	// should we print as pdf?
 	if chrome.AsPDF {
