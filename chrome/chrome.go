@@ -231,14 +231,13 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 
 // Screenshot takes a screenshot of a URL, optionally saving network and console events.
 // Ref:
-// 	https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go
+//
+//	https://github.com/chromedp/examples/blob/255873ca0d76b00e0af8a951a689df3eb4f224c3/screenshot/main.go
 func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err error) {
 
 	// prepare a new screenshotResult
 	result = &ScreenshotResult{}
-	
-	
-	
+
 	// setup chromedp default options
 	options := []chromedp.ExecAllocatorOption{}
 	options = append(options, chromedp.DefaultExecAllocatorOptions[:]...)
@@ -246,11 +245,6 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 	options = append(options, chromedp.DisableGPU)
 	options = append(options, chromedp.Flag("ignore-certificate-errors", true)) // RIP shittyproxy.go
 	options = append(options, chromedp.WindowSize(chrome.ResolutionX, chrome.ResolutionY))
-	
-	
-	
-	
-	
 
 	if chrome.ChromePath != "" {
 		options = append(options, chromedp.ExecPath(chrome.ChromePath))
@@ -427,8 +421,6 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 // buildTasks builds the chromedp tasks slice
 func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom *string) chromedp.Tasks {
 	var actions chromedp.Tasks
-	// pass javascript code
-	var res *runtime.RemoteObject
 
 	if len(chrome.HeadersMap) > 0 {
 		actions = append(actions, network.Enable(), network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)))
@@ -436,7 +428,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	if doNavigate {
 		actions = append(actions, chromedp.Navigate(url.String()))
-		actions = append(actions, chromedp.Evaluate(chrome.JsCode, &res),)
+		if len(chrome.JsCode) > 0 {
+			actions = append(actions, chromedp.Evaluate(chrome.JsCode, nil))
+		}
 		if chrome.Delay > 0 {
 			actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay)*time.Second))
 		}
@@ -448,8 +442,6 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	// grab the dom
 	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
-	
-	
 
 	// should we print as pdf?
 	if chrome.AsPDF {
@@ -476,7 +468,8 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 // initalize the headers Map. we do this given the format chromedp wants
 // Ref:
-// 	https://github.com/chromedp/examples/blob/master/headers/main.go
+//
+//	https://github.com/chromedp/examples/blob/master/headers/main.go
 func (chrome *Chrome) PrepareHeaderMap() {
 
 	if len(chrome.Headers) <= 0 {
