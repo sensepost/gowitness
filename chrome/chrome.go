@@ -25,6 +25,7 @@ type Chrome struct {
 	ResolutionX int
 	ResolutionY int
 	UserAgent   string
+	JsCode      string
 	Timeout     int64
 	Delay       int
 	FullPage    bool
@@ -235,7 +236,9 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 
 	// prepare a new screenshotResult
 	result = &ScreenshotResult{}
-
+	
+	
+	
 	// setup chromedp default options
 	options := []chromedp.ExecAllocatorOption{}
 	options = append(options, chromedp.DefaultExecAllocatorOptions[:]...)
@@ -243,6 +246,11 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 	options = append(options, chromedp.DisableGPU)
 	options = append(options, chromedp.Flag("ignore-certificate-errors", true)) // RIP shittyproxy.go
 	options = append(options, chromedp.WindowSize(chrome.ResolutionX, chrome.ResolutionY))
+	
+	
+	
+	
+	
 
 	if chrome.ChromePath != "" {
 		options = append(options, chromedp.ExecPath(chrome.ChromePath))
@@ -419,6 +427,8 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 // buildTasks builds the chromedp tasks slice
 func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom *string) chromedp.Tasks {
 	var actions chromedp.Tasks
+	// pass javascript code
+	var res *runtime.RemoteObject
 
 	if len(chrome.HeadersMap) > 0 {
 		actions = append(actions, network.Enable(), network.SetExtraHTTPHeaders(network.Headers(chrome.HeadersMap)))
@@ -426,6 +436,7 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	if doNavigate {
 		actions = append(actions, chromedp.Navigate(url.String()))
+		actions = append(actions, chromedp.Evaluate(chrome.JsCode, &res),)
 		if chrome.Delay > 0 {
 			actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay)*time.Second))
 		}
@@ -437,6 +448,8 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	// grab the dom
 	actions = append(actions, chromedp.OuterHTML(":root", dom, chromedp.ByQueryAll))
+	
+	
 
 	// should we print as pdf?
 	if chrome.AsPDF {

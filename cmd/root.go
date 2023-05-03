@@ -65,6 +65,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionY, "resolution-y", "Y", 900, "screenshot resolution y")
 	rootCmd.PersistentFlags().IntVar(&chrm.Delay, "delay", 0, "delay in seconds between navigation and screenshot")
 	rootCmd.PersistentFlags().StringVar(&chrm.UserAgent, "user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36", "user agent string to use")
+	rootCmd.PersistentFlags().StringVar(&chrm.JsCode, "js", "console.log('your code is run')", "javascript code to excute")
 	rootCmd.PersistentFlags().StringSliceVar(&chrm.Headers, "header", []string{}, "Additional HTTP header to set. Supports multiple --header flags")
 	rootCmd.PersistentFlags().StringVarP(&options.ScreenshotPath, "screenshot-path", "P", "screenshots", "store path for screenshots (use . for pwd)")
 	rootCmd.PersistentFlags().BoolVarP(&chrm.FullPage, "fullpage", "F", false, "take fullpage screenshots")
