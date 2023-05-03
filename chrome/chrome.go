@@ -26,6 +26,7 @@ type Chrome struct {
 	ResolutionX int
 	ResolutionY int
 	UserAgent   string
+	JsCode      string
 	Timeout     int64
 	Delay       int
 	FullPage    bool
@@ -428,6 +429,9 @@ func buildTasks(chrome *Chrome, url *url.URL, doNavigate bool, buf *[]byte, dom 
 
 	if doNavigate {
 		actions = append(actions, chromedp.Navigate(url.String()))
+		if len(chrome.JsCode) > 0 {
+			actions = append(actions, chromedp.Evaluate(chrome.JsCode, nil))
+		}
 		if chrome.Delay > 0 {
 			actions = append(actions, chromedp.Sleep(time.Duration(chrome.Delay)*time.Second))
 		}
