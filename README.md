@@ -29,18 +29,7 @@ For installation information and other documentation, please refer to the wiki [
 
 ## credits
 
-`gowitness` would not have been posssible without these amazing projects:
-
-- [chromedp](https://github.com/chromedp/chromedp)
-- [tabler](https://github.com/tabler/tabler)
-- [zerolog](https://github.com/rs/zerolog)
-- [cobra](https://github.com/spf13/cobra)
-- [gorm](https://github.com/go-gorm/gorm)
-- [go-nmap](https://github.com/lair-framework/go-nmap)
-- [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo)
-- [goimagehash](https://github.com/corona10/goimagehash)
-
-And many more!
+`gowitness` would not have been posssible without some of these amazing projects: [chromedp](https://github.com/chromedp/chromedp), [tabler](https://github.com/tabler/tabler), [zerolog](https://github.com/rs/zerolog), [cobra](https://github.com/spf13/cobra), [gorm](https://github.com/go-gorm/gorm), [go-nmap](https://github.com/lair-framework/go-nmap), [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo), [goimagehash](https://github.com/corona10/goimagehash)
 
 ## license
 
