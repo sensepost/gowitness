@@ -57,17 +57,9 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 		if !strings.Contains(options.ServerAddr, "localhost") {
 			log.Warn().Msg("exposing this server to other networks is dangerous! see the server command help for more information")
 		}
-		if db.Platform == storage.Sqlite {
-			if !strings.HasPrefix(options.BasePath, "/") {
-				log.Warn().Msg("base path does not start with a /")
-			}
-		}
 
-		if db.Platform == storage.Postgres {
-			if !strings.HasPrefix(options.BasePath, "postgresql") {
-				log.Warn().Msg("base path does not start with a /")
-			}
-
+		if !strings.HasPrefix(options.BasePath, "/") {
+			log.Warn().Msg("base path does not start with a /")
 		}
 
 		// db
@@ -77,7 +69,7 @@ $ gowitness server --address 127.0.0.1:9000 --allow-insecure-uri`,
 		}
 		rsDB = dbh
 
-		log.Info().Str("path", db.Path).Msg("db path")
+		log.Info().Str("path", db.Location).Msg("db path")
 		log.Info().Str("path", options.ScreenshotPath).Msg("screenshot path")
 
 		if options.Debug {
@@ -207,9 +199,6 @@ func themeChooser(choice *string) gin.HandlerFunc {
 			d := "dark"
 			*choice = d
 		}
-
-		// no change with an invalid value
-		return
 	}
 }
 
@@ -565,10 +554,21 @@ func apiURLHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, urls)
 }
 
+// apiSearchHandler allows for searches via the api
 func apiSearchHandler(c *gin.Context) {
 
+	query := c.Query("q")
+
+	if query == "" {
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status": "error",
+			"error":  "search parameter 'q' empty",
+		})
+		return
+	}
+
 	// use gorm SmartSelect Fields to filter URL
-	search := "%" + c.Query("q") + "%"
+	search := "%" + query + "%"
 	var urls []storage.URL
 
 	rsDB.

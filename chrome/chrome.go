@@ -37,6 +37,8 @@ type Chrome struct {
 
 	// save screenies as PDF's instead
 	AsPDF bool
+	// save screenies in db
+	ScreenshotDbStore bool
 
 	// wappalyzer client
 	wappalyzer *Wappalyzer
@@ -169,8 +171,13 @@ func (chrome *Chrome) StoreRequest(db *gorm.DB, preflight *PreflightResult, scre
 		Title:          preflight.HTTPTitle,
 		Filename:       filename,
 		IsPDF:          chrome.AsPDF,
-		Screenshot:     base64.StdEncoding.EncodeToString(screenshot.Screenshot),
 	}
+
+	// if screenshots need to be saved to the database, do that.
+	if chrome.ScreenshotDbStore {
+		record.Screenshot = base64.StdEncoding.EncodeToString(screenshot.Screenshot)
+	}
+
 	// append headers
 	for k, v := range preflight.HTTPResponse.Header {
 		hv := strings.Join(v, ", ")

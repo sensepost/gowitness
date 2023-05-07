@@ -50,7 +50,7 @@ $ gowitness merge -i gowitness.sqlite3 --input-path dbs/ --output merged.sqlite3
 
 		// get a handle for the fresh, merged db
 		dstDB := storage.NewDb()
-		dstDB.Path = options.MergeOutputDB
+		dstDB.Location = options.MergeOutputDB
 		dstDBConn, err := dstDB.Get()
 
 		if err != nil {
@@ -116,7 +116,7 @@ func mergeFromPath(source string, dst *gorm.DB) error {
 	log := options.Logger
 
 	srcDB := storage.NewDb()
-	srcDB.Path = source
+	srcDB.Location = source
 	srcDB.SkipMigration = true
 
 	db, err := srcDB.Get()

@@ -38,11 +38,11 @@ type Processor struct {
 }
 
 // Gowitness processes a URL by:
-//	- preflighting
-//	- storing
-//	- screenshotting
-//	- calculating a perception hash
-//	- writing a screenshot to disk
+//   - preflighting
+//   - storing
+//   - screenshotting
+//   - calculating a perception hash
+//   - writing a screenshot to disk
 func (p *Processor) Gowitness() (err error) {
 
 	p.init()
@@ -75,13 +75,13 @@ func (p *Processor) Gowitness() (err error) {
 	return
 }
 
-//adds the file extension to a given path if the path does not end with the given extension
+// adds the file extension to a given path if the path does not end with the given extension
 func addExtensionIfNeeded(filepath, extension string) string {
-       ext := filepath[len(filepath)-len(extension):]
-       if ext != extension {
-               return filepath[:len(filepath)] + extension
-       }
-       return filepath
+	ext := filepath[len(filepath)-len(extension):]
+	if ext != extension {
+		return filepath[:] + extension
+	}
+	return filepath
 }
 
 // init initialises the Processor
@@ -97,9 +97,9 @@ func (p *Processor) init() {
 
 	// set the extention depending on the screenshot format
 	if p.Chrome.AsPDF {
-		p.fn = addExtensionIfNeeded(p.fn,  ".pdf")
+		p.fn = addExtensionIfNeeded(p.fn, ".pdf")
 	} else {
-		p.fn = addExtensionIfNeeded(p.fn,  ".png")
+		p.fn = addExtensionIfNeeded(p.fn, ".png")
 	}
 
 	p.fp = ScreenshotPath(p.fn, p.URL, p.ScreenshotPath)

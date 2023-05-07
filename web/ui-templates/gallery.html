@@ -77,15 +77,19 @@
 
         <div class="card card-sm">
           {{ if .IsPDF }}
-          <embed src='{{ URL "/screenshots/" }}{{ .Filename }}' type="application/pdf" frameBorder="0" scrolling="auto"
-            height="100%" width="100%"></embed>
+            <embed src='{{ URL "/screenshots/" }}{{ .Filename }}' type="application/pdf" frameBorder="0" scrolling="auto"
+              height="100%" width="100%"></embed>
+            {{ else if .Screenshot }}
+            <a class="d-block">
+              <img loading="lazy" src="data:image/png;base64,{{ .Screenshot }}" alt="Screenshot" class="card-img-top">
+            </a>
           {{ else }}
-          <a class="d-block">
-            <img loading="lazy" src="data:image/png;base64,{{ .Screenshot }}" alt="Screenshot" class="card-img-top">
-          </a>
+            <a href='{{ URL "/screenshots/" }}{{ .Filename }}' target="_blank" class="d-block">
+              <img loading="lazy" src='{{ URL "/screenshots/" }}{{ .Filename }}'
+                onerror="this.onerror=null; this.src='{{ URL "/assets/img/blank.png" }}'" class="card-img-top">
           {{ end }}
-          <div class="card-body">
 
+          <div class="card-body">
             <div class="d-flex align-items-center">
               <div>
                 <div>{{ .URL }}</div>

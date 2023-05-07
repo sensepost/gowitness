@@ -2,27 +2,23 @@ package storage
 
 import (
 	"errors"
-	"gorm.io/driver/sqlite"
+	"net/url"
+
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 // Db is the SQLite3 db handler ype
 type Db struct {
-	Path          string
+	Location      string
 	SkipMigration bool
 
 	// cli flags
 	Disabled bool
 	Debug    bool
-	Platform int
 }
-
-const (
-	Sqlite = iota
-	Postgres
-)
 
 // NewDb sets up a new DB
 func NewDb() *Db {
@@ -43,29 +39,34 @@ func (db *Db) Get() (*gorm.DB, error) {
 		config.Logger = logger.Default.LogMode(logger.Error)
 	}
 
-	switch db.Platform {
-	case Sqlite:
-		conn, err := gorm.Open(sqlite.Open(db.Path+"?cache=shared"), config)
-		if err != nil {
-			return nil, err
-		}
-
-		if !db.SkipMigration {
-			conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
-		}
-		return conn, nil
-	case Postgres:
-		conn, err := gorm.Open(postgres.Open(db.Path), config)
-		if err != nil {
-			return nil, err
-		}
-
-		if !db.SkipMigration {
-			conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
-		}
-		return conn, nil
+	// Parse the DB URI.
+	location, err := url.Parse(db.Location)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("invalid db platform")
+
+	var conn *gorm.DB
+
+	switch location.Scheme {
+	case "sqlite":
+		conn, err = gorm.Open(sqlite.Open(location.Host+"?cache=shared"), config)
+		if err != nil {
+			return nil, err
+		}
+	case "postgres":
+		conn, err = gorm.Open(postgres.Open(db.Location), config)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("unsupported database URI provided")
+	}
+
+	if !db.SkipMigration {
+		conn.AutoMigrate(&URL{}, &Header{}, &TLS{}, &TLSCertificate{}, &TLSCertificateDNSName{}, &Technologie{}, &ConsoleLog{}, &NetworkLog{})
+	}
+
+	return conn, nil
 }
 
 // OrderPerception orders by perception hash if enabled
