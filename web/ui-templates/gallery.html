@@ -80,9 +80,8 @@
           <embed src='{{ URL "/screenshots/" }}{{ .Filename }}' type="application/pdf" frameBorder="0" scrolling="auto"
             height="100%" width="100%"></embed>
           {{ else }}
-          <a href='{{ URL "/screenshots/" }}{{ .Filename }}' target="_blank" class="d-block">
-            <img loading="lazy" src='{{ URL "/screenshots/" }}{{ .Filename }}'
-              onerror="this.onerror=null; this.src='{{ URL "/assets/img/blank.png" }}'" class="card-img-top">
+          <a class="d-block">
+            <img loading="lazy" src="data:image/png;base64,{{ .Screenshot }}" alt="Screenshot" class="card-img-top">
           </a>
           {{ end }}
           <div class="card-body">

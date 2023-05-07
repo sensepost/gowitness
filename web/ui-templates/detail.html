@@ -61,9 +61,8 @@
               <embed class="card-img-top" src='{{ URL "/screenshots/" }}{{ .Data.Filename }}' type="application/pdf" frameBorder="0"
                 scrolling="auto" height="100%" width="100%"></embed>
               {{ else }}
-              <a href='{{ URL "/screenshots/" }}{{ .Data.Filename }}' target="_blank" class="d-block">
-                <img loading="lazy" src='{{ URL "/screenshots/" }}{{ .Data.Filename }}'
-                  onerror="this.onerror=null; this.src='{{ URL "/assets/img/blank.png" }}'" class="card-img-top">
+              <a class="d-block">
+                <img loading="lazy" src="data:image/png;base64,{{ .Data.Screenshot }}"; class="card-img-top">
               </a>
               {{ end }}
               <div class="card-footer">

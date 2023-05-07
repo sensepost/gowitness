@@ -4,7 +4,7 @@
 *.so
 *.dylib
 *.sqlite3
-
+.idea
 # dep vendor/
 vendor/
 
