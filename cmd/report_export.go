@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +48,7 @@ specified will be the target for the final ZIP file that will be created.
 		}
 
 		// create a temp working directory
-		tempDir, err := ioutil.TempDir("", "")
+		tempDir, err := os.MkdirTemp("", "")
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not create temp working directory")
 		}

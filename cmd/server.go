@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -299,7 +299,7 @@ func submitHandler(c *gin.Context) {
 		}
 	}
 
-	if err := ioutil.WriteFile(fp, result.Screenshot, 0644); err != nil {
+	if err := os.WriteFile(fp, result.Screenshot, 0644); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"message": err.Error(),
@@ -614,7 +614,7 @@ func apiDetailScreenshotHandler(c *gin.Context) {
 
 	p := options.ScreenshotPath + "/" + url.Filename
 
-	screenshot, err := ioutil.ReadFile(p)
+	screenshot, err := os.ReadFile(p)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"stauts": "errir",

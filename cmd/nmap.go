@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/remeh/sizedwaitgroup"
@@ -131,7 +131,7 @@ func init() {
 // this function considers many of the flag combinations
 func getNmapURLs() (urls []string, err error) {
 
-	xml, err := ioutil.ReadFile(options.NmapFile)
+	xml, err := os.ReadFile(options.NmapFile)
 	if err != nil {
 		return
 	}
