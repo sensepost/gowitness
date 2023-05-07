@@ -52,6 +52,17 @@ func (p *Processor) Gowitness() (err error) {
 		return
 	}
 
+	// check if the preflight returned a code to process.
+	// an empty slice implies no filtering
+	if (len(p.Chrome.ScreenshotCodes) > 0) &&
+		!SliceContainsInt(p.Chrome.ScreenshotCodes, p.preflightResult.HTTPResponse.StatusCode) {
+
+		log.Warn().Int("response-code", p.preflightResult.HTTPResponse.StatusCode).
+			Msg("response code not in allowed screenshot http response codes. skipping.")
+
+		return
+	}
+
 	if err = p.takeScreenshot(); err != nil {
 		log.Error().Err(err).Msg("failed to take screenshot")
 		return

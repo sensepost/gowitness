@@ -35,6 +35,9 @@ type Chrome struct {
 	Headers     []string
 	HeadersMap  map[string]interface{}
 
+	// http codes to screenshot (used as a filter)
+	ScreenshotCodes []int
+
 	// save screenies as PDF's instead
 	AsPDF bool
 	// save screenies in db
