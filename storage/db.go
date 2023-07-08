@@ -2,9 +2,7 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
-	"os"
 	"strings"
 
 	"gorm.io/driver/postgres"
@@ -44,11 +42,7 @@ func parseDBLocation(dbLocation string) (*url.URL, string, error) {
 		case location.Host != "" && location.Path == "":
 			return location, location.Host, nil
 		case location.Host == "" && location.Path == "":
-			cwd, err := os.Getwd()
-			if err != nil {
-				return nil, "", err
-			}
-			return location, fmt.Sprintf("%s/gowitness.sqlite3", cwd), nil
+			return location, "gowitness.sqlite3", nil
 		default:
 			return location, strings.TrimPrefix(dbLocation, "sqlite://"), nil
 		}
@@ -86,6 +80,11 @@ func (db *Db) Get() (*gorm.DB, error) {
 		}
 	case "postgres":
 		conn, err = gorm.Open(postgres.Open(db.Location), config)
+		if err != nil {
+			return nil, err
+		}
+	case "":
+		conn, err = gorm.Open(sqlite.Open(dbLocation+"?cache=shared"), config)
 		if err != nil {
 			return nil, err
 		}
