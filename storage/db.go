@@ -35,7 +35,7 @@ func parseDBLocation(dbLocation string) (*url.URL, string, error) {
 	}
 
 	// Ensure the sqlite DB file path is correctly parsed via url.Parse
-	if location.Scheme != "postgres" {
+	if location.Scheme == "sqlite" {
 		switch {
 		case location.Host == "" && location.Path != "":
 			return location, location.Path, nil

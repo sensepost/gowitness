@@ -41,7 +41,7 @@ func Test_parseDBLocation(t *testing.T) {
 			Path:   "/db",
 			User:   userInfo,
 		}, want1: "postgres://user:pass@host:5432/db", wantErr: false},
-		{name: "empty string test", args: args{dbLocation: ""}, want: &url.URL{}, want1: "gowitness.sqlite3", wantErr: false},
+		{name: "empty string test", args: args{dbLocation: ""}, want: &url.URL{}, want1: "", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
