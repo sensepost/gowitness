@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"net/url"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -25,6 +26,30 @@ func NewDb() *Db {
 	return &Db{}
 }
 
+// parseDBLocation parses the db.Location file path
+func parseDBLocation(dbLocation string) (*url.URL, string, error) {
+	// Parse the DB URI.
+	location, err := url.Parse(dbLocation)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Ensure the sqlite DB file path is correctly parsed via url.Parse
+	if location.Scheme == "sqlite" {
+		switch {
+		case location.Host == "" && location.Path != "":
+			return location, location.Path, nil
+		case location.Host != "" && location.Path == "":
+			return location, location.Host, nil
+		case location.Host == "" && location.Path == "":
+			return location, "gowitness.sqlite3", nil
+		default:
+			return location, strings.TrimPrefix(dbLocation, "sqlite://"), nil
+		}
+	}
+	return location, dbLocation, nil
+}
+
 // Get gets a db handle
 func (db *Db) Get() (*gorm.DB, error) {
 
@@ -40,7 +65,7 @@ func (db *Db) Get() (*gorm.DB, error) {
 	}
 
 	// Parse the DB URI.
-	location, err := url.Parse(db.Location)
+	location, dbLocation, err := parseDBLocation(db.Location)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +74,7 @@ func (db *Db) Get() (*gorm.DB, error) {
 
 	switch location.Scheme {
 	case "sqlite":
-		conn, err = gorm.Open(sqlite.Open(location.Host+"?cache=shared"), config)
+		conn, err = gorm.Open(sqlite.Open(dbLocation+"?cache=shared"), config)
 		if err != nil {
 			return nil, err
 		}
