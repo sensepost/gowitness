@@ -65,14 +65,14 @@ func (db *Db) Get() (*gorm.DB, error) {
 	}
 
 	// Parse the DB URI.
-	parsedURI, dbLocation, err := parseDBLocation(db.Location)
+	location, dbLocation, err := parseDBLocation(db.Location)
 	if err != nil {
 		return nil, err
 	}
 
 	var conn *gorm.DB
 
-	switch parsedURI.Scheme {
+	switch location.Scheme {
 	case "sqlite":
 		conn, err = gorm.Open(sqlite.Open(dbLocation+"?cache=shared"), config)
 		if err != nil {
