@@ -83,11 +83,6 @@ func (db *Db) Get() (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-	case "":
-		conn, err = gorm.Open(sqlite.Open(dbLocation+"?cache=shared"), config)
-		if err != nil {
-			return nil, err
-		}
 	default:
 		return nil, errors.New("unsupported database URI provided")
 	}
