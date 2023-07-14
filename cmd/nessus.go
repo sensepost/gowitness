@@ -232,7 +232,7 @@ func getNessusURLs() (urls []string, err error) {
 						// add the hostnames if the option has been set
 						if options.NmapScanHostnames {
 							if fqdn != "" {
-								nessusHostsMap[ip] = removeDuplicatedPorts(append(nessusHostsMap[ip], item.Port))
+								nessusHostsMap[fqdn] = removeDuplicatedPorts(append(nessusHostsMap[fqdn], item.Port))
 							}
 						}
 						// checking for empty ip. It should always be set, but you never know
