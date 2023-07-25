@@ -1,4 +1,4 @@
-FROM golang:1 as build
+FROM golang:1-bullseye as build
 
 LABEL maintainer="Leon Jacobs <leonja511@gmail.com>"
 
