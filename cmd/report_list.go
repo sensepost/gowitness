@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -53,7 +54,9 @@ $ gowitness report list --csv --sort`,
 		}
 
 		if options.ReportJSON {
-			outputJSON(&data)
+			if err := outputJSON(&data); err != nil {
+				log.Fatal().Err(err).Msg("failed to output json")
+			}
 			return
 		}
 
@@ -75,12 +78,16 @@ func init() {
 }
 
 // outputJSON prints the report in JSON format
-func outputJSON(d *[]storage.URL) {
+func outputJSON(d *[]storage.URL) error {
 
 	for _, l := range *d {
-		bytes, _ := l.MarshallJSON()
+		bytes, err := json.Marshal(l)
+		if err != nil {
+			return err
+		}
 		fmt.Print(string(bytes))
 	}
+	return nil
 }
 
 // outputCSV prints the report in CSV format
