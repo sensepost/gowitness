@@ -28,7 +28,7 @@ var serverCmd = &cobra.Command{
 	Short: "Starts a webserver that serves the report interface, api and screenshot tool",
 	Long: `Starts a webserver that serves the report interface, api and screenshot tool.
 
-The report server is availabe in the root path, aka /.
+The report server is available in the root path, aka /.
 The API is available from the /api path.
 
 The global database and screenshot paths should be set to the same as
