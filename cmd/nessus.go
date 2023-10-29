@@ -171,8 +171,8 @@ func getNessusURLs() (urls []string, err error) {
 	decoder := xml.NewDecoder(nessusFile)
 
 	// Unique maps to cut down on dupliation within nessus files
-	var nessusIPsMap = make(map[string]int)
-	var nessusHostsMap = make(map[string]int)
+	var nessusIPsMap = make(map[string][]int)
+	var nessusHostsMap = make(map[string][]int)
 
 	for {
 		token, err := decoder.Token()
@@ -232,12 +232,12 @@ func getNessusURLs() (urls []string, err error) {
 						// add the hostnames if the option has been set
 						if options.NmapScanHostnames {
 							if fqdn != "" {
-								nessusHostsMap[fqdn] = item.Port
+								nessusHostsMap[fqdn] = removeDuplicatedPorts(append(nessusHostsMap[fqdn], item.Port))
 							}
 						}
 						// checking for empty ip. It should always be set, but you never know
 						if ip != "" {
-							nessusIPsMap[ip] = item.Port
+							nessusIPsMap[ip] = removeDuplicatedPorts(append(nessusIPsMap[ip], item.Port))
 						}
 
 						log.Debug().Str("target", ip).Str("service", item.ServiceName).Int("port", item.Port).
@@ -261,15 +261,32 @@ func getNessusURLs() (urls []string, err error) {
 }
 
 // buildURI will build urls taking the http/https options int account
-func buildURL(hostname string, port int) (r []string) {
+func buildURL(hostname string, port []int) (r []string) {
 
-	if !options.NoHTTP {
-		r = append(r, fmt.Sprintf(`http://%s:%d`, hostname, port))
+	for _, v := range port {
+		if !options.NoHTTP {
+			r = append(r, fmt.Sprintf(`http://%s:%d`, hostname, v))
+		}
+
+		if !options.NoHTTPS {
+			r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, v))
+		}
 	}
-
-	if !options.NoHTTPS {
-		r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, port))
-	}
-
+	
 	return r
+}
+
+// removeDuplicatedPort removes duplicated ports
+func removeDuplicatedPorts(port []int) []int {
+    uniqueMap := make(map[int]bool)
+    uniqueList := []int{}
+
+    for _, item := range port {
+        if _, ok := uniqueMap[item]; !ok {
+            uniqueMap[item] = true
+            uniqueList = append(uniqueList, item)
+        }
+    }
+
+    return uniqueList
 }
