@@ -272,21 +272,21 @@ func buildURL(hostname string, port []int) (r []string) {
 			r = append(r, fmt.Sprintf(`https://%s:%d`, hostname, v))
 		}
 	}
-	
+
 	return r
 }
 
 // removeDuplicatedPort removes duplicated ports
 func removeDuplicatedPorts(port []int) []int {
-    uniqueMap := make(map[int]bool)
-    uniqueList := []int{}
+	uniqueMap := make(map[int]bool)
+	uniqueList := []int{}
 
-    for _, item := range port {
-        if _, ok := uniqueMap[item]; !ok {
-            uniqueMap[item] = true
-            uniqueList = append(uniqueList, item)
-        }
-    }
+	for _, item := range port {
+		if _, ok := uniqueMap[item]; !ok {
+			uniqueMap[item] = true
+			uniqueList = append(uniqueList, item)
+		}
+	}
 
-    return uniqueList
+	return uniqueList
 }
