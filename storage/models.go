@@ -60,8 +60,8 @@ func (url *URL) MarshallCSV() (res []string) {
 		url.Filename}
 }
 
-// MarshallJSON returns values as a slice
-func (url *URL) MarshallJSON() ([]byte, error) {
+// MarshalJSON returns JSON encoding of url. Implements json.Marshaler.
+func (url *URL) MarshalJSON() ([]byte, error) {
 	var tmp struct {
 		URL            string `json:"url"`
 		FinalURL       string `json:"final_url"`
