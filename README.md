@@ -26,6 +26,10 @@ For installation information and other documentation, please refer to the wiki [
 ## screenshots
 
 ![dark](images/gowitness-detail.png)
+## Install
+```
+go install -v github.com/sensepost/gowitness@latest   
+```
 
 ## credits
 
