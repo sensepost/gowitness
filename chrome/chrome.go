@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -249,12 +250,23 @@ func (chrome *Chrome) Screenshot(url *url.URL) (result *ScreenshotResult, err er
 	// prepare a new screenshotResult
 	result = &ScreenshotResult{}
 
+	// create list of allowed ports
+	var allowedPortsBuilder strings.Builder
+	for i := 1; i <= 65535; i++ {
+		allowedPortsBuilder.WriteString(fmt.Sprintf("%d", i))
+		if i < 65535 {
+			allowedPortsBuilder.WriteString(",")
+		}
+	}
+	allowedPorts := allowedPortsBuilder.String()
+
 	// setup chromedp default options
 	options := []chromedp.ExecAllocatorOption{}
 	options = append(options, chromedp.DefaultExecAllocatorOptions[:]...)
 	options = append(options, chromedp.UserAgent(chrome.UserAgent))
 	options = append(options, chromedp.DisableGPU)
 	options = append(options, chromedp.Flag("ignore-certificate-errors", true)) // RIP shittyproxy.go
+	options = append(options, chromedp.Flag("explicitly-allowed-ports", allowedPorts))
 	options = append(options, chromedp.WindowSize(chrome.ResolutionX, chrome.ResolutionY))
 
 	if chrome.ChromePath != "" {
