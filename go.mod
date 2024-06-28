@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/h2non/filetype v1.1.3
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/projectdiscovery/wappalyzergo v0.1.6
+	github.com/projectdiscovery/wappalyzergo v0.1.8
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
