@@ -5,13 +5,13 @@ go 1.21
 toolchain go1.22.1
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20240614221651-cc28c8fb63e7
+	github.com/chromedp/cdproto v0.0.0-20240626232640-f933b107c653
 	github.com/chromedp/chromedp v0.9.5
 	github.com/corona10/goimagehash v1.1.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/h2non/filetype v1.1.3
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/projectdiscovery/wappalyzergo v0.1.6
+	github.com/projectdiscovery/wappalyzergo v0.1.8
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
@@ -23,7 +23,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.11.8 // indirect
+	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
