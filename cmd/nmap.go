@@ -178,7 +178,12 @@ func getNmapURLs() (urls []string, err error) {
 				}
 
 				// process the port successfully
-				urls = append(urls, buildURI(address.Addr, port.PortId)...)
+				if address.AddrType == "ipv4" {
+					urls = append(urls, buildURI(address.Addr, port.PortId)...)					
+				} else {
+					addr := fmt.Sprintf(`[%s]`, address.Addr)
+					urls = append(urls, buildURI(addr, port.PortId)...)			
+				}
 			}
 		}
 	}
