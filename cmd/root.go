@@ -64,7 +64,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionX, "resolution-x", "X", 1440, "screenshot resolution x")
 	rootCmd.PersistentFlags().IntVarP(&chrm.ResolutionY, "resolution-y", "Y", 900, "screenshot resolution y")
 	rootCmd.PersistentFlags().IntVar(&chrm.Delay, "delay", 0, "delay in seconds between navigation and screenshot")
-	rootCmd.PersistentFlags().StringVar(&chrm.UserAgent, "user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36", "user agent string to use")
+	rootCmd.PersistentFlags().StringVar(&chrm.UserAgent, "user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36", "user agent string to use")
 	rootCmd.PersistentFlags().StringVar(&chrm.JsCode, "js", "", "javascript code to execute when loading a target site (eg: console.log('gowitness'))")
 	rootCmd.PersistentFlags().StringSliceVar(&chrm.Headers, "header", []string{}, "additional HTTP header to set. Supports multiple --header flags")
 	rootCmd.PersistentFlags().IntSliceVar(&chrm.ScreenshotCodes, "screenshot-filter", []int{}, "http response codes to screenshot. this is a filter. by default all codes are screenshotted")
