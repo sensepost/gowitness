@@ -118,6 +118,7 @@ func init() {
 	nmapCmd.Flags().StringSliceVarP(&options.NmapService, "service", "n", []string{}, "map service name filter. supports multiple --service flags")
 	nmapCmd.Flags().StringVarP(&options.NmapServiceContains, "service-contains", "w", "", "partial service name filter (aka: contains)")
 	nmapCmd.Flags().IntSliceVar(&options.NmapPorts, "port", []int{}, "ports filter. supports multiple --port flags")
+	nmapCmd.Flags().IntSliceVar(&options.NmapSkipPort, "skip-port", []int{}, "ports to skip. supports multiple --skip-port flags")
 	nmapCmd.Flags().BoolVarP(&options.NmapScanHostnames, "scan-hostnames", "N", false, "scan hostnames (useful for virtual hosting)")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTP, "no-http", "s", false, "do not try using http://")
 	nmapCmd.Flags().BoolVarP(&options.NoHTTPS, "no-https", "S", false, "do not try using https://")
@@ -157,6 +158,11 @@ func getNmapURLs() (urls []string, err error) {
 
 				// skip port if the port id does not match the provided ports to filter
 				if len(options.NmapPorts) > 0 && !lib.SliceContainsInt(options.NmapPorts, port.PortId) {
+					continue
+				}
+
+				// skip port if the port id does match the ports to avoid
+				if len(options.NmapSkipPort) > 0 && lib.SliceContainsInt(options.NmapSkipPort, port.PortId) {
 					continue
 				}
 
