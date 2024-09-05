@@ -11,8 +11,8 @@ import (
 // fileCmd represents the file command
 var fileCmd = &cobra.Command{
 	Use:   "file",
-	Short: "Scan URL's sourced from a file",
-	Long:  `Scan URL's sourced from a file`,
+	Short: "Scan targets sourced from a file",
+	Long:  `Scan targets sourced from a file`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := validators.ValidateScanFileCmd(cmd); err != nil {
 			return err
@@ -24,11 +24,7 @@ var fileCmd = &cobra.Command{
 		source, _ := cmd.Flags().GetString("file")
 		nohttp, _ := cmd.Flags().GetBool("no-http")
 		nohttps, _ := cmd.Flags().GetBool("no-https")
-		log.Debug("starting file scanning",
-			"file", source,
-			"nohttp", nohttp,
-			"nohttps", nohttps,
-		)
+		log.Debug("starting file scanning", "file", source)
 
 		reader := readers.NewFileReader(source, &readers.FileReaderOptions{
 			NoHTTP:  nohttp,
