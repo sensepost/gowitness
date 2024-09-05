@@ -296,7 +296,7 @@ func (run *Runner) checkUrl(target string) error {
 		return err
 	}
 
-	if !islazy.Contains(run.options.Scan.UriFilter, url.Scheme) {
+	if !islazy.SliceHasStr(run.options.Scan.UriFilter, url.Scheme) {
 		return errors.New("url contains invalid scheme")
 	}
 

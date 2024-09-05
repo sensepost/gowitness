@@ -21,6 +21,9 @@ var scanCmd = &cobra.Command{
 			return err
 		}
 
+		// TODO: move this somewhere else. it's too elusive where
+		// scanWriters comes from in subcommands.
+
 		// configure writers that subdommand scanners will pass to
 		// a runner instance.
 		if opts.Output.Jsonl {
@@ -32,6 +35,8 @@ var scanCmd = &cobra.Command{
 		}
 
 		return nil
+
+		// TODO: maybe add https://github.com/projectdiscovery/networkpolicy support?
 	},
 }
 
