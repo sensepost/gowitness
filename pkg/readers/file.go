@@ -29,13 +29,13 @@ func NewFileReader(opts *FileReaderOptions) *FileReader {
 // Read from a file that contains targets.
 // FilePath can be "-" indicating that we should read from stdin.
 func (fr *FileReader) Read(ch chan<- string) error {
-	var file *os.File
-	var err error
+	defer close(ch)
 
+	var file *os.File
 	if fr.Options.Source == "-" {
 		file = os.Stdin
 	} else {
-		file, err = os.Open(fr.Options.Source)
+		file, err := os.Open(fr.Options.Source)
 		if err != nil {
 			return err
 		}
@@ -53,8 +53,6 @@ func (fr *FileReader) Read(ch chan<- string) error {
 			ch <- url
 		}
 	}
-
-	close(ch)
 
 	return scanner.Err()
 }

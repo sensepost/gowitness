@@ -53,6 +53,8 @@ func NewNessusReader(opts *NessusReaderOptions) *NessusReader {
 }
 
 func (nr *NessusReader) Read(ch chan<- string) error {
+	defer close(ch)
+
 	nessus, err := os.Open(nr.Options.Source)
 	if err != nil {
 		return err
@@ -127,7 +129,6 @@ func (nr *NessusReader) Read(ch chan<- string) error {
 		}
 	}
 
-	close(ch)
 	return nil
 }
 
