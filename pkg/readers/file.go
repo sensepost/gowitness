@@ -9,21 +9,20 @@ import (
 // FileReader is a reader that expects a file with targets that
 // is newline delimited.
 type FileReader struct {
-	FilePath string
-	Options  *FileReaderOptions
+	Options *FileReaderOptions
 }
 
 // FileReaderOptions are options for the file reader
 type FileReaderOptions struct {
+	Source  string
 	NoHTTP  bool
 	NoHTTPS bool
 }
 
 // NewFileReader prepares a new file reader
-func NewFileReader(path string, opts *FileReaderOptions) *FileReader {
+func NewFileReader(opts *FileReaderOptions) *FileReader {
 	return &FileReader{
-		FilePath: path,
-		Options:  opts,
+		Options: opts,
 	}
 }
 
@@ -33,10 +32,10 @@ func (fr *FileReader) Read(ch chan<- string) error {
 	var file *os.File
 	var err error
 
-	if fr.FilePath == "-" {
+	if fr.Options.Source == "-" {
 		file = os.Stdin
 	} else {
-		file, err = os.Open(fr.FilePath)
+		file, err = os.Open(fr.Options.Source)
 		if err != nil {
 			return err
 		}

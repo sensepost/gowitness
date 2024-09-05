@@ -10,12 +10,12 @@ import (
 
 // NessusReader is a Nessus file reader
 type NessusReader struct {
-	FilePath string
-	Options  *NessusReaderOptions
+	Options *NessusReaderOptions
 }
 
 // NessusReaderOptions are options for a nessus file reader
 type NessusReaderOptions struct {
+	Source    string
 	NoHTTP    bool
 	NoHTTPS   bool
 	Hostnames bool
@@ -46,15 +46,14 @@ type reportItem struct {
 }
 
 // NewNessusReader returns a new Nessus file reader
-func NewNessusReader(path string, opts *NessusReaderOptions) *NessusReader {
+func NewNessusReader(opts *NessusReaderOptions) *NessusReader {
 	return &NessusReader{
-		FilePath: path,
-		Options:  opts,
+		Options: opts,
 	}
 }
 
 func (nr *NessusReader) Read(ch chan<- string) error {
-	nessus, err := os.Open(nr.FilePath)
+	nessus, err := os.Open(nr.Options.Source)
 	if err != nil {
 		return err
 	}

@@ -38,10 +38,6 @@ type Runner struct {
 // New gets a new Browser ready for probing.
 // It's up to the caller to call Close() on the instance.
 func New(opts options.Options, writers []writers.Writer) (*Runner, error) {
-	if len(writers) == 0 {
-		return nil, errors.New("no writers are configured")
-	}
-
 	screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
 	if err != nil {
 		return nil, err

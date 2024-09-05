@@ -11,12 +11,13 @@ import (
 
 // NmapReader is an Nmap results reader
 type NmapReader struct {
-	FilePath string
-	Options  *NmapReaderOptions
+	Options *NmapReaderOptions
 }
 
 // NmapReaderOptions are options for the nmap reader
 type NmapReaderOptions struct {
+	// Path to an Nmap XML file
+	Source  string
 	NoHTTP  bool
 	NoHTTPS bool
 	// OpenOnly will only scan ports marked as open
@@ -27,23 +28,22 @@ type NmapReaderOptions struct {
 	SkipPorts []int
 	// ServiceContains is a partial service filter
 	ServiceContains string
-	// Service is a service limit
-	Service []string
+	// Services is a service limit
+	Services []string
 	// Hostname is a hostname to use for url targets
 	Hostnames bool
 }
 
 // NewNmapReader prepares a new Nmap reader
-func NewNmapReader(path string, opts *NmapReaderOptions) *NmapReader {
+func NewNmapReader(opts *NmapReaderOptions) *NmapReader {
 	return &NmapReader{
-		FilePath: path,
-		Options:  opts,
+		Options: opts,
 	}
 }
 
 // Read an nmap file
 func (nr *NmapReader) Read(ch chan<- string) error {
-	xml, err := os.ReadFile(nr.FilePath)
+	xml, err := os.ReadFile(nr.Options.Source)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (nr *NmapReader) Read(ch chan<- string) error {
 				}
 
 				// apply service filter
-				if len(nr.Options.Service) > 0 && !islazy.SliceHasStr(nr.Options.Service, port.Service.Name) {
+				if len(nr.Options.Services) > 0 && !islazy.SliceHasStr(nr.Options.Services, port.Service.Name) {
 					continue
 				}
 
