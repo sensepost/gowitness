@@ -21,3 +21,18 @@ func SliceHasInt(slice []int, item int) bool {
 
 	return false
 }
+
+// UniqueIntSlice returns a slice of unique ints
+func UniqueIntSlice(slice []int) []int {
+	seen := make(map[int]bool)
+	result := []int{}
+
+	for _, num := range slice {
+		if !seen[num] {
+			seen[num] = true
+			result = append(result, num)
+		}
+	}
+
+	return result
+}

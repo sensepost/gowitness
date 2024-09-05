@@ -43,7 +43,6 @@ func NewNmapReader(path string, opts *NmapReaderOptions) *NmapReader {
 
 // Read an nmap file
 func (nr *NmapReader) Read(ch chan<- string) error {
-
 	xml, err := os.ReadFile(nr.FilePath)
 	if err != nil {
 		return err
