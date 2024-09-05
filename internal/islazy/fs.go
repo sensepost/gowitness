@@ -72,3 +72,10 @@ func SafeFileName(s string) string {
 
 	return builder.String()
 }
+
+// FileExists returns true if a path exists
+func FileExists(path string) bool {
+	_, err := os.Stat(path)
+
+	return !os.IsNotExist(err)
+}

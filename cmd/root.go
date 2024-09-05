@@ -9,11 +9,9 @@ import (
 )
 
 var (
-	// opts are options set by the command line
 	opts = &options.Options{}
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gowitness",
 	Short: "A web screenshot and information gathering tool",
@@ -45,7 +43,6 @@ func Execute() {
 }
 
 func init() {
-	// logging configuration
-	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Debug, "debug-logging", "D", false, "Enable debug logging")
-	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Silence, "silence-logging", "", false, "Silence all (well almost all) logging")
+	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Debug, "debug-log", "D", false, "Enable debug logging")
+	rootCmd.PersistentFlags().BoolVar(&opts.Logging.Silence, "silence-log", false, "Silence all (well almost all) logging")
 }

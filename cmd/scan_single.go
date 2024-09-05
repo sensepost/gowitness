@@ -1,27 +1,30 @@
 package cmd
 
 import (
-	"github.com/sensepost/gowitness/internal/validators"
+	"errors"
+
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/spf13/cobra"
 )
 
-// singleCmd represents the single command
+var singleCmdOptions = struct {
+	URL string
+}{}
+
 var singleCmd = &cobra.Command{
 	Use:   "single",
 	Short: "Scan a single target",
 	Long:  `Scan a single target`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := validators.ValidateScanSingleCmd(cmd); err != nil {
-			return err
+		if singleCmdOptions.URL == "" {
+			return errors.New("a url must be specified")
 		}
-
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		url, _ := cmd.Flags().GetString("url")
-		runner, err := runner.New(*opts, scanWriters)
+		runner, err := runner.New(*opts, scanCmdWriters)
 		if err != nil {
 			log.Error("could not get a runner", "err", err)
 			return
@@ -40,5 +43,5 @@ var singleCmd = &cobra.Command{
 func init() {
 	scanCmd.AddCommand(singleCmd)
 
-	singleCmd.Flags().StringP("url", "u", "", "The target to screenshot")
+	singleCmd.Flags().StringVarP(&singleCmdOptions.URL, "url", "u", "", "The target to screenshot")
 }
