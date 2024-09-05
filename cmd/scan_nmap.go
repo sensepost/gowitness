@@ -30,7 +30,7 @@ var nmapCmd = &cobra.Command{
 		serviceContains, _ := cmd.Flags().GetString("service")
 		service, _ := cmd.Flags().GetStringSlice("service")
 		hostnames, _ := cmd.Flags().GetBool("hostname")
-		log.Debug("starting name file scanning", "file", source)
+		log.Debug("starting nmap file scanning", "file", source)
 
 		reader := readers.NewNmapReader(source, &readers.NmapReaderOptions{
 			NoHTTP:          nohttp,
@@ -64,12 +64,12 @@ func init() {
 	nmapCmd.Flags().StringP("file", "f", "", "An Nmap XML file with targets to scan")
 
 	// options
-	nmapCmd.Flags().BoolP("no-https", "", false, "Do not add 'https://' to targets where missing")
-	nmapCmd.Flags().BoolP("no-http", "", false, "Do not add 'http://' to targets where missing")
+	nmapCmd.Flags().Bool("no-https", false, "Do not add 'https://' to targets where missing")
+	nmapCmd.Flags().Bool("no-http", false, "Do not add 'http://' to targets where missing")
 	nmapCmd.Flags().BoolP("open-only", "o", false, "Only scan ports marked as open")
-	nmapCmd.Flags().IntSliceP("port", "", []int{}, "A port filter to apply. Suports multiple --port flags")
-	nmapCmd.Flags().IntSliceP("skip-port", "", []int{}, "Do not scan these ports. Suports multiple --skip-port flags")
-	nmapCmd.Flags().StringP("service-contains", "", "", "A service name filter. Will check if service 'contains' this value first")
-	nmapCmd.Flags().StringSliceP("service", "", []string{}, "A service filter to apply. Supports multiple --service flags")
-	nmapCmd.Flags().BoolP("hostnames", "", false, "Add hostnames in URL candidates (useful for virtual hosting)")
+	nmapCmd.Flags().IntSlice("port", []int{}, "A port filter to apply. Suports multiple --port flags")
+	nmapCmd.Flags().IntSlice("skip-port", []int{}, "Do not scan these ports. Suports multiple --skip-port flags")
+	nmapCmd.Flags().String("service-contains", "", "A service name filter. Will check if service 'contains' this value first")
+	nmapCmd.Flags().StringSlice("service", []string{}, "A service filter to apply. Supports multiple --service flags")
+	nmapCmd.Flags().Bool("hostnames", false, "Add hostnames in URL candidates (useful for virtual hosting)")
 }
