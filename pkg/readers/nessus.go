@@ -76,8 +76,6 @@ func (nr *NessusReader) Read(ch chan<- string) error {
 				break
 			}
 
-			// Read the ReportHosts from the XML
-
 			var host reportHost
 			decoder.DecodeElement(&host, &element)
 

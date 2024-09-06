@@ -20,7 +20,7 @@ var nessusCmd = &cobra.Command{
 			return errors.New("a source must be specified")
 		}
 
-		if !islazy.FileExists(fileCmdOptions.Source) {
+		if !islazy.FileExists(nessusCmdOptions.Source) {
 			return errors.New("source is not readable")
 		}
 
