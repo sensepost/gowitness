@@ -113,10 +113,11 @@ func (cr *CidrReader) ips() ([]string, error) {
 	// Slurp a file if we have one
 	if cr.Options.Source != "" {
 		var file *os.File
+		var err error
 		if cr.Options.Source == "-" {
 			file = os.Stdin
 		} else {
-			file, err := os.Open(cr.Options.Source)
+			file, err = os.Open(cr.Options.Source)
 			if err != nil {
 				return nil, err
 			}

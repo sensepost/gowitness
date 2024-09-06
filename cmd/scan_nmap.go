@@ -20,7 +20,7 @@ var nmapCmd = &cobra.Command{
 			return errors.New("a source must be specified")
 		}
 
-		if !islazy.FileExists(fileCmdOptions.Source) {
+		if !islazy.FileExists(nmapCmdOptions.Source) {
 			return errors.New("source is not readable")
 		}
 

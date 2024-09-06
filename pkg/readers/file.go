@@ -32,10 +32,12 @@ func (fr *FileReader) Read(ch chan<- string) error {
 	defer close(ch)
 
 	var file *os.File
+	var err error
+
 	if fr.Options.Source == "-" {
 		file = os.Stdin
 	} else {
-		file, err := os.Open(fr.Options.Source)
+		file, err = os.Open(fr.Options.Source)
 		if err != nil {
 			return err
 		}

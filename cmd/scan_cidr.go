@@ -20,7 +20,7 @@ var cidrCmd = &cobra.Command{
 			return errors.New("need targets to scan via either a --cidr-file for --cidr")
 		}
 
-		if cidrCmdOptions.Source != "" && !islazy.FileExists(fileCmdOptions.Source) {
+		if cidrCmdOptions.Source != "" && !islazy.FileExists(cidrCmdOptions.Source) {
 			return errors.New("source is not readable")
 		}
 
