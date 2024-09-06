@@ -22,8 +22,24 @@ var scanCmd = &cobra.Command{
 
 		// configure writers that subdommand scanners will pass to
 		// a runner instance.
-		if opts.Output.Jsonl {
-			w, err := writers.NewJsonWriter(opts.Output.JsonlFile)
+		if opts.Writer.Jsonl {
+			w, err := writers.NewJsonWriter(opts.Writer.JsonlFile)
+			if err != nil {
+				return err
+			}
+			scanCmdWriters = append(scanCmdWriters, w)
+		}
+
+		if opts.Writer.Db {
+			w, err := writers.NewDbWriter(opts.Writer.DbURI, opts.Writer.DbDebug)
+			if err != nil {
+				return err
+			}
+			scanCmdWriters = append(scanCmdWriters, w)
+		}
+
+		if opts.Writer.Csv {
+			w, err := writers.NewCsvWriter(opts.Writer.CsvFile)
 			if err != nil {
 				return err
 			}
@@ -31,7 +47,6 @@ var scanCmd = &cobra.Command{
 		}
 
 		return nil
-
 		// TODO: maybe add https://github.com/projectdiscovery/networkpolicy support?
 	},
 }
@@ -50,10 +65,11 @@ func init() {
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.UserAgent, "user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36", "The user-agent string to use")
 
 	// output controlling for scan sub commands
-	scanCmd.PersistentFlags().BoolVar(&opts.Output.Db, "write-db", false, "Write results to a Sqlite database")
-	scanCmd.PersistentFlags().StringVar(&opts.Output.DbFile, "write-db-file", "gowitness.sqlite3", "The file to write the Sqlite database to")
-	scanCmd.PersistentFlags().BoolVar(&opts.Output.Csv, "write-csv", false, "Write results as CSV (has limited columns)")
-	scanCmd.PersistentFlags().StringVar(&opts.Output.CsvFile, "write-csv-file", "gowitness.csv", "The file to write CSV rows to")
-	scanCmd.PersistentFlags().BoolVar(&opts.Output.Jsonl, "write-jsonl", false, "Write results as JSON lines")
-	scanCmd.PersistentFlags().StringVar(&opts.Output.JsonlFile, "write-jsonl-file", "gowitness.jsonl", "The file to write JSON lines to")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Db, "write-db", false, "Write results to a SQLite database")
+	scanCmd.PersistentFlags().StringVar(&opts.Writer.DbURI, "write-db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite and Postgres (eg: postgres://user:pass@host:port/db)")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.DbDebug, "write-db-enable-debug", false, "Enable database query debug logging (warning: verbose!)")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Csv, "write-csv", false, "Write results as CSV (has limited columns)")
+	scanCmd.PersistentFlags().StringVar(&opts.Writer.CsvFile, "write-csv-file", "gowitness.csv", "The file to write CSV rows to")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Jsonl, "write-jsonl", false, "Write results as JSON lines")
+	scanCmd.PersistentFlags().StringVar(&opts.Writer.JsonlFile, "write-jsonl-file", "gowitness.jsonl", "The file to write JSON lines to")
 }

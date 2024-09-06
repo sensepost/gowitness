@@ -4,8 +4,8 @@ package options
 type Options struct {
 	// Logging is logging options
 	Logging Logging
-	// Output is output options
-	Output Output
+	// Writer is output options
+	Writer Writer
 	// Scan is typically Scan options
 	Scan Scan
 }
@@ -20,10 +20,11 @@ type Logging struct {
 	Silence bool
 }
 
-// Output options
-type Output struct {
+// Writer options
+type Writer struct {
 	Db        bool
-	DbFile    string
+	DbURI     string
+	DbDebug   bool // enables verbose database logs
 	Csv       bool
 	CsvFile   string
 	Jsonl     bool

@@ -134,7 +134,7 @@ func (run *Runner) witness(target string) {
 				return
 			}
 
-			result.Console = append(result.Console, &models.ConsoleLog{
+			result.Console = append(result.Console, models.ConsoleLog{
 				Type:  string(e.Type),
 				Value: strings.TrimSpace(v),
 			})
@@ -178,7 +178,7 @@ func (run *Runner) witness(target string) {
 					entry.Time = e.Response.ResponseTime.Time()
 
 					// write the network log
-					result.AddNetworkLog(&entry)
+					result.AddNetworkLog(entry)
 				}
 			} else {
 				logger.Warn("received a response to an unknown request")
@@ -196,7 +196,7 @@ func (run *Runner) witness(target string) {
 					entry.Error = e.ErrorText
 
 					// write the network log
-					result.AddNetworkLog(&entry)
+					result.AddNetworkLog(entry)
 				}
 			} else {
 				logger.Warn("received a failure for an unknown request")
