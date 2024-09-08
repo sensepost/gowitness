@@ -28,6 +28,8 @@ type Chrome struct {
 	// go-rod will auto download a platform appropriate binary
 	// to use.
 	Path string
+	// Proxy server to use
+	Proxy string
 }
 
 // Writer options

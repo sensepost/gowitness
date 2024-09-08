@@ -77,6 +77,11 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		chrmLauncher.Bin(opts.Chrome.Path)
 	}
 
+	// proxy
+	if opts.Chrome.Proxy != "" {
+		chrmLauncher.Proxy(opts.Chrome.Proxy)
+	}
+
 	url, err := chrmLauncher.Launch()
 	if err != nil {
 		return nil, err
