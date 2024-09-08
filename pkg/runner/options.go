@@ -63,6 +63,10 @@ type Scan struct {
 	UriFilter []string
 	// ScreenshotPath is the path where screenshot images will be stored
 	ScreenshotPath string
+	// ScreenshotFormat to save as
+	ScreenshotFormat string
+	// ScreenshotFullPage saves full, scrolled web pages
+	ScreenshotFullPage bool
 	// JavaScript to evaluate on every page
 	JavaScript     string
 	JavaScriptFile string
