@@ -3,23 +3,20 @@ package cmd
 import (
 	"os"
 
+	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/pkg/log"
-	"github.com/sensepost/gowitness/pkg/options"
+	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/spf13/cobra"
 )
 
 var (
-	opts = &options.Options{}
+	opts = &runner.Options{}
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "gowitness",
 	Short: "A web screenshot and information gathering tool",
-	Long: `               _ _                   
- ___ ___ _ _ _|_| |_ ___ ___ ___ ___ 
-| . | . | | | | |  _|   | -_|_ -|_ -|
-|_  |___|_____|_|_| |_|_|___|___|___|
-|___|    v3, with <3 by @leonjza`,
+	Long:  ascii.Logo(),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if opts.Logging.Silence {
 			log.EnableSilence()

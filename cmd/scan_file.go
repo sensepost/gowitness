@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 
+	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/readers"
@@ -13,8 +14,30 @@ import (
 var fileCmdOptions = &readers.FileReaderOptions{}
 var fileCmd = &cobra.Command{
 	Use:   "file",
-	Short: "Scan targets sourced from a file",
-	Long:  `Scan targets sourced from a file`,
+	Short: "Scan targets sourced from a file or stdin",
+	Long: ascii.LogoHelp(`Scan targets sourced from a file or stdin.
+
+This command will check the structure of a target URL to ensure that a
+protocol is defined. If it is not set, it will prepend 'http://' and
+'https://'. You can disable either using the --no-http / --no-https flags.
+
+URLs in the source file should be newline separated. Invalid URLs are
+simply ignored.
+
+Note: By default, no metadata is saved except for screenshots that are
+stored in the configured --screenshot-path. For later parsing (i.e., using
+the gowitness reporting feature), you need to specify where to write results
+(db, csv, jsonl) using the --write-* set of flags. See --help for available
+flags.`),
+	Example: `  Scan targets from a file:
+   $ gowitness scan file -f ~/Desktop/targets.txt
+  Scan targets from a file, using 50 'threads':
+   $ gowitness scan file -f targets.txt --threads 50
+  Scan targets from a file piped in via stdin:
+   $ cat urls.txt | gowitness scan file -f -
+  Scan targets from a file that is first shuffled using the 'shuf' command.
+  This can also wont prepend http:// to any urls that need don't have a URI:
+   $ gowitness scan file -f <( shuf domains.txt ) --no-http`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if fileCmdOptions.Source == "" {
 			return errors.New("a source must be specified")
