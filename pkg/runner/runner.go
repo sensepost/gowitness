@@ -15,7 +15,6 @@ import (
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
-	"github.com/sensepost/gowitness/pkg/options"
 	"github.com/sensepost/gowitness/pkg/writers"
 	"github.com/ysmood/gson"
 )
@@ -26,7 +25,7 @@ type Runner struct {
 	browser *rod.Browser
 
 	// options for the Browser to consider
-	options options.Options
+	options Options
 	// writers are the result writers to use
 	writers []writers.Writer
 
@@ -37,7 +36,7 @@ type Runner struct {
 
 // New gets a new Browser ready for probing.
 // It's up to the caller to call Close() on the instance.
-func New(opts options.Options, writers []writers.Writer) (*Runner, error) {
+func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
 	if err != nil {
 		return nil, err
@@ -80,7 +79,7 @@ func New(opts options.Options, writers []writers.Writer) (*Runner, error) {
 // This is where everything comes together as far as the runner is concerned.
 func (run *Runner) witness(target string) {
 	logger := log.With("target", target)
-	logger.Debug("witnessing")
+	logger.Debug("witnessing 👀")
 
 	page, err := run.browser.Page(proto.TargetCreateTarget{})
 	if err != nil {
@@ -121,6 +120,7 @@ func (run *Runner) witness(target string) {
 		func(e *proto.PageJavascriptDialogOpening) {
 			_ = proto.PageHandleJavaScriptDialog{Accept: true}.Call(page)
 		},
+
 		// log console.* calls
 		func(e *proto.RuntimeConsoleAPICalled) {
 			v := ""
@@ -156,6 +156,7 @@ func (run *Runner) witness(target string) {
 				URL:         e.Request.URL,
 			}
 		},
+
 		// write the response to the network request map
 		func(e *proto.NetworkResponseReceived) {
 			// grab an existing requestid, and add response info
@@ -184,6 +185,7 @@ func (run *Runner) witness(target string) {
 				logger.Warn("received a response to an unknown request")
 			}
 		},
+
 		// mark a request as failed
 		func(e *proto.NetworkLoadingFailed) {
 			// grab an existing requestid an add failure info
@@ -198,8 +200,6 @@ func (run *Runner) witness(target string) {
 					// write the network log
 					result.AddNetworkLog(entry)
 				}
-			} else {
-				logger.Warn("received a failure for an unknown request")
 			}
 		},
 

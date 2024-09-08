@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 
+	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/readers"
@@ -14,7 +15,35 @@ var nessusCmdOptions = &readers.NessusReaderOptions{}
 var nessusCmd = &cobra.Command{
 	Use:   "nessus",
 	Short: "Scan targets from a Nessus XML file",
-	Long:  `Scan targets from a Nessus XML file.`,
+	Long: ascii.LogoHelp(`Scan targets from a Nessus XML file.
+
+Targets are parsed out of an exported Nessus scan result in XML format. This
+format is typically called "Nessus" format in the export menu.
+
+By default, the parser will search for web services using the following rules:
+  - Plugin Name Contains: "Service Detection"
+  - Plugin Service Name Contains: "www" or "http"
+  - Plugin Output Value Contains: "web server"
+
+With these defaults, the parser should detect most web services from a Nessus
+scan export. You can adjust the filters to include more Plugin Names, Service
+Names, or Plugin Output filters using the --service-name, --plugin-output and
+--plugin-name flags.
+
+Including the --hostnames flag will have the parser add a scan target based on
+any hostname information found in a matched result.
+
+Note: By default, no metadata is saved except for screenshots that are
+stored in the configured --screenshot-path. For later parsing (i.e., using
+the gowitness reporting feature), you need to specify where to write results
+(db, csv, jsonl) using the --write-* set of flags. See --help for available
+flags.`),
+	Example: `  Scan targets from a file:
+   $ gowitness scan nessus -f ~/Desktop/scan-results.nessus
+  Scan targets from a file, using 50 'threads' and filtering plugin output by the word 'server':
+   $ gowitness scan nessus -f scan-results.nessus --threads 50 --plugin-output server
+  Scan targets from a file, dont prepend http:// to URI targets and filter by port 80:
+   $ gowitness scan nessus -f ./scan-results.nessus --port 80`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if nessusCmdOptions.Source == "" {
 			return errors.New("a source must be specified")

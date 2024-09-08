@@ -1,4 +1,4 @@
-package options
+package runner
 
 // Options are global gowitness options
 type Options struct {

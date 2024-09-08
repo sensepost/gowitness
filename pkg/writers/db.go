@@ -6,6 +6,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/sensepost/gowitness/pkg/models"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -40,6 +41,11 @@ func NewDbWriter(uri string, debug bool) (*DbWriter, error) {
 		}
 	case "postgres":
 		c, err = gorm.Open(postgres.Open(uri), config)
+		if err != nil {
+			return nil, err
+		}
+	case "mysql":
+		c, err = gorm.Open(mysql.Open(uri), config)
 		if err != nil {
 			return nil, err
 		}
