@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/charmbracelet/log v0.4.0
+	github.com/corona10/goimagehash v1.1.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-rod/rod v0.116.2
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
@@ -37,6 +38,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
