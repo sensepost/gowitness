@@ -58,9 +58,7 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	}
 
 	// TODO: configure logging
-
 	// TODO: is root, disable sandbox
-	// TODO: delay
 
 	// get chrome ready
 	chrmLauncher := launcher.New().
@@ -130,6 +128,7 @@ func (run *Runner) witness(target string) {
 	duration := time.Duration(run.options.Scan.Timeout) * time.Second
 	page = page.Timeout(duration)
 
+	// set user agent
 	if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
 		UserAgent: run.options.Chrome.UserAgent,
 	}); err != nil {
@@ -137,7 +136,22 @@ func (run *Runner) witness(target string) {
 		return
 	}
 
-	// TODO: set extra headers
+	// set extra headers, if any
+	if len(run.options.Chrome.Headers) > 0 {
+		for _, header := range run.options.Chrome.Headers {
+			kv := strings.SplitN(header, ":", 2)
+			if len(kv) != 2 {
+				logger.Warn("custom header did not parse correctly", "header", header)
+				continue
+			}
+
+			_, err := page.SetExtraHeaders([]string{kv[0], kv[1]})
+			if err != nil {
+				logger.Error("could not set extra headers for page", "err", err)
+				return
+			}
+		}
+	}
 
 	// use page events to grab information about targets. It's how we
 	// know what the results of the first request is to save as an overall
@@ -289,6 +303,9 @@ func (run *Runner) witness(target string) {
 		}
 		return
 	}
+
+	// wait for the --delay number of seconds
+	page.Timeout(time.Duration(run.options.Scan.Delay) * time.Second).WaitNavigation(proto.PageLifecycleEventNameFirstMeaningfulPaint)()
 
 	// wait for navigation to complete
 	if err := page.WaitLoad(); err != nil {
