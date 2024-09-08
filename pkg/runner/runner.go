@@ -24,7 +24,7 @@ type Runner struct {
 	// browser is a go-rod browser instance
 	browser *rod.Browser
 
-	// options for the Browser to consider
+	// options for the Runner to consider
 	options Options
 	// writers are the result writers to use
 	writers []writers.Writer
@@ -43,6 +43,8 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	}
 	opts.Scan.ScreenshotPath = screenshotPath
 	log.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
+
+	// TODO: configure logging
 
 	// TODO: user path to chrome
 	// TODO: is root, disable sandbox

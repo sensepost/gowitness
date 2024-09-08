@@ -4,6 +4,7 @@
 *.so
 *.dylib
 *.sqlite3
+gowitness
 # dep vendor/
 vendor/
 
