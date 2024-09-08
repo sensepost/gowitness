@@ -12,6 +12,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
@@ -22,7 +23,8 @@ import (
 // Runner is a runner that probes web targets
 type Runner struct {
 	// browser is a go-rod browser instance
-	browser *rod.Browser
+	browser    *rod.Browser
+	wappalyzer *wappalyzer.Wappalyze
 
 	// options for the Runner to consider
 	options Options
@@ -44,13 +46,22 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	opts.Scan.ScreenshotPath = screenshotPath
 	log.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
 
+	// get a wappalyzer instance
+	wap, err := wappalyzer.New()
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: configure logging
 
 	// TODO: user path to chrome
 	// TODO: is root, disable sandbox
 	// TODO: proxy support
-	// TODO: windows size config
+	// TODO: window size config
+	// TODO: custom js to eval
+	// TODO: delay
 
+	// get chrome ready
 	url, err := launcher.New().
 		// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
 		Set("disable-features", "MediaRouter").
@@ -70,10 +81,11 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	log.Debug("got a browser up", "control-url", url)
 
 	return &Runner{
-		browser: browser,
-		options: opts,
-		writers: writers,
-		Targets: make(chan string),
+		browser:    browser,
+		wappalyzer: wap,
+		options:    opts,
+		writers:    writers,
+		Targets:    make(chan string),
 	}, nil
 }
 
@@ -102,13 +114,10 @@ func (run *Runner) witness(target string) {
 	}
 
 	// TODO: set extra headers
-	// TODO: tls information
-	// TODO: wapalyzer
 
-	// start the request hijacker. this lets us grab information about
-	// network requests to store in the result. Its also how we know
-	// what the results of the first request is to save as an overall url
-	// result for the output writers.
+	// use page events to grab information about targets. It's how we
+	// know what the results of the first request is to save as an overall
+	// url result for output writers.
 	var (
 		first  = ""
 		result = &models.Result{
@@ -118,7 +127,7 @@ func (run *Runner) witness(target string) {
 	)
 
 	go page.EachEvent(
-		// dismiss any dialogs
+		// dismiss any javascript dialogs
 		func(e *proto.PageJavascriptDialogOpening) {
 			_ = proto.PageHandleJavaScriptDialog{Accept: true}.Call(page)
 		},
@@ -168,10 +177,53 @@ func (run *Runner) witness(target string) {
 					result.FinalURL = e.Response.URL
 					result.ResponseCode = e.Response.Status
 					result.ResponseReason = e.Response.StatusText
+					result.Protocol = e.Response.Protocol
 					result.ContentLength = int64(e.Response.EncodedDataLength)
 
+					// write headers
 					for k, v := range e.Response.Headers {
-						result.AddHeader(k, v.String())
+						var vs []models.HeaderValue
+
+						// if we have an array of values, append them
+						if arr := v.Arr(); len(arr) > 0 {
+							for _, v := range v.Arr() {
+								vs = append(vs, models.HeaderValue{
+									Value: v.Str(),
+								})
+							}
+						} else { // else, take the value as a raw string
+							vs = append(vs, models.HeaderValue{
+								Value: v.Str(),
+							})
+						}
+
+						result.Headers = append(result.Headers, models.Header{
+							Key:    k,
+							Values: vs,
+						})
+					}
+
+					// grab security detail if available
+					if e.Response.SecurityDetails != nil {
+						var sanlist []models.TLSSanList
+						for _, san := range e.Response.SecurityDetails.SanList {
+							sanlist = append(sanlist, models.TLSSanList{
+								Value: san,
+							})
+						}
+
+						result.TLS = models.TLS{
+							Protocol:                 e.Response.SecurityDetails.Protocol,
+							KeyExchange:              e.Response.SecurityDetails.KeyExchange,
+							Cipher:                   e.Response.SecurityDetails.Cipher,
+							SubjectName:              e.Response.SecurityDetails.SubjectName,
+							SanList:                  sanlist,
+							Issuer:                   e.Response.SecurityDetails.Issuer,
+							ValidFrom:                float64(e.Response.SecurityDetails.ValidFrom),
+							ValidTo:                  float64(e.Response.SecurityDetails.ValidTo),
+							ServerSignatureAlgorithm: e.Response.SecurityDetails.ServerSignatureAlgorithm,
+							EncryptedClientHello:     e.Response.SecurityDetails.EncryptedClientHello,
+						}
 					}
 				} else { // else, add a network log
 					entry.StatusCode = e.Response.Status
@@ -181,10 +233,8 @@ func (run *Runner) witness(target string) {
 					entry.Time = e.Response.ResponseTime.Time()
 
 					// write the network log
-					result.AddNetworkLog(entry)
+					result.Network = append(result.Network, entry)
 				}
-			} else {
-				logger.Warn("received a response to an unknown request")
 			}
 		},
 
@@ -200,7 +250,7 @@ func (run *Runner) witness(target string) {
 					entry.Error = e.ErrorText
 
 					// write the network log
-					result.AddNetworkLog(entry)
+					result.Network = append(result.Network, entry)
 				}
 			}
 		},
@@ -209,7 +259,6 @@ func (run *Runner) witness(target string) {
 	)()
 
 	// finally, navigate to the target
-
 	if err := page.Navigate(target); err != nil {
 		if run.options.Logging.LogScanErrors {
 			logger.Error("could not navigate to target", "err", err)
@@ -229,8 +278,22 @@ func (run *Runner) witness(target string) {
 	// TODO: maybe remove this later? i dont think well ever have this condition
 	// be true to be honest.
 	if first == "" {
-		logger.Error("could not determine first request. how?")
+		logger.Error("🤔 could not determine first request. how?")
 		return
+	}
+
+	// get and set the last results info before triggering the
+	info := page.MustInfo()
+	result.Title = info.Title
+	result.HTML = page.MustHTML()
+
+	// fingerprint technologies in the first response
+	if fingerprints := run.wappalyzer.Fingerprint(result.HeaderMap(), []byte(result.HTML)); fingerprints != nil {
+		for tech := range fingerprints {
+			result.Technologies = append(result.Technologies, models.Technology{
+				Value: tech,
+			})
+		}
 	}
 
 	// take a screenshot
@@ -262,11 +325,6 @@ func (run *Runner) witness(target string) {
 		}
 		return
 	}
-
-	// get and set the last results info before triggering the
-	info := page.MustInfo()
-	result.Title = info.Title
-	result.HTML = page.MustHTML()
 
 	// pass the result off the configured writers
 	if err := run.callWriters(result); err != nil {

@@ -56,7 +56,11 @@ func NewDbWriter(uri string, debug bool) (*DbWriter, error) {
 	// run database migrations on the connection
 	if err := c.AutoMigrate(
 		&models.Result{},
+		&models.TLS{},
+		&models.TLSSanList{},
+		&models.Technology{},
 		&models.Header{},
+		&models.HeaderValue{},
 		&models.NetworkLog{},
 		&models.ConsoleLog{},
 	); err != nil {
