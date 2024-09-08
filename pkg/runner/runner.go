@@ -1,7 +1,9 @@
 package runner
 
 import (
+	"bytes"
 	"errors"
+	"image"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/corona10/goimagehash"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
@@ -349,7 +352,6 @@ func (run *Runner) witness(target string) {
 	// TODO: fullPage
 	// TODO: formatToggle
 	// TODO: pdf
-	// TODO: perception hash
 	logger.Debug("taking a screenshot 🔎")
 	img, err := page.Screenshot(false, &proto.PageCaptureScreenshot{
 		Format:           proto.PageCaptureScreenshotFormatJpeg,
@@ -375,7 +377,22 @@ func (run *Runner) witness(target string) {
 		return
 	}
 
-	// pass the result off the configured writers
+	// calculate and set the perception hash
+	decoded, _, err := image.Decode(bytes.NewReader(img))
+	if err != nil {
+		logger.Error("failed to decode screenshot image", "err", err)
+		return
+	}
+
+	hash, err := goimagehash.PerceptionHash(decoded)
+	if err != nil {
+		logger.Error("failed to calculate image perception hash", "err", err)
+		return
+	}
+	result.PerceptionHash = hash.ToString()
+
+	// we have everything we can enumerate!
+	// pass the result off the configured writers.
 	if err := run.callWriters(result); err != nil {
 		logger.Error("failed to write results", "err", err)
 	}
