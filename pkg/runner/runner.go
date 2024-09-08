@@ -54,7 +54,6 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 
 	// TODO: configure logging
 
-	// TODO: user path to chrome
 	// TODO: is root, disable sandbox
 	// TODO: proxy support
 	// TODO: window size config
@@ -62,7 +61,7 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	// TODO: delay
 
 	// get chrome ready
-	url, err := launcher.New().
+	chrmLauncher := launcher.New().
 		// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
 		Set("disable-features", "MediaRouter").
 		Set("disable-client-side-phishing-detection").
@@ -71,8 +70,14 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		Set("mute-audio").
 		Set("no-default-browser-check").
 		Set("no-first-run").
-		Set("deny-permission-prompts").
-		Launch()
+		Set("deny-permission-prompts")
+
+	// user specified Chrome
+	if opts.Chrome.Path != "" {
+		chrmLauncher.Bin(opts.Chrome.Path)
+	}
+
+	url, err := chrmLauncher.Launch()
 	if err != nil {
 		return nil, err
 	}

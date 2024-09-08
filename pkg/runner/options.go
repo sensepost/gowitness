@@ -4,6 +4,8 @@ package runner
 type Options struct {
 	// Logging is logging options
 	Logging Logging
+	// Chrome is Chrome related options
+	Chrome Chrome
 	// Writer is output options
 	Writer Writer
 	// Scan is typically Scan options
@@ -18,6 +20,14 @@ type Logging struct {
 	LogScanErrors bool
 	// Silence all logging
 	Silence bool
+}
+
+// Chrome is Google Chrome related options
+type Chrome struct {
+	// Path to the Chrome binary. An empty value implies that
+	// go-rod will auto download a platform appropriate binary
+	// to use.
+	Path string
 }
 
 // Writer options
