@@ -351,12 +351,9 @@ func (run *Runner) witness(target string) {
 		}
 	}
 
-	// TODO: fullPage
+	// take the screenshot
 	logger.Debug("taking a screenshot 🔎")
-	var screenshotOptions = &proto.PageCaptureScreenshot{
-		OptimizeForSpeed: true,
-	}
-
+	var screenshotOptions = &proto.PageCaptureScreenshot{OptimizeForSpeed: true}
 	switch run.options.Scan.ScreenshotFormat {
 	case "jpeg":
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatJpeg
@@ -365,7 +362,6 @@ func (run *Runner) witness(target string) {
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatPng
 	}
 
-	// take the screenshot
 	img, err := page.Screenshot(run.options.Scan.ScreenshotFullPage, screenshotOptions)
 	if err != nil {
 		if run.options.Logging.LogScanErrors {
