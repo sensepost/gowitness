@@ -30,6 +30,8 @@ type Chrome struct {
 	Path string
 	// Proxy server to use
 	Proxy string
+	// UserAgent is the user-agent string to set for Chrome
+	UserAgent string
 }
 
 // Writer options
@@ -55,6 +57,7 @@ type Scan struct {
 	UriFilter []string
 	// ScreenshotPath is the path where screenshot images will be stored
 	ScreenshotPath string
-	// UserAgent is the user-agent string to set for Chrome
-	UserAgent string
+	// JavaScript to evaluate on every page
+	JavaScript     string
+	JavaScriptFile string
 }

@@ -55,7 +55,6 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	// TODO: configure logging
 
 	// TODO: is root, disable sandbox
-	// TODO: proxy support
 	// TODO: window size config
 	// TODO: custom js to eval
 	// TODO: delay
@@ -80,6 +79,17 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	// proxy
 	if opts.Chrome.Proxy != "" {
 		chrmLauncher.Proxy(opts.Chrome.Proxy)
+	}
+
+	// javascript file containing javascript to eval on each page.
+	// just read it in and set Scan.JavaScript to the value.
+	if opts.Scan.JavaScriptFile != "" {
+		javascript, err := os.ReadFile(opts.Scan.JavaScriptFile)
+		if err != nil {
+			return nil, err
+		}
+
+		opts.Scan.JavaScript = string(javascript)
 	}
 
 	url, err := chrmLauncher.Launch()
@@ -117,7 +127,7 @@ func (run *Runner) witness(target string) {
 	page = page.Timeout(duration)
 
 	if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
-		UserAgent: run.options.Scan.UserAgent,
+		UserAgent: run.options.Chrome.UserAgent,
 	}); err != nil {
 		logger.Error("unable to set user-agent string", "err", err)
 		return
@@ -290,6 +300,14 @@ func (run *Runner) witness(target string) {
 	if first == "" {
 		logger.Error("🤔 could not determine first request. how?")
 		return
+	}
+
+	// if run any JavaScript if we have
+	if run.options.Scan.JavaScript != "" {
+		_, err := page.Eval(run.options.Scan.JavaScript)
+		if err != nil {
+			log.Warn("failed to evaluate user-provided javascript", "err", err)
+		}
 	}
 
 	// get and set the last results info before triggering the
