@@ -32,6 +32,8 @@ type Chrome struct {
 	Proxy string
 	// UserAgent is the user-agent string to set for Chrome
 	UserAgent string
+	// WindowSize, in pixels. Eg; 1920,1080
+	WindowSize string
 }
 
 // Writer options

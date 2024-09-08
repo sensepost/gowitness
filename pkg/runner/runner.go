@@ -52,11 +52,14 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		return nil, err
 	}
 
+	// silly window size check
+	if !strings.Contains(opts.Chrome.WindowSize, ",") {
+		return nil, errors.New("window size appears to be malformed")
+	}
+
 	// TODO: configure logging
 
 	// TODO: is root, disable sandbox
-	// TODO: window size config
-	// TODO: custom js to eval
 	// TODO: delay
 
 	// get chrome ready
@@ -69,7 +72,8 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		Set("mute-audio").
 		Set("no-default-browser-check").
 		Set("no-first-run").
-		Set("deny-permission-prompts")
+		Set("deny-permission-prompts").
+		Set("window-size", opts.Chrome.WindowSize)
 
 	// user specified Chrome
 	if opts.Chrome.Path != "" {
