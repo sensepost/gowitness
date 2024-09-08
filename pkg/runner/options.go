@@ -32,6 +32,8 @@ type Chrome struct {
 	Proxy string
 	// UserAgent is the user-agent string to set for Chrome
 	UserAgent string
+	// Headers to add to every request
+	Headers []string
 	// WindowSize, in pixels. Eg; 1920,1080
 	WindowSize string
 }
@@ -54,6 +56,8 @@ type Scan struct {
 	Threads int
 	// Timeout is the maximum time to wait for a page load before timing out.
 	Timeout int
+	// Number of seconds of delay between navigation and screenshotting
+	Delay int
 	// UriFilter are URI's that are okay to process. This should normally
 	// be http and https
 	UriFilter []string
