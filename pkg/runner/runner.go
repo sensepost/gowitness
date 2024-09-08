@@ -60,6 +60,11 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		return nil, errors.New("window size appears to be malformed")
 	}
 
+	// screenshot format check
+	if !islazy.SliceHasStr([]string{"jpeg", "png"}, opts.Scan.ScreenshotFormat) {
+		return nil, errors.New("invalid screenshot format")
+	}
+
 	// TODO: configure logging
 	// TODO: is root, disable sandbox
 
@@ -319,10 +324,8 @@ func (run *Runner) witness(target string) {
 	}
 
 	// sanity check
-	// TODO: maybe remove this later? i dont think well ever have this condition
-	// be true to be honest.
 	if first == "" {
-		logger.Error("🤔 could not determine first request. how?")
+		logger.Error("🤔 could not determine first request. how??")
 		return
 	}
 
@@ -348,16 +351,22 @@ func (run *Runner) witness(target string) {
 		}
 	}
 
-	// take a screenshot
 	// TODO: fullPage
-	// TODO: formatToggle
-	// TODO: pdf
 	logger.Debug("taking a screenshot 🔎")
-	img, err := page.Screenshot(false, &proto.PageCaptureScreenshot{
-		Format:           proto.PageCaptureScreenshotFormatJpeg,
-		Quality:          gson.Int(90),
+	var screenshotOptions = &proto.PageCaptureScreenshot{
 		OptimizeForSpeed: true,
-	})
+	}
+
+	switch run.options.Scan.ScreenshotFormat {
+	case "jpeg":
+		screenshotOptions.Format = proto.PageCaptureScreenshotFormatJpeg
+		screenshotOptions.Quality = gson.Int(90)
+	case "png":
+		screenshotOptions.Format = proto.PageCaptureScreenshotFormatPng
+	}
+
+	// take the screenshot
+	img, err := page.Screenshot(run.options.Scan.ScreenshotFullPage, screenshotOptions)
 	if err != nil {
 		if run.options.Logging.LogScanErrors {
 			logger.Error("could not take screenshot", "err", err)
@@ -366,7 +375,7 @@ func (run *Runner) witness(target string) {
 	}
 
 	// write the screenshot to disk
-	result.Filename = islazy.SafeFileName(target) + ".jpg"
+	result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
 	if err := os.WriteFile(
 		filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
 		img, 0o664,
