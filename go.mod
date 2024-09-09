@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/corona10/goimagehash v1.1.0
 	github.com/glebarez/sqlite v1.11.0
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-rod/rod v0.116.2
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/projectdiscovery/wappalyzergo v0.1.18
@@ -23,6 +24,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.2.3 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
+	github.com/go-chi/cors v1.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect

@@ -228,24 +228,9 @@ func (run *Runner) witness(target string) {
 
 					// write headers
 					for k, v := range e.Response.Headers {
-						var vs []models.HeaderValue
-
-						// if we have an array of values, append them
-						if arr := v.Arr(); len(arr) > 0 {
-							for _, v := range v.Arr() {
-								vs = append(vs, models.HeaderValue{
-									Value: v.Str(),
-								})
-							}
-						} else { // else, take the value as a raw string
-							vs = append(vs, models.HeaderValue{
-								Value: v.Str(),
-							})
-						}
-
 						result.Headers = append(result.Headers, models.Header{
-							Key:    k,
-							Values: vs,
+							Key:   k,
+							Value: v.Str(),
 						})
 					}
 
