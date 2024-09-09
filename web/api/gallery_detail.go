@@ -13,7 +13,9 @@ import (
 func (h *ApiHandler) GalleryDetailHandler(w http.ResponseWriter, r *http.Request) {
 	var response = &models.Result{}
 
-	v := h.DB.Model(&models.Result{}).Preload(clause.Associations).
+	v := h.DB.Model(&models.Result{}).
+		Preload(clause.Associations).
+		Preload("TLS.SanList").
 		First(&response, chi.URLParam(r, "id"))
 	if v.Error != nil {
 		log.Error("could not get detail for id", "err", v.Error)

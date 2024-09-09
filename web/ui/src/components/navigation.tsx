@@ -2,7 +2,6 @@ import {
   HomeIcon,
   ImageIcon,
   MonitorDownIcon,
-  PlusCircleIcon,
   SearchIcon,
   TableIcon
 } from "lucide-react";
@@ -15,14 +14,13 @@ const navs = [
   { name: `Home`, icon: <HomeIcon className="mr-2 h-4 w-4" />, to: `/` },
   { name: `Gallery`, icon: <ImageIcon className="mr-2 h-4 w-4" />, to: `/gallery` },
   { name: `Table`, icon: <TableIcon className="mr-2 h-4 w-4" />, to: `/table` },
-  { name: `Submit`, icon: <PlusCircleIcon className="mr-2 h-4 w-4" />, to: `/submit` },
 ];
 
 const Navigation = () => {
   return (
     <>
       <nav className="container flex h-14 items-center">
-        <NavLink to="/" className="flex items-center space-x-2">
+        <NavLink to="/" className="flex items-center space-x-2 p-2">
           <MonitorDownIcon className="h-6 w-6" />
           <span className="font-bold">gowitness, v3</span>
         </NavLink>

@@ -22,12 +22,13 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import * as api from "@/lib/api";
+import * as api from "@/lib/api/api";
+import * as apitypes from "@/lib/api/types";
 
 
 const GalleryPage = () => {
-  const [gallery, setGallery] = useState<api.galleryResult[]>();
-  const [wappalyzer, setWappalyzer] = useState<api.wappalyzer>();
+  const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
+  const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 

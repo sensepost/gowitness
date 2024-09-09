@@ -13,6 +13,11 @@ const App = () => {
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
           <Outlet />
         </main>
+        <footer className="flex justify-end p-4">
+          <p className="text-sm text-muted-foreground">
+            Made with ♥ by <a href="https://github.com/leonjza" target="_blank" rel="noopener noreferrer" className="underline">@leonjza</a>
+          </p>
+        </footer>
       </div>
       <Toaster />
     </ThemeProvider>
