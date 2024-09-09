@@ -338,9 +338,19 @@ func (run *Runner) witness(target string) {
 	}
 
 	// get and set the last results info before triggering the
-	info := page.MustInfo()
-	result.Title = info.Title
-	result.HTML = page.MustHTML()
+	info, err := page.Info()
+	if err != nil {
+		logger.Error("could not get page info", "err", err)
+	} else {
+		result.Title = info.Title
+	}
+
+	html, err := page.HTML()
+	if err != nil {
+		logger.Error("could not get page html", "err", err)
+	} else {
+		result.HTML = html
+	}
 
 	// fingerprint technologies in the first response
 	if fingerprints := run.wappalyzer.Fingerprint(result.HeaderMap(), []byte(result.HTML)); fingerprints != nil {
