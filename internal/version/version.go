@@ -3,12 +3,13 @@ package version
 var (
 	version = "3.0.0-dev"
 
-	gitHash    = ""
-	goBuildEnv = ""
+	gitHash     = ""
+	goBuildEnv  = ""
+	goBuildTime = ""
 )
 
 // Get the current version
-func Get() (string, string, string) {
+func Get() (string, string, string, string) {
 
 	if gitHash == "" {
 		gitHash = "dev"
@@ -18,5 +19,5 @@ func Get() (string, string, string) {
 		goBuildEnv = "dev"
 	}
 
-	return version, gitHash, goBuildEnv
+	return version, gitHash, goBuildEnv, goBuildTime
 }

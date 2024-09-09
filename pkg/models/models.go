@@ -70,7 +70,7 @@ type TLS struct {
 
 type TLSSanList struct {
 	ID    uint `json:"id" gorm:"primarykey"`
-	TLSID uint `json:"tlsid"`
+	TLSID uint `json:"tls_id"`
 
 	Value string `json:"value"`
 }
