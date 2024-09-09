@@ -1,13 +1,13 @@
 G := $(shell go version | cut -d' ' -f 3,4 | sed 's/ /_/g')
 V := $(shell git rev-parse --short HEAD)
-APPVER := $(shell grep 'version =' internal/version/version.go | cut -d \" -f2)
+APPVER := $(shell grep 'Version =' internal/version/version.go | cut -d \" -f2)
 PWD := $(shell pwd)
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LD_FLAGS := -trimpath \
 	-ldflags="-s -w \
-	-X=github.com/sensepost/gowitness/internal/version.gitHash=$(V) \
-	-X=github.com/sensepost/gowitness/internal/version.goBuildEnv=$(G) \
-	-X=github.com/sensepost/gowitness/internal/version.goBuildTime=$(BUILD_TIME)"
+	-X=github.com/sensepost/gowitness/internal/version.GitHash=$(V) \
+	-X=github.com/sensepost/gowitness/internal/version.GoBuildEnv=$(G) \
+	-X=github.com/sensepost/gowitness/internal/version.GoBuildTime=$(BUILD_TIME)"
 BIN_DIR := build
 PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 linux/arm windows/amd64
 CGO := CGO_ENABLED=0
