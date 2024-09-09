@@ -38,14 +38,15 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { WideSkeleton } from '@/components/loading';
 import { Link, useParams } from 'react-router-dom';
-import * as api from "@/lib/api";
+import * as api from "@/lib/api/api";
+import * as apitypes from "@/lib/api/types";
 import { format } from 'date-fns';
 
 
 const ScreenshotDetail = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
-  const [detail, setDetail] = useState<api.result>();
-  const [wappalyzer, setWappalyzer] = useState<api.wappalyzer>({});
+  const [detail, setDetail] = useState<apitypes.detail>();
+  const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   const { id } = useParams<{ id: string; }>();
@@ -204,7 +205,7 @@ const ScreenshotDetail = () => {
             </CardHeader>
             <CardContent>
               <p><strong>Subject Name:</strong> {detail.tls.subject_name}</p>
-              <p><strong>SAN List:</strong> {detail.tls.san_list}</p>
+              <p><strong>SAN List:</strong> {detail.tls.san_list.map(san => san.value).join(', ')}</p>
               <p><strong>Issuer:</strong> {detail.tls.issuer}</p>
               <p><strong>Protocol:</strong> {detail.tls.protocol}</p>
               <p><strong>Cipher:</strong> {detail.tls.cipher}</p>
@@ -249,8 +250,9 @@ const ScreenshotDetail = () => {
             </CardHeader>
             <CardContent>
               <p className="mb-4">
-                The final URL was <a href={detail.final_url} target='_blank'>{detail.final_url}</a>, responding with an
-                HTTP {detail.response_code}, with {detail.content_length} bytes of content.
+                The final URL was <Link to={detail.final_url} target="_blank" className="font-mono">
+                  {detail.final_url}
+                </Link>, responding with an HTTP <span className="font-mono">{detail.response_code}</span> and <span className="font-mono">{detail.content_length}</span> bytes of content.
                 The request {detail.failed ? "failed" : "was successful"}.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -274,67 +276,72 @@ const ScreenshotDetail = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Network Log</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>HTTP</TableHead>
-                    <TableHead>Remote IP</TableHead>
-                    <TableHead>MIME Type</TableHead>
-                    <TableHead>URL</TableHead>
-                    <TableHead>Error</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detail.network.map((log, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
-                          {log.status_code}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{log.mime_type}</TableCell>
-                      <TableCell>{log.remote_ip}</TableCell>
-                      <TableCell className="text-xs">{log.url}</TableCell>
-                      <TableCell>{log.error || '-'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {detail.network.length > 0 &&
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Console Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Message</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detail.console.map((log, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
-                          {log.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{log.value}</TableCell>
+            <Card>
+              <CardHeader>
+                <CardTitle>Network Log</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>HTTP</TableHead>
+                      <TableHead>Remote IP</TableHead>
+                      <TableHead>MIME Type</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Error</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {detail.network.map((log, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
+                            {log.status_code}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{log.remote_ip}</TableCell>
+                        <TableCell><span className="text-nowrap font-mono">{log.mime_type}</span></TableCell>
+                        <TableCell className="text-xs">{log.url}</TableCell>
+                        <TableCell>{log.error || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          }
+
+          {detail.console.length > 0 &&
+            <Card>
+              <CardHeader>
+                <CardTitle>Console Logs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Message</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {detail.console.map((log, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
+                            {log.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{log.value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          }
         </div>
       </div>
     </div>

@@ -6,14 +6,15 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import * as api from "@/lib/api";
+import * as api from "@/lib/api/api";
+import * as apitypes from "@/lib/api/types";
 import {
   useEffect,
   useState
 } from "react";
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState<api.statistics>();
+  const [stats, setStats] = useState<apitypes.statistics>();
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {

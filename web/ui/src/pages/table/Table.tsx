@@ -14,11 +14,12 @@ import { WideSkeleton } from "@/components/loading";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import * as api from "@/lib/api";
+import * as api from "@/lib/api/api";
+import * as apitypes from "@/lib/api/types";
 
 const TablePage = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [list, setList] = useState<api.list[]>();
+  const [list, setList] = useState<apitypes.list[]>();
 
   useEffect(() => {
     const getData = async () => {
