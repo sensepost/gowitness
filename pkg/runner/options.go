@@ -28,6 +28,9 @@ type Chrome struct {
 	// go-rod will auto download a platform appropriate binary
 	// to use.
 	Path string
+	// WSS is a websocket URL. Setting this will prevent gowitness
+	// form launching Chrome, but rather use the remote instance.
+	WSS string
 	// Proxy server to use
 	Proxy string
 	// UserAgent is the user-agent string to set for Chrome

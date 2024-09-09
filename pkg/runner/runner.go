@@ -65,32 +65,6 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		return nil, errors.New("invalid screenshot format")
 	}
 
-	// TODO: configure logging
-	// TODO: is root, disable sandbox
-
-	// get chrome ready
-	chrmLauncher := launcher.New().
-		// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
-		Set("disable-features", "MediaRouter").
-		Set("disable-client-side-phishing-detection").
-		Set("disable-default-apps").
-		Set("hide-scrollbars").
-		Set("mute-audio").
-		Set("no-default-browser-check").
-		Set("no-first-run").
-		Set("deny-permission-prompts").
-		Set("window-size", opts.Chrome.WindowSize)
-
-	// user specified Chrome
-	if opts.Chrome.Path != "" {
-		chrmLauncher.Bin(opts.Chrome.Path)
-	}
-
-	// proxy
-	if opts.Chrome.Proxy != "" {
-		chrmLauncher.Proxy(opts.Chrome.Proxy)
-	}
-
 	// javascript file containing javascript to eval on each page.
 	// just read it in and set Scan.JavaScript to the value.
 	if opts.Scan.JavaScriptFile != "" {
@@ -102,13 +76,51 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		opts.Scan.JavaScript = string(javascript)
 	}
 
-	url, err := chrmLauncher.Launch()
-	if err != nil {
+	var url string
+	if opts.Chrome.WSS == "" {
+		// get chrome ready
+		chrmLauncher := launcher.New().
+			// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
+			Set("disable-features", "MediaRouter").
+			Set("disable-client-side-phishing-detection").
+			Set("disable-default-apps").
+			Set("hide-scrollbars").
+			Set("mute-audio").
+			Set("no-default-browser-check").
+			Set("no-first-run").
+			Set("deny-permission-prompts").
+			Set("window-size", opts.Chrome.WindowSize)
+
+		// user specified Chrome
+		if opts.Chrome.Path != "" {
+			chrmLauncher.Bin(opts.Chrome.Path)
+		}
+
+		// proxy
+		if opts.Chrome.Proxy != "" {
+			chrmLauncher.Proxy(opts.Chrome.Proxy)
+		}
+
+		url, err = chrmLauncher.Launch()
+		if err != nil {
+			return nil, err
+		}
+		log.Debug("got a browser up", "control-url", url)
+	} else {
+		url = opts.Chrome.WSS
+		log.Debug("using a user specified WSS url", "control-url", url)
+	}
+
+	// connect to the control-url
+	browser := rod.New().ControlURL(url)
+	if err := browser.Connect(); err != nil {
 		return nil, err
 	}
 
-	browser := rod.New().ControlURL(url).MustConnect().MustIgnoreCertErrors(true)
-	log.Debug("got a browser up", "control-url", url)
+	// ignore cert errors
+	if err := browser.IgnoreCertErrors(true); err != nil {
+		return nil, err
+	}
 
 	return &Runner{
 		browser:    browser,

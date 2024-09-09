@@ -79,6 +79,7 @@ func init() {
 	// chrome options
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Path, "chrome-path", "", "The path to a Google Chrome binary to use (downloads a platform appropriate binary by default)")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Proxy, "chrome-proxy", "", "An http/socks5 proxy server to use. Specify the proxy using this format: proto://address:port")
+	scanCmd.PersistentFlags().StringVar(&opts.Chrome.WSS, "chrome-wss-url", "", "A websocket URL to connect to a remote, already running Chrome Devtools instance (i.e., Chrome started with --remote-debugging-port)")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.UserAgent, "chrome-user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36", "The user-agent string to use")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.WindowSize, "chrome-window-size", "1920,1080", "The Chrome browser window size, in pixels")
 	scanCmd.PersistentFlags().StringSliceVar(&opts.Chrome.Headers, "chrome-header", []string{}, "Extra headers to add to requests. Supports multiple --header flags")
