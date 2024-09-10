@@ -25,7 +25,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Code,
-  SearchSlashIcon
+  SearchSlashIcon,
+  ChevronUpIcon,
+  ChevronDownIcon
 } from 'lucide-react';
 import {
   Dialog,
@@ -37,14 +39,24 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from '@/hooks/use-toast';
 import { WideSkeleton } from '@/components/loading';
-import { Link, useParams } from 'react-router-dom';
+import {
+  Link,
+  useParams
+} from 'react-router-dom';
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { format } from 'date-fns';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
 
 
 const ScreenshotDetail = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
+  const [isNetworkLogOpen, setIsNetworkLogOpen] = useState(true);
+  const [isConsoleLogOpen, setIsConsoleLogOpen] = useState(true);
   const [detail, setDetail] = useState<apitypes.detail>();
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -126,7 +138,7 @@ const ScreenshotDetail = () => {
             </Button>
           </Link>
         </div>
-        <Button variant="secondary" size="sm">
+        <Button variant="outline" size="sm">
           <SearchSlashIcon className="mr-2 h-4 w-4" />
           Visually Similar
         </Button>
@@ -136,11 +148,12 @@ const ScreenshotDetail = () => {
         {/* Left Column */}
         <div className="w-full lg:w-2/5 space-y-4">
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 relative group">
               <img
                 src={api.endpoints.screenshot.path + "/" + detail.file_name}
                 alt={detail.title}
-                className="w-196 h-120 object-cover transition-all duration-300 filter group-hover:scale-105" />
+                className="w-full h-auto object-cover transition-all duration-300 filter group-hover:scale-105 cursor-pointer rounded-lg"
+              />
             </CardContent>
             <CardFooter className="flex justify-between items-center pt-4">
               <div>
@@ -205,12 +218,21 @@ const ScreenshotDetail = () => {
             </CardHeader>
             <CardContent>
               <p><strong>Subject Name:</strong> {detail.tls.subject_name}</p>
-              <p><strong>SAN List:</strong> {detail.tls.san_list.map(san => san.value).join(', ')}</p>
               <p><strong>Issuer:</strong> {detail.tls.issuer}</p>
               <p><strong>Protocol:</strong> {detail.tls.protocol}</p>
               <p><strong>Cipher:</strong> {detail.tls.cipher}</p>
-              <p><strong>Valid From:</strong>{format(new Date(detail.tls.valid_from * 1000), 'PPP')}</p>
-              <p><strong>Valid To:</strong>{format(new Date(detail.tls.valid_to * 1000), 'PPP')}</p>
+              <p><strong>Valid From:</strong> {format(new Date(detail.tls.valid_from * 1000), 'PPP')}</p>
+              <p><strong>Valid To:</strong> {format(new Date(detail.tls.valid_to * 1000), 'PPP')}</p>
+              <details className="mt-4">
+                <summary className="cursor-pointer font-semibold">
+                  SAN List ({detail.tls.san_list.length})
+                </summary>
+                <ul className="list-disc pl-5">
+                  {detail.tls.san_list.map((san, index) => (
+                    <li key={index}>{san.value}</li>
+                  ))}
+                </ul>
+              </details>
             </CardContent>
           </Card>
 
@@ -241,36 +263,35 @@ const ScreenshotDetail = () => {
 
         {/* Right Column */}
         <div className="w-full lg:w-3/5 space-y-4">
-          <Card>
+          <Card className="bg-gradient-to-r from-green-600 to-blue-500 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Summary</CardTitle>
-              <Badge className={getStatusColor(detail.response_code)}>
+              <CardTitle >Summary</CardTitle>
+              <Badge className={`${getStatusColor(detail.response_code)} px-3 py-1`}>
                 HTTP {detail.response_code}
               </Badge>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">
-                The final URL was <Link to={detail.final_url} target="_blank" className="font-mono">
+              <p className="mb-6 ">
+                The final URL was <a href={detail.final_url} target="_blank" rel="noopener noreferrer" className="font-mono underline">
                   {detail.final_url}
-                </Link>, responding with an HTTP <span className="font-mono">{detail.response_code}</span> and <span className="font-mono">{detail.content_length}</span> bytes of content.
-                The request {detail.failed ? "failed" : "was successful"}.
+                </a> responding with an HTTP <span className="font-mono">{detail.response_code}</span> and <span className="font-mono">{detail.content_length}</span> bytes of content.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-secondary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold">{detail.network.length}</p>
-                  <p className="text-sm text-muted-foreground">Network Requests</p>
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">{detail.network.length}</p>
+                  <p className="text-sm">Network Requests</p>
                 </div>
-                <div className="bg-secondary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold">{detail.console.length}</p>
-                  <p className="text-sm text-muted-foreground">Console Logs</p>
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">{detail.console.length}</p>
+                  <p className="text-sm">Console Logs</p>
                 </div>
-                <div className="bg-secondary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold">{Object.keys(detail.headers).length}</p>
-                  <p className="text-sm text-muted-foreground">Headers</p>
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">{Object.keys(detail.headers).length}</p>
+                  <p className="text-sm">Headers</p>
                 </div>
-                <div className="bg-secondary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold">{detail.technologies.length}</p>
-                  <p className="text-sm text-muted-foreground">Technologies</p>
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">{detail.technologies.length}</p>
+                  <p className="text-sm">Technologies</p>
                 </div>
               </div>
             </CardContent>
@@ -278,69 +299,89 @@ const ScreenshotDetail = () => {
 
           {detail.network.length > 0 &&
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Network Log</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>HTTP</TableHead>
-                      <TableHead>Remote IP</TableHead>
-                      <TableHead>MIME Type</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Error</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {detail.network.map((log, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
-                            {log.status_code}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{log.remote_ip}</TableCell>
-                        <TableCell><span className="text-nowrap font-mono">{log.mime_type}</span></TableCell>
-                        <TableCell className="text-xs">{log.url}</TableCell>
-                        <TableCell>{log.error || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <Collapsible open={isNetworkLogOpen} onOpenChange={setIsNetworkLogOpen}>
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Network Log</CardTitle>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {isNetworkLogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>HTTP</TableHead>
+                          <TableHead>URL</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.network.map((log, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
+                                {log.status_code}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <a href={log.url} target="_blank" rel="noopener noreferrer" className="break-all">
+                                {log.url}
+                              </a>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           }
 
           {detail.console.length > 0 &&
-            <Card>
-              <CardHeader>
-                <CardTitle>Console Logs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Message</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {detail.console.map((log, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
-                            {log.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{log.value}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <Collapsible open={isConsoleLogOpen} onOpenChange={setIsConsoleLogOpen}>
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Console Logs</CardTitle>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {isConsoleLogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Message</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.console.map((log, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
+                                {log.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{log.value}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           }
         </div>
       </div>
