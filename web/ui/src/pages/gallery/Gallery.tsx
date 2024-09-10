@@ -24,6 +24,14 @@ import {
 } from "@/components/ui/tooltip";
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 
 const GalleryPage = () => {
@@ -89,6 +97,10 @@ const GalleryPage = () => {
     setSearchParams({ page: newPage.toString(), limit: limit.toString() });
   };
 
+  const handleLimitChange = (newLimit: string) => {
+    setSearchParams({ limit: newLimit });
+  };
+
   const renderPageButtons = () => {
     const pageButtons = [];
     const maxVisiblePages = 5; // Number of visible pages around the current page
@@ -114,7 +126,43 @@ const GalleryPage = () => {
   if (loading) return <WideSkeleton />;
 
   return (
-    <div>
+    <div className="space-y-6">
+
+      <div className="flex flex-wrap gap-4 items-center justify-between rounded-lg">
+        <div className="flex flex-wrap gap-2">
+          <Select >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Technology Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* {technologies.map((tech) => (
+              <SelectItem key={tech} value={tech}>
+                {tech}
+              </SelectItem>
+            ))} */}
+            </SelectContent>
+          </Select>
+          <Button variant="outline">
+            HTTP 200
+          </Button>
+          <Button variant="secondary">
+            HTTP 400
+          </Button>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              placeholder="Custom Code"
+              value="custom status"
+              className="w-32"
+            />
+            <Button >Filter</Button>
+          </div>
+        </div>
+        <Button variant="outline">
+          Group by Similar
+        </Button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {gallery?.map(screenshot => (
           <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
@@ -183,8 +231,28 @@ const GalleryPage = () => {
           </Link>
         ))}
       </div>
-      <div className="flex justify-center mt-8">
+      <div className="flex justify-between items-center mt-8">
+        <Select value={limit.toString()} onValueChange={handleLimitChange}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="Limit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="12">12</SelectItem>
+            <SelectItem value="24">24</SelectItem>
+            <SelectItem value="48">48</SelectItem>
+            <SelectItem value="96">96</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={page <= 1}
+          >
+            First
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -201,6 +269,14 @@ const GalleryPage = () => {
             disabled={page >= totalPages}
           >
             »
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={page >= totalPages}
+          >
+            Last
           </Button>
         </div>
       </div>
