@@ -10,9 +10,12 @@ import App from '@/pages/App';
 import ErrorPage from '@/pages/Error';
 
 import DashboardPage from '@/pages/dashboard/Dashboard';
-import GalleryPage from './pages/gallery/Gallery';
-import TablePage from './pages/table/Table';
-import ScreenshotDetail from './pages/detail/Detail';
+import GalleryPage from '@/pages/gallery/Gallery';
+import TablePage from '@/pages/table/Table';
+import ScreenshotDetail from '@/pages/detail/Detail';
+import SearchResultsPage from '@/pages/search/Search';
+
+import { searchAction, searchLoader } from '@/actions/Search';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +38,12 @@ const router = createBrowserRouter([
       {
         path: 'screenshot/:id',
         element: <ScreenshotDetail />
+      },
+      {
+        path: 'search',
+        element: <SearchResultsPage />,
+        action: searchAction,
+        loader: searchLoader,
       },
     ]
   }

@@ -65,6 +65,8 @@ func (s *Server) Run() {
 		r.Get("/list", apih.ListHandler)
 		r.Get("/detail/{id}", apih.GalleryDetailHandler)
 		r.Get("/wappalyzer", apih.WappalyzerHandler)
+
+		r.Post("/search", apih.SearchHandler)
 	})
 
 	r.Mount("/screenshots",

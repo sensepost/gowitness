@@ -5,7 +5,13 @@ type statistics = {
   headers: number;
   consolelogs: number;
   networklogs: number;
+  response_code_stats: response_code_stats[];
 };
+
+interface response_code_stats {
+  code: number;
+  count: number;
+}
 
 // wappalyzer
 type wappalyzer = {
@@ -120,6 +126,18 @@ interface detail {
   console: consolelog[];
 }
 
+interface searchresult {
+  id: number;
+  url: string;
+  final_url: string;
+  response_code: number;
+  content_length: number;
+  title: string;
+  matched_fields: string[];
+  file_name: string;
+}
+
+
 export type {
   statistics,
   wappalyzer,
@@ -133,4 +151,5 @@ export type {
   networklog,
   consolelog,
   detail,
+  searchresult,
 };
