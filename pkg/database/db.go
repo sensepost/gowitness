@@ -25,6 +25,8 @@ func Connection(uri string, debug bool) (*gorm.DB, error) {
 	var config = &gorm.Config{}
 	if debug {
 		config.Logger = logger.Default.LogMode(logger.Info)
+	} else {
+		config.Logger = logger.Default.LogMode(logger.Error)
 	}
 
 	switch db.Scheme {

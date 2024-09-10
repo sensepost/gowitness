@@ -9,11 +9,17 @@ import (
 )
 
 type statisticsResponse struct {
-	DbSize      int64 `json:"dbsize"`
-	Results     int64 `json:"results"`
-	Headers     int64 `json:"headers"`
-	NetworkLogs int64 `json:"networklogs"`
-	ConsoleLogs int64 `json:"consolelogs"`
+	DbSize        int64                     `json:"dbsize"`
+	Results       int64                     `json:"results"`
+	Headers       int64                     `json:"headers"`
+	NetworkLogs   int64                     `json:"networklogs"`
+	ConsoleLogs   int64                     `json:"consolelogs"`
+	ResponseCodes []*statisticsResponseCode `json:"response_code_stats"`
+}
+
+type statisticsResponseCode struct {
+	Code  int   `json:"code"`
+	Count int64 `json:"count"`
 }
 
 func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +54,16 @@ func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error("an error occured counting console logs", "err", v.Error)
 		return
 	}
+
+	var counts []*statisticsResponseCode
+	if err := h.DB.Model(&models.Result{}).
+		Select("response_code as code, count(*) as count").
+		Group("response_code").Scan(&counts).Error; err != nil {
+		log.Error("failed counting response codes", "err", err)
+		return
+	}
+
+	response.ResponseCodes = counts
 
 	jsonData, err := json.Marshal(response)
 	if err != nil {

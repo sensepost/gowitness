@@ -373,7 +373,9 @@ const ScreenshotDetail = () => {
                                 {log.type}
                               </Badge>
                             </TableCell>
-                            <TableCell>{log.value}</TableCell>
+                            <TableCell>
+                              <span className="font-mono">{log.value}</span>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

@@ -4,7 +4,9 @@ import {
   statistics,
   wappalyzer,
   detail,
+  searchresult,
 } from "@/lib/api/types";
+import path from "path";
 
 const endpoints = {
   // api base path
@@ -42,6 +44,12 @@ const endpoints = {
   detail: {
     path: `/detail/:id`,
     returnas: {} as detail
+  },
+
+  // post endpoints
+  search: {
+    path: `/search`,
+    returnas: {} as searchresult
   },
 };
 

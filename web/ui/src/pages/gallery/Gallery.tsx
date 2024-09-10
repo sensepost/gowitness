@@ -152,7 +152,7 @@ const GalleryPage = () => {
             <Input
               type="number"
               placeholder="Custom Code"
-              value="custom status"
+              defaultValue="custom status"
               className="w-32"
             />
             <Button >Filter</Button>

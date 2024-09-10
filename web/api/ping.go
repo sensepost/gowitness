@@ -6,7 +6,7 @@ import (
 )
 
 // PingHandler handles ping requests
-func (a *ApiHandler) PingHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ApiHandler) PingHandler(w http.ResponseWriter, r *http.Request) {
 	response := `pong`
 
 	jsonData, err := json.Marshal(response)
