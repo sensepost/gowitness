@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +40,7 @@ type Runner struct {
 	Targets chan string
 }
 
-// New gets a new Browser ready for probing.
+// New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the instance.
 func New(opts Options, writers []writers.Writer) (*Runner, error) {
 	screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
@@ -55,9 +56,28 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 		return nil, err
 	}
 
-	// silly window size check
-	if !strings.Contains(opts.Chrome.WindowSize, ",") {
-		return nil, errors.New("window size appears to be malformed")
+	// parse the window size config
+	if opts.Chrome.WindowSize != "" {
+		if !strings.Contains(opts.Chrome.WindowSize, ",") {
+			return nil, errors.New("window size appears to be malformed")
+		}
+
+		xy := strings.Split(opts.Chrome.WindowSize, ",")
+		if len(xy) != 2 {
+			return nil, errors.New("invalid x or y size")
+		}
+
+		x, err := strconv.Atoi(xy[0])
+		if err != nil {
+			return nil, err
+		}
+		y, err := strconv.Atoi(xy[1])
+		if err != nil {
+			return nil, err
+		}
+
+		opts.Chrome.windowX = x
+		opts.Chrome.windowY = y
 	}
 
 	// screenshot format check
@@ -88,8 +108,7 @@ func New(opts Options, writers []writers.Writer) (*Runner, error) {
 			Set("mute-audio").
 			Set("no-default-browser-check").
 			Set("no-first-run").
-			Set("deny-permission-prompts").
-			Set("window-size", opts.Chrome.WindowSize)
+			Set("deny-permission-prompts")
 
 		// user specified Chrome
 		if opts.Chrome.Path != "" {
@@ -143,6 +162,17 @@ func (run *Runner) witness(target string) {
 		return
 	}
 	defer page.Close()
+
+	// configure viewport size
+	if run.options.Chrome.windowX > 0 && run.options.Chrome.windowY > 0 {
+		if err := page.SetViewport(&proto.EmulationSetDeviceMetricsOverride{
+			Width:  run.options.Chrome.windowX,
+			Height: run.options.Chrome.windowY,
+		}); err != nil {
+			logger.Error("unable to set viewport", "err", err)
+			return
+		}
+	}
 
 	// configure timeout
 	duration := time.Duration(run.options.Scan.Timeout) * time.Second
