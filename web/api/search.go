@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/sensepost/gowitness/pkg/log"
@@ -114,41 +114,75 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-// parseSearchQuery will extract operator and value pairs
-// Parse the search query into a map of operators and their values, and capture free-form text
+// parseSearchQuery parses a search query string into key-value pairs for known operators
+// and captures any remaining free-form text.
 func parseSearchQuery(query string) (map[string]string, string) {
+	// Operators that we know of and that will be parsed
+	operators := []string{"title", "tech", "header"}
 	result := make(map[string]string)
+
 	var freeText string
+	var currentKey string
+	var currentValue []string
 
-	// Regular expression to extract key-value pairs (e.g., title: "foo bar", header: bar)
-	// Matches: key: "value with spaces" or key: valueWithoutSpaces
-	re := regexp.MustCompile(`(\w+):\s*(?:"([^"]+)"|([^\s]+))`)
+	parts := strings.Fields(query)
 
-	// Extract all the key-value pairs from the query
-	matches := re.FindAllStringSubmatch(query, -1)
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
 
-	processedLength := 0
+		// Check if the part contains an operator (e.g., title: or tech:)
+		if index := strings.Index(part, ":"); index != -1 {
+			operator := part[:index]
+			if slices.Contains(operators, operator) {
+				// If we are processing an operator, finalize the previous key-value pair
+				if currentKey != "" {
+					result[currentKey] = strings.Join(currentValue, " ")
+					currentValue = nil
+				}
+				// Set the current key to the new operator
+				currentKey = operator
 
-	for _, match := range matches {
-		key := match[1]
-		value := match[2] // match[2] is the quoted value (if any)
-		if value == "" {
-			value = match[3] // match[3] is the unquoted value
+				// Handle the value right after the colon
+				remainingPart := part[index+1:]
+				// quoted value?
+				if strings.HasPrefix(remainingPart, `"`) {
+					// Quoted value (with spaces)
+					remainingPart = strings.Trim(remainingPart, `"`)
+					currentValue = append(currentValue, remainingPart)
+
+					// Continue appending parts until the closing quote
+					for i+1 < len(parts) && !strings.HasSuffix(parts[i+1], `"`) {
+						i++
+						currentValue = append(currentValue, parts[i])
+					}
+					if i+1 < len(parts) && strings.HasSuffix(parts[i+1], `"`) {
+						i++
+						closingPart := strings.Trim(parts[i], `"`)
+						currentValue = append(currentValue, closingPart)
+					}
+				} else if remainingPart != "" {
+					// Unquoted single word after colon
+					currentValue = append(currentValue, remainingPart)
+				} else if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], `"`) {
+					// Unquoted value in the next part
+					i++
+					currentValue = append(currentValue, parts[i])
+				}
+				continue
+			}
 		}
-		result[key] = strings.Trim(value, `"'`)
-		processedLength += len(match[0]) + 1 // Keep track of processed characters
+
+		// Add remaining parts as free text
+		freeText += part + " "
 	}
 
-	// Ensure that processedLength does not exceed the query length
-	if processedLength > len(query) {
-		processedLength = len(query)
+	// If we have an unprocessed key-value pair, store it
+	if currentKey != "" {
+		result[currentKey] = strings.Join(currentValue, " ")
 	}
 
-	// If there's any remaining free-form text after the operators
-	remainingText := query[processedLength:]
-	if strings.TrimSpace(remainingText) != "" {
-		freeText = strings.TrimSpace(remainingText)
-	}
+	// Trim any excess spaces from freeText
+	freeText = strings.TrimSpace(freeText)
 
 	return result, freeText
 }
