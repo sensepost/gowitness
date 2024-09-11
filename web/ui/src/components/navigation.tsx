@@ -109,6 +109,7 @@ const Navigation = () => {
                   </p>
                 </div>
                 <div className="grid gap-2">
+                  {searchOperators.length === usedOperators.length && <div className="text-sm">No operators left.</div>}
                   {searchOperators.map((operator) => (
                     !usedOperators.includes(operator.key) && (
                       <div key={operator.key} className="flex items-center">
