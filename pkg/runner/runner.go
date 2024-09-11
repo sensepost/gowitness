@@ -411,7 +411,10 @@ func (run *Runner) witness(target string) {
 		}
 	}
 
-	// take the screenshot
+	// take the screenshot. getting here often means the page responded and we have
+	// some information. sometimes though, and im not sure why, page.Screenshot()
+	// fails by timing out. in that case, record what we have at least but martk
+	// the screenshotting as failed. that way we dont lose all our work at least.
 	logger.Debug("taking a screenshot 🔎")
 	var screenshotOptions = &proto.PageCaptureScreenshot{OptimizeForSpeed: true}
 	switch run.options.Scan.ScreenshotFormat {
@@ -431,7 +434,6 @@ func (run *Runner) witness(target string) {
 		result.Failed = true
 		result.FailedReason = err.Error()
 	} else {
-
 		// write the screenshot to disk
 		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
 		if err := os.WriteFile(
@@ -465,7 +467,7 @@ func (run *Runner) witness(target string) {
 		logger.Error("failed to write results", "err", err)
 	}
 
-	logger.Info("page result", "title", info.Title)
+	logger.Info("page result", "title", info.Title, "screenshot", !result.Failed)
 }
 
 // callWriters takes a result and passes it to writers

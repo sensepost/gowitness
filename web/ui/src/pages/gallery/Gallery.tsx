@@ -21,7 +21,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ExternalLinkIcon,
-  FilterIcon
+  EyeIcon,
+  EyeOffIcon,
+  FilterIcon,
+  XIcon
 } from "lucide-react";
 import {
   Tooltip,
@@ -62,11 +65,15 @@ const GalleryPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  // pagination
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "24");
+  //filters
   const technologyFilter = searchParams.get("technologies") || "";
   const statusFilter = searchParams.get("status") || "";
+  // toggles
   const perceptionGroup = searchParams.get("perception") === "true";
+  const showFailed = searchParams.get("failed") !== "false"; // Default to true
 
   useEffect(() => {
     const getData = async () => {
@@ -97,7 +104,8 @@ const GalleryPage = () => {
           limit,
           technologies: technologyFilter,
           status: statusFilter,
-          perception: perceptionGroup ? 'true' : 'false'
+          perception: perceptionGroup ? 'true' : 'false',
+          failed: showFailed ? 'true' : 'false',
         });
         setGallery(s.results);
         setTotalPages(Math.ceil(s.total_count / limit));
@@ -112,7 +120,7 @@ const GalleryPage = () => {
       }
     };
     getData();
-  }, [page, limit, perceptionGroup, statusFilter, technologyFilter]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
 
   const getStatusColor = (code: number) => {
     if (code >= 200 && code < 300) return "bg-green-500 text-white";
@@ -182,6 +190,13 @@ const GalleryPage = () => {
     });
   };
 
+  const handleToggleShowFailed = () => {
+    setSearchParams(prev => {
+      prev.set("failed", (!showFailed).toString());
+      return prev;
+    });
+  };
+
   const renderPageButtons = (visible: number) => {
     const pageButtons = [];
     const maxVisiblePages = visible;
@@ -202,6 +217,81 @@ const GalleryPage = () => {
     }
 
     return pageButtons;
+  };
+
+  const renderGalleryCard = (screenshot: apitypes.galleryResult) => {
+    return (
+      <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
+        <Card className="group overflow-hidden transition-all hover:shadow-lg flex flex-col h-full">
+          <CardContent className="p-0 relative flex-grow">
+            {screenshot.failed ? (
+              <div className="w-full h-48 bg-gray-800 flex items-center justify-center">
+                <XIcon className="text-gray-600 w-12 h-12" />
+              </div>
+            ) : (
+              <img
+                src={api.endpoints.screenshot.path + "/" + screenshot.file_name}
+                alt={screenshot.url}
+                loading="lazy"
+                className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
+              />
+            )}
+            <div className="absolute top-2 right-2">
+              <Badge variant="default" className={`${getStatusColor(screenshot.response_code)}`}>
+                {screenshot.response_code}
+              </Badge>
+            </div>
+            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <ExternalLinkIcon className="text-white drop-shadow-lg" />
+            </div>
+          </CardContent>
+
+          <CardFooter className="p-2 flex flex-col items-start">
+            <div className="w-full mb-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-full truncate text-sm font-medium">
+                      {screenshot.title || "Untitled"}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{screenshot.title || "Untitled"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="w-full truncate text-xs text-muted-foreground mt-1">
+                {screenshot.url}
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end w-full gap-1 mt-2">
+              {screenshot.technologies?.map(tech => {
+                const iconUrl = getIconUrl(tech);
+                return iconUrl ? (
+                  <TooltipProvider key={tech}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-6 h-6 flex items-center justify-center">
+                          <img
+                            src={iconUrl}
+                            alt={tech}
+                            loading="lazy"
+                            className="w-5 h-5 object-contain"
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{tech}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : null;
+              })}
+            </div>
+          </CardFooter>
+        </Card>
+      </Link>
+    );
   };
 
   const sortedTechnologies = useMemo(() => {
@@ -281,6 +371,24 @@ const GalleryPage = () => {
           >
             Group by Similar
           </Button>
+          <Button
+            variant={showFailed ? "secondary" : "outline"}
+            onClick={handleToggleShowFailed}
+          >
+            {
+              showFailed
+                ? (
+                  <>
+                    <EyeIcon className="mr-2 h-4 w-4" />
+                    Exclude Failed
+                  </>
+                )
+                : <>
+                  <EyeOffIcon className="mr-2 h-4 w-4" />
+                  Include Failed
+                </>
+            }
+          </Button>
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -303,72 +411,7 @@ const GalleryPage = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {gallery?.map(screenshot => (
-          <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
-            <Card className="group overflow-hidden transition-all hover:shadow-lg flex flex-col h-full">
-              <CardContent className="p-0 relative flex-grow">
-                <img
-                  src={api.endpoints.screenshot.path + "/" + screenshot.file_name}
-                  alt={screenshot.url}
-                  loading="lazy"
-                  className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
-                />
-                <div className="absolute top-2 right-2">
-                  <Badge variant="default" className={`${getStatusColor(screenshot.response_code)}`}>
-                    {screenshot.response_code}
-                  </Badge>
-                </div>
-                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ExternalLinkIcon className="text-white drop-shadow-lg" />
-                </div>
-              </CardContent>
-
-              <CardFooter className="p-2 flex flex-col items-start">
-                <div className="w-full mb-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-full truncate text-sm font-medium">
-                          {screenshot.title || "Untitled"}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{screenshot.title || "Untitled"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <div className="w-full truncate text-xs text-muted-foreground mt-1">
-                    {screenshot.url}
-                  </div>
-                </div>
-                <div className="flex flex-wrap justify-end w-full gap-1 mt-2">
-                  {screenshot.technologies?.map(tech => {
-                    const iconUrl = getIconUrl(tech);
-                    return iconUrl ? (
-                      <TooltipProvider key={tech}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="w-6 h-6 flex items-center justify-center">
-                              <img
-                                src={iconUrl}
-                                alt={tech}
-                                loading="lazy"
-                                className="w-5 h-5 object-contain"
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{tech}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : null;
-                  })}
-                </div>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
+        {gallery?.map(screenshot => renderGalleryCard(screenshot))}
       </div>
 
       <div className="flex justify-between items-center mt-8">
