@@ -73,6 +73,13 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		technologies = append(technologies, strings.Split(technologyFilterValue, ",")...)
 	}
 
+	// failed result filtering
+	var showFailed bool
+	showFailed, err = strconv.ParseBool(r.URL.Query().Get("failed"))
+	if err != nil {
+		showFailed = true
+	}
+
 	// query the db
 	var queryResults []*models.Result
 	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
@@ -90,6 +97,10 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		query.Where("id in (?)", h.DB.Model(&models.Technology{}).
 			Select("result_id").Distinct("result_id").
 			Where("value IN (?)", technologies))
+	}
+
+	if !showFailed {
+		query.Where("failed = ?", showFailed)
 	}
 
 	// run the query
