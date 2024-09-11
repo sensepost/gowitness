@@ -47,10 +47,10 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// query the db
 	var queryResults []*models.Result
-	v := h.DB.Model(&models.Result{}).Limit(results.Limit).
-		Offset(offset).Preload("Technologies").Find(&queryResults)
-	if v.Error != nil {
-		log.Error("could not get gallery", "err", v.Error)
+	if err := h.DB.Model(&models.Result{}).Limit(results.Limit).
+		Offset(offset).Preload("Technologies").Find(&queryResults).Error; err != nil {
+
+		log.Error("could not get gallery", "err", err)
 		return
 	}
 
@@ -73,9 +73,8 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	v = h.DB.Model(&models.Result{}).Count(&results.TotalCount)
-	if v.Error != nil {
-		log.Error("could not count total results", "err", v.Error)
+	if err := h.DB.Model(&models.Result{}).Count(&results.TotalCount).Error; err != nil {
+		log.Error("could not count total results", "err", err)
 		return
 	}
 
