@@ -61,12 +61,13 @@ func (s *Server) Run() {
 
 		r.Get("/ping", apih.PingHandler)
 		r.Get("/statistics", apih.StatisticsHandler)
-		r.Get("/gallery", apih.GalleryHandler)
-		r.Get("/list", apih.ListHandler)
-		r.Get("/detail/{id}", apih.GalleryDetailHandler)
 		r.Get("/wappalyzer", apih.WappalyzerHandler)
-
 		r.Post("/search", apih.SearchHandler)
+
+		r.Get("/results/gallery", apih.GalleryHandler)
+		r.Get("/results/list", apih.ListHandler)
+		r.Get("/results/detail/{id}", apih.GalleryDetailHandler)
+		r.Get("/results/technology", apih.TechnologyListHandler)
 	})
 
 	r.Mount("/screenshots",

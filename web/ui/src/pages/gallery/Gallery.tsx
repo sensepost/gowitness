@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/card";
 import {
   useEffect,
+  useMemo,
   useState
 } from "react";
 import {
@@ -15,7 +16,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { WideSkeleton } from "@/components/loading";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLinkIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon,
+  FilterIcon
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,29 +38,50 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 
 const GalleryPage = () => {
   const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
+  const [technology, setTechnology] = useState<apitypes.technologylist>();
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "24");
+  const technologyFilter = searchParams.get("technologies") || "";
+  const statusFilter = searchParams.get("status") || "";
+  const perceptionGroup = searchParams.get("perception") === "true";
 
   useEffect(() => {
     const getData = async () => {
       try {
-        const s = await api.get('wappalyzer');
-        setWappalyzer(s);
+        const [wappalyzerData, technologyData] = await Promise.all([
+          await api.get('wappalyzer'),
+          await api.get('technology')
+        ]);
+        setWappalyzer(wappalyzerData);
+        setTechnology(technologyData);
       } catch (err) {
         toast({
           title: "API Error",
           variant: "destructive",
-          description: `Failed to get wappalyzer: ${err}`
+          description: `Failed to get wappalyzer / technology: ${err}`
         });
       }
     };
@@ -64,7 +92,13 @@ const GalleryPage = () => {
     const getData = async () => {
       setLoading(true);
       try {
-        const s = await api.get('gallery', { page: page, limit: limit });
+        const s = await api.get('gallery', {
+          page,
+          limit,
+          technologies: technologyFilter,
+          status: statusFilter,
+          perception: perceptionGroup ? 'true' : 'false'
+        });
         setGallery(s.results);
         setTotalPages(Math.ceil(s.total_count / limit));
       } catch (err) {
@@ -78,7 +112,7 @@ const GalleryPage = () => {
       }
     };
     getData();
-  }, [page, limit]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter]);
 
   const getStatusColor = (code: number) => {
     if (code >= 200 && code < 300) return "bg-green-500 text-white";
@@ -94,16 +128,63 @@ const GalleryPage = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    setSearchParams({ page: newPage.toString(), limit: limit.toString() });
+    setSearchParams(prev => {
+      prev.set("page", newPage.toString());
+      return prev;
+    });
   };
 
   const handleLimitChange = (newLimit: string) => {
-    setSearchParams({ limit: newLimit });
+    setSearchParams(prev => {
+      prev.set("limit", newLimit);
+      return prev;
+    });
   };
 
-  const renderPageButtons = () => {
+  const handleTechnologyChange = (tech: string) => {
+    const field = "technologies";
+    setSearchParams(prev => {
+      const currentTechnology = prev.get(field)?.split(",").filter(Boolean) || [];
+
+      if (currentTechnology.includes(tech)) {
+        const updatedTechnology = currentTechnology.filter(s => s !== tech);
+        prev.set(field, updatedTechnology.join(","));
+      } else {
+        currentTechnology.push(tech);
+        prev.set(field, currentTechnology.join(","));
+      }
+
+      return prev;
+    });
+    handlePageChange(1); // back to page 1
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setSearchParams(prev => {
+      const currentStatus = prev.get("status")?.split(",").filter(Boolean) || [];
+
+      if (currentStatus.includes(status)) {
+        const updatedStatus = currentStatus.filter(s => s !== status);
+        prev.set("status", updatedStatus.join(","));
+      } else {
+        currentStatus.push(status);
+        prev.set("status", currentStatus.join(","));
+      }
+
+      return prev;
+    });
+  };
+
+  const handleGroupBySimilar = () => {
+    setSearchParams(prev => {
+      prev.set("perception", (!perceptionGroup).toString());
+      return prev;
+    });
+  };
+
+  const renderPageButtons = (visible: number) => {
     const pageButtons = [];
-    const maxVisiblePages = 5; // Number of visible pages around the current page
+    const maxVisiblePages = visible;
     const startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
     const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -123,51 +204,109 @@ const GalleryPage = () => {
     return pageButtons;
   };
 
+  const sortedTechnologies = useMemo(() => {
+    if (!technology) return [];
+    const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
+    return [
+      ...selectedTechnologies,
+      ...technology.technologies.filter(tech => !selectedTechnologies.includes(tech))
+    ];
+  }, [technology, technologyFilter]);
+
   if (loading) return <WideSkeleton />;
 
   return (
     <div className="space-y-6">
-
       <div className="flex flex-wrap gap-4 items-center justify-between rounded-lg">
         <div className="flex flex-wrap gap-2">
-          <Select >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Technology Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              {/* {technologies.map((tech) => (
-              <SelectItem key={tech} value={tech}>
-                {tech}
-              </SelectItem>
-            ))} */}
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            HTTP 200
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[200px] justify-start">
+                <FilterIcon className="mr-2 h-4 w-4" />
+                {technologyFilter.split(',').filter(n => n).length > 0 ? (
+                  <>
+                    {technologyFilter.split(',').length} selected
+                  </>
+                ) : (
+                  "Filter by Technology"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0">
+              <Command>
+                <CommandInput placeholder="Search technologies..." />
+                <CommandList>
+                  <CommandEmpty>No technology found.</CommandEmpty>
+                  <CommandGroup>
+                    {sortedTechnologies.map((tech) => (
+                      <CommandItem
+                        key={tech}
+                        onSelect={() => handleTechnologyChange(tech)}
+                      >
+                        <CheckIcon
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            technologyFilter.includes(tech) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {tech}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant={statusFilter.includes("200") ? "secondary" : "outline"}
+            onClick={() => handleStatusFilter("200")}
+          >
+            200
           </Button>
-          <Button variant="secondary">
-            HTTP 400
+          <Button
+            variant={statusFilter.includes("403") ? "secondary" : "outline"}
+            onClick={() => handleStatusFilter("403")}
+          >
+            403
           </Button>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Custom Code"
-              defaultValue="custom status"
-              className="w-32"
-            />
-            <Button >Filter</Button>
-          </div>
+          <Button
+            variant={statusFilter.includes("500") ? "secondary" : "outline"}
+            onClick={() => handleStatusFilter("500")}
+          >
+            500
+          </Button>
+          <Button
+            variant={perceptionGroup ? "secondary" : "outline"}
+            onClick={handleGroupBySimilar}
+          >
+            Group by Similar
+          </Button>
         </div>
-        <Button variant="outline">
-          Group by Similar
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages}
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {gallery?.map(screenshot => (
           <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
-            <Card className="group overflow-hidden transition-all hover:shadow-lg">
-              <CardContent className="p-0 relative">
+            <Card className="group overflow-hidden transition-all hover:shadow-lg flex flex-col h-full">
+              <CardContent className="p-0 relative flex-grow">
                 <img
                   src={api.endpoints.screenshot.path + "/" + screenshot.file_name}
                   alt={screenshot.url}
@@ -184,8 +323,8 @@ const GalleryPage = () => {
                 </div>
               </CardContent>
 
-              <CardFooter className="p-2 flex items-start justify-between">
-                <div className="flex-grow mr-2">
+              <CardFooter className="p-2 flex flex-col items-start">
+                <div className="w-full mb-2">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -202,8 +341,8 @@ const GalleryPage = () => {
                     {screenshot.url}
                   </div>
                 </div>
-                <div className="flex flex-shrink-0 space-x-1">
-                  {screenshot.technologies?.slice(0, 5).map(tech => {
+                <div className="flex flex-wrap justify-end w-full gap-1 mt-2">
+                  {screenshot.technologies?.map(tech => {
                     const iconUrl = getIconUrl(tech);
                     return iconUrl ? (
                       <TooltipProvider key={tech}>
@@ -231,6 +370,7 @@ const GalleryPage = () => {
           </Link>
         ))}
       </div>
+
       <div className="flex justify-between items-center mt-8">
         <Select value={limit.toString()} onValueChange={handleLimitChange}>
           <SelectTrigger className="w-[100px]">
@@ -261,7 +401,7 @@ const GalleryPage = () => {
           >
             «
           </Button>
-          {renderPageButtons()}
+          {renderPageButtons(8)}
           <Button
             variant="outline"
             size="sm"

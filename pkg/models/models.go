@@ -22,9 +22,9 @@ type Result struct {
 	ResponseReason string `json:"response_reason"`
 	Protocol       string `json:"protocol"`
 	ContentLength  int64  `json:"content_length"`
-	HTML           string `json:"html"`
-	Title          string `json:"title"`
-	PerceptionHash string `json:"perception_hash"`
+	HTML           string `json:"html" gorm:"index"`
+	Title          string `json:"title" gorm:"index"`
+	PerceptionHash string `json:"perception_hash" gorm:"index"`
 
 	// Name of the screenshot file
 	Filename string `json:"file_name"`
@@ -79,7 +79,7 @@ type Technology struct {
 	ID       uint `json:"id" gorm:"primarykey"`
 	ResultID uint `json:"result_id"`
 
-	Value string `json:"value"`
+	Value string `json:"value" gorm:"index"`
 }
 
 type Header struct {
@@ -87,7 +87,7 @@ type Header struct {
 	ResultID uint `json:"result_id"`
 
 	Key   string `json:"key"`
-	Value string `json:"value"`
+	Value string `json:"value" gorm:"index"`
 }
 
 type NetworkLog struct {
@@ -108,5 +108,5 @@ type ConsoleLog struct {
 	ResultID uint `json:"result_id"`
 
 	Type  string `json:"type"`
-	Value string `json:"value"`
+	Value string `json:"value" gorm:"index"`
 }

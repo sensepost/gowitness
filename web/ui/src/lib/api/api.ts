@@ -5,6 +5,7 @@ import {
   wappalyzer,
   detail,
   searchresult,
+  technologylist,
 } from "@/lib/api/types";
 import path from "path";
 
@@ -34,16 +35,20 @@ const endpoints = {
     returnas: {} as wappalyzer
   },
   gallery: {
-    path: `/gallery`,
+    path: `/results/gallery`,
     returnas: {} as gallery
   },
   list: {
-    path: `/list`,
+    path: `/results/list`,
     returnas: [] as list[]
   },
   detail: {
-    path: `/detail/:id`,
+    path: `/results/detail/:id`,
     returnas: {} as detail
+  },
+  technology: {
+    path: `/results/technology`,
+    returnas: {} as technologylist
   },
 
   // post endpoints

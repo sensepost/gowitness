@@ -137,6 +137,10 @@ interface searchresult {
   file_name: string;
 }
 
+interface technologylist {
+  technologies: string[];
+}
+
 
 export type {
   statistics,
@@ -152,4 +156,5 @@ export type {
   consolelog,
   detail,
   searchresult,
+  technologylist,
 };
