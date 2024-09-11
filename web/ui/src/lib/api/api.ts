@@ -7,7 +7,6 @@ import {
   searchresult,
   technologylist,
 } from "@/lib/api/types";
-import path from "path";
 
 const endpoints = {
   // api base path
