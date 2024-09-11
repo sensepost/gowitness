@@ -25,7 +25,7 @@ import {
 
 const chartConfig = {
   count: {
-    label: "Total Status Code Count",
+    label: "Total",
     color: "hsl(var(--chart-5))",
   },
   code: {
@@ -141,7 +141,7 @@ const DashboardPage = () => {
             tickMargin={10}
             axisLine={false}
           />
-          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+          <ChartTooltip content={<ChartTooltipContent hideLabel indicator="line" />} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="count" fill="var(--color-count)" radius={4} />
         </BarChart>
