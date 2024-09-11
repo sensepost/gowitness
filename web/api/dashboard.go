@@ -25,33 +25,30 @@ type statisticsResponseCode struct {
 func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
 	response := &statisticsResponse{}
 
-	v := h.DB.Raw("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()").Take(&response.DbSize)
-	if v.Error != nil {
-		log.Error("an error occured getting database size", "err", v.Error)
+	if err := h.DB.Raw("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()").
+		Take(&response.DbSize).Error; err != nil {
+
+		log.Error("an error occured getting database size", "err", err)
 		return
 	}
 
-	v = h.DB.Model(&models.Result{}).Count(&response.Results)
-	if v.Error != nil {
-		log.Error("an error occured counting results", "err", v.Error)
+	if err := h.DB.Model(&models.Result{}).Count(&response.Results).Error; err != nil {
+		log.Error("an error occured counting results", "err", err)
 		return
 	}
 
-	v = h.DB.Model(&models.Header{}).Count(&response.Headers)
-	if v.Error != nil {
-		log.Error("an error occured counting headers", "err", v.Error)
+	if err := h.DB.Model(&models.Header{}).Count(&response.Headers).Error; err != nil {
+		log.Error("an error occured counting headers", "err", err)
 		return
 	}
 
-	v = h.DB.Model(&models.NetworkLog{}).Count(&response.NetworkLogs)
-	if v.Error != nil {
-		log.Error("an error occured counting network logs", "err", v.Error)
+	if err := h.DB.Model(&models.NetworkLog{}).Count(&response.NetworkLogs).Error; err != nil {
+		log.Error("an error occured counting network logs", "err", err)
 		return
 	}
 
-	v = h.DB.Model(&models.ConsoleLog{}).Count(&response.ConsoleLogs)
-	if v.Error != nil {
-		log.Error("an error occured counting console logs", "err", v.Error)
+	if err := h.DB.Model(&models.ConsoleLog{}).Count(&response.ConsoleLogs).Error; err != nil {
+		log.Error("an error occured counting console logs", "err", err)
 		return
 	}
 

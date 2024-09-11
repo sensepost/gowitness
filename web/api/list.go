@@ -27,17 +27,10 @@ type listResponse struct {
 func (h *ApiHandler) ListHandler(w http.ResponseWriter, r *http.Request) {
 	var results = []*listResponse{}
 
-	v := h.DB.Model(&models.Result{}).Find(&results)
-	if v.Error != nil {
-		log.Error("could not get list", "err", v.Error)
+	if err := h.DB.Model(&models.Result{}).Find(&results).Error; err != nil {
+		log.Error("could not get list", "err", err)
 		return
 	}
-
-	// v = h.DB.Model(&models.Result{}).Count(&results.TotalCount)
-	// if v.Error != nil {
-	// 	log.Error("could not count total results", "err", v.Error)
-	// 	return
-	// }
 
 	jsonData, err := json.Marshal(results)
 	if err != nil {
