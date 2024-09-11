@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
@@ -35,21 +36,64 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 	// pagination
 	urlPage := r.URL.Query().Get("page")
 	urlLimit := r.URL.Query().Get("limit")
-
 	if p, err := strconv.Atoi(urlPage); err == nil && p > 0 {
 		results.Page = p
 	}
 	if l, err := strconv.Atoi(urlLimit); err == nil && l > 0 {
 		results.Limit = l
 	}
-
 	offset := (results.Page - 1) * results.Limit
+
+	// perception sorting
+	var perceptionSort bool
+	perceptionSortValue := r.URL.Query().Get("perception")
+	perceptionSort, err := strconv.ParseBool(perceptionSortValue)
+	if err != nil {
+		perceptionSort = false
+	}
+
+	// status code filtering
+	var statusCodes []int
+	statusFilterValue := r.URL.Query().Get("status")
+	if statusFilterValue != "" {
+		for _, statusCodeString := range strings.Split(statusFilterValue, ",") {
+			statusCode, err := strconv.Atoi(statusCodeString)
+			if err != nil {
+				continue
+			}
+
+			statusCodes = append(statusCodes, statusCode)
+		}
+	}
+
+	// technology filtering
+	var technologies []string
+	technologyFilterValue := r.URL.Query().Get("technologies")
+	if technologyFilterValue != "" {
+		technologies = append(technologies, strings.Split(technologyFilterValue, ",")...)
+	}
 
 	// query the db
 	var queryResults []*models.Result
-	if err := h.DB.Model(&models.Result{}).Limit(results.Limit).
-		Offset(offset).Preload("Technologies").Find(&queryResults).Error; err != nil {
+	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
+		Offset(offset).Preload("Technologies")
 
+	if perceptionSort {
+		query.Order("perception_hash DESC")
+	}
+
+	if len(statusCodes) > 0 {
+		query.Where("response_code IN ?", statusCodes)
+	}
+
+	if len(technologies) > 0 {
+		query.Where("id in (?)", h.DB.Model(&models.Technology{}).
+			Select("result_id").Distinct("result_id").
+			Where("value IN (?)", technologies))
+	}
+
+	// run the query
+	if err := query.Find(&queryResults).Error; err != nil {
 		log.Error("could not get gallery", "err", err)
 		return
 	}
