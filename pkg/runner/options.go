@@ -39,6 +39,10 @@ type Chrome struct {
 	Headers []string
 	// WindowSize, in pixels. Eg; 1920,1080
 	WindowSize string
+
+	// parsed x,y size
+	windowX int
+	windowY int
 }
 
 // Writer options
