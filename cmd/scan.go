@@ -1,28 +1,53 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/pkg/log"
+	"github.com/sensepost/gowitness/pkg/runner"
+	driver "github.com/sensepost/gowitness/pkg/runner/drivers"
 	"github.com/sensepost/gowitness/pkg/writers"
 	"github.com/spf13/cobra"
 )
 
-var scanCmdWriters = []writers.Writer{}
+var scanWriters = []writers.Writer{}
+var scanDriver runner.Driver
+var scanRunner *runner.Runner
+
 var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Perform various scans",
 	Long: ascii.LogoHelp(`Perform various scans using sources such as a file,
 nmap XML's, Nessus exports or by scanning network CIDR ranges.`),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		var err error
+
 		// annoying quirk, but because im overriding persistentprerun
 		// here which overrides the parent it seems.
 		// so we need to explicitly call the parents one now.
-		if err := rootCmd.PersistentPreRunE(cmd, args); err != nil {
+		if err = rootCmd.PersistentPreRunE(cmd, args); err != nil {
 			return err
 		}
 
-		// TODO: move this somewhere else. it's too elusive where
-		// scanWriters come from in subcommands.
+		// configure the driver
+		switch opts.Scan.Driver {
+		case "gorod":
+			scanDriver, err = driver.NewGorod(*opts)
+			if err != nil {
+				return err
+			}
+		default:
+			return errors.New("invalid scan driver chosen")
+		}
+
+		log.Debug("scanning driver started", "driver", opts.Scan.Driver)
+
+		// get the runner up
+		scanRunner, err = runner.NewRunner(scanDriver, *opts, scanWriters)
+		if err != nil {
+			return err
+		}
 
 		// configure writers that subdommand scanners will pass to
 		// a runner instance.
@@ -31,7 +56,7 @@ nmap XML's, Nessus exports or by scanning network CIDR ranges.`),
 			if err != nil {
 				return err
 			}
-			scanCmdWriters = append(scanCmdWriters, w)
+			scanWriters = append(scanWriters, w)
 		}
 
 		if opts.Writer.Db {
@@ -39,7 +64,7 @@ nmap XML's, Nessus exports or by scanning network CIDR ranges.`),
 			if err != nil {
 				return err
 			}
-			scanCmdWriters = append(scanCmdWriters, w)
+			scanWriters = append(scanWriters, w)
 		}
 
 		if opts.Writer.Csv {
@@ -47,10 +72,10 @@ nmap XML's, Nessus exports or by scanning network CIDR ranges.`),
 			if err != nil {
 				return err
 			}
-			scanCmdWriters = append(scanCmdWriters, w)
+			scanWriters = append(scanWriters, w)
 		}
 
-		if len(scanCmdWriters) == 0 {
+		if len(scanWriters) == 0 {
 			log.Warn("no writers have been configured. only saving screenshots. add writers using --write-* flags")
 		}
 
@@ -66,6 +91,7 @@ func init() {
 	scanCmd.PersistentFlags().BoolVar(&opts.Logging.LogScanErrors, "log-scan-errors", false, "Log scan errors (timeouts, dns errors, etc.) to stderr (warning: can be verbose!)")
 
 	// "threads" && other
+	scanCmd.PersistentFlags().StringVarP(&opts.Scan.Driver, "driver", "", "gorod", "The scan driver to use. Can be one of [gorod, chromedp]")
 	scanCmd.PersistentFlags().IntVarP(&opts.Scan.Threads, "threads", "t", 6, "Number of concurrent threads (goroutines) to use")
 	scanCmd.PersistentFlags().IntVarP(&opts.Scan.Timeout, "timeout", "T", 30, "Number of seconds before considering a page timed out")
 	scanCmd.PersistentFlags().IntVar(&opts.Scan.Delay, "delay", 3, "Number of seconds delay between navigation and screenshotting")
@@ -86,7 +112,7 @@ func init() {
 
 	// write options for scan sub commands
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Db, "write-db", false, "Write results to a SQLite database")
-	scanCmd.PersistentFlags().StringVar(&opts.Writer.DbURI, "write-db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite and Postgres anhd MySQL (eg: postgres://user:pass@host:port/db)")
+	scanCmd.PersistentFlags().StringVar(&opts.Writer.DbURI, "write-db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite, Postgres and MySQL (eg: postgres://user:pass@host:port/db)")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.DbDebug, "write-db-enable-debug", false, "Enable database query debug logging (warning: verbose!)")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Csv, "write-csv", false, "Write results as CSV (has limited columns)")
 	scanCmd.PersistentFlags().StringVar(&opts.Writer.CsvFile, "write-csv-file", "gowitness.csv", "The file to write CSV rows to")

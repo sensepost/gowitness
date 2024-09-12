@@ -7,7 +7,6 @@ import (
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/readers"
-	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -53,21 +52,15 @@ flags.`),
 		log.Debug("starting file scanning", "file", fileCmdOptions.Source)
 
 		reader := readers.NewFileReader(fileCmdOptions)
-		runner, err := runner.New(*opts, scanCmdWriters)
-		if err != nil {
-			log.Error("could not get a runner", "err", err)
-			return
-		}
-		defer runner.Close()
-
 		go func() {
-			if err := reader.Read(runner.Targets); err != nil {
+			if err := reader.Read(scanRunner.Targets); err != nil {
 				log.Error("error in reader.Read", "err", err)
 				return
 			}
 		}()
 
-		runner.Run()
+		scanRunner.Run()
+		scanRunner.Close()
 	},
 }
 
