@@ -37,10 +37,7 @@ type Chrome struct {
 	UserAgent string
 	// Headers to add to every request
 	Headers []string
-	// WindowSize, in pixels. Eg; 1920,1080
-	WindowSize string
-
-	// parsed x,y size
+	// WindowSize, in pixels. Eg; X=1920,Y=1080
 	WindowX int
 	WindowY int
 }

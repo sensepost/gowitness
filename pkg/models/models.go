@@ -64,7 +64,7 @@ type TLS struct {
 	Issuer                   string       `json:"issuer"`
 	ValidFrom                float64      `json:"valid_from"`
 	ValidTo                  float64      `json:"valid_to"`
-	ServerSignatureAlgorithm *int         `json:"server_signature_algorithm"`
+	ServerSignatureAlgorithm int64        `json:"server_signature_algorithm"`
 	EncryptedClientHello     bool         `json:"encrypted_client_hello"`
 }
 
@@ -95,7 +95,7 @@ type NetworkLog struct {
 	ResultID uint `json:"result_id"`
 
 	RequestType RequestType `json:"request_type"`
-	StatusCode  int         `json:"status_code"`
+	StatusCode  int64       `json:"status_code"`
 	URL         string      `json:"url"`
 	RemoteIP    string      `json:"remote_ip"`
 	MIMEType    string      `json:"mime_type"`

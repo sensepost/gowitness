@@ -3,10 +3,10 @@ package driver
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"image"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -33,30 +33,6 @@ type Gorod struct {
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the instance.
 func NewGorod(opts runner.Options) (*Gorod, error) {
-	// parse the window size config
-	if opts.Chrome.WindowSize != "" {
-		if !strings.Contains(opts.Chrome.WindowSize, ",") {
-			return nil, errors.New("window size appears to be malformed")
-		}
-
-		xy := strings.Split(opts.Chrome.WindowSize, ",")
-		if len(xy) != 2 {
-			return nil, errors.New("invalid x or y size")
-		}
-
-		x, err := strconv.Atoi(xy[0])
-		if err != nil {
-			return nil, err
-		}
-		y, err := strconv.Atoi(xy[1])
-		if err != nil {
-			return nil, err
-		}
-
-		opts.Chrome.WindowX = x
-		opts.Chrome.WindowY = y
-	}
-
 	var url string
 	if opts.Chrome.WSS == "" {
 		// get chrome ready
@@ -110,14 +86,13 @@ func NewGorod(opts runner.Options) (*Gorod, error) {
 
 // witness does the work of probing a url.
 // This is where everything comes together as far as the runner is concerned.
-func (run *Gorod) Witness(target string, runner *runner.Runner) {
+func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result, error) {
 	logger := log.With("target", target)
 	logger.Debug("witnessing 👀")
 
 	page, err := run.browser.Page(proto.TargetCreateTarget{})
 	if err != nil {
-		logger.Error("could not get a page", "err", err)
-		return
+		return nil, fmt.Errorf("could not get a page: %w", err)
 	}
 	defer page.Close()
 
@@ -127,8 +102,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 			Width:  run.options.Chrome.WindowX,
 			Height: run.options.Chrome.WindowY,
 		}); err != nil {
-			logger.Error("unable to set viewport", "err", err)
-			return
+			return nil, fmt.Errorf("unable to set viewport: %w", err)
 		}
 	}
 
@@ -140,8 +114,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 	if err := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{
 		UserAgent: run.options.Chrome.UserAgent,
 	}); err != nil {
-		logger.Error("unable to set user-agent string", "err", err)
-		return
+		return nil, fmt.Errorf("unable to set user-agent string: %w", err)
 	}
 
 	// set extra headers, if any
@@ -155,8 +128,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 
 			_, err := page.SetExtraHeaders([]string{kv[0], kv[1]})
 			if err != nil {
-				logger.Error("could not set extra headers for page", "err", err)
-				return
+				return nil, fmt.Errorf("could not set extra headers for page: %s", err)
 			}
 		}
 	}
@@ -165,10 +137,8 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 	// know what the results of the first request is to save as an overall
 	// url result for output writers.
 	var (
-		first  = ""
-		result = &models.Result{
-			URL: target,
-		}
+		first         = ""
+		result        = &models.Result{URL: target}
 		resultMutex   = sync.Mutex{}
 		netlog        = make(map[string]models.NetworkLog)
 		dismissEvents = false // set to true to stop EachEvent callbacks
@@ -196,7 +166,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 
 			resultMutex.Lock()
 			result.Console = append(result.Console, models.ConsoleLog{
-				Type:  string(e.Type),
+				Type:  "console." + string(e.Type),
 				Value: strings.TrimSpace(v),
 			})
 			resultMutex.Unlock()
@@ -262,16 +232,14 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 							Issuer:                   e.Response.SecurityDetails.Issuer,
 							ValidFrom:                float64(e.Response.SecurityDetails.ValidFrom),
 							ValidTo:                  float64(e.Response.SecurityDetails.ValidTo),
-							ServerSignatureAlgorithm: e.Response.SecurityDetails.ServerSignatureAlgorithm,
+							ServerSignatureAlgorithm: int64(*e.Response.SecurityDetails.ServerSignatureAlgorithm),
 							EncryptedClientHello:     e.Response.SecurityDetails.EncryptedClientHello,
 						}
-						resultMutex.Unlock()
 					}
+					resultMutex.Unlock()
 				}
 
-				// logger.Debug("network response", "url", e.Response.URL, "status", e.Response.Status, "mime", e.Response.MIMEType)
-
-				entry.StatusCode = e.Response.Status
+				entry.StatusCode = int64(e.Response.Status)
 				entry.URL = e.Response.URL
 				entry.RemoteIP = e.Response.RemoteIPAddress
 				entry.MIMEType = e.Response.MIMEType
@@ -314,24 +282,22 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 
 	// finally, navigate to the target
 	if err := page.Navigate(target); err != nil {
-		if run.options.Logging.LogScanErrors {
-			logger.Error("could not navigate to target", "err", err)
-		}
-		return
+		return nil, fmt.Errorf("could not navigate to target: %s", err)
 	}
 
-	// wait for navigation to complete
-	if err := page.WaitDOMStable(time.Duration(run.options.Scan.Delay)*time.Second, 0); err != nil {
-		if run.options.Logging.LogScanErrors {
-			logger.Error("could not wait for window.onload", "err", err)
-		}
-		return
-	}
+	// // wait for navigation to complete
+	// if err := page.WaitDOMStable(time.Duration(run.options.Scan.Delay)*time.Second, 10); err != nil {
+	// 	if run.options.Logging.LogScanErrors {
+	// 		logger.Warn("could not wait for window.onload", "err", err)
+	// 	}
+	// }
+
+	// wait for the configured delay
+	time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
 
 	// sanity check
 	if first == "" {
-		logger.Error("🤔 could not determine first request. how??")
-		return
+		return nil, errors.New("🤔 could not determine first request. how??")
 	}
 
 	// if run any JavaScript if we have
@@ -374,11 +340,11 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 	// fails by timing out. in that case, record what we have at least but martk
 	// the screenshotting as failed. that way we dont lose all our work at least.
 	logger.Debug("taking a screenshot 🔎")
-	var screenshotOptions = &proto.PageCaptureScreenshot{OptimizeForSpeed: true}
+	var screenshotOptions = &proto.PageCaptureScreenshot{}
 	switch run.options.Scan.ScreenshotFormat {
 	case "jpeg":
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatJpeg
-		screenshotOptions.Quality = gson.Int(90)
+		screenshotOptions.Quality = gson.Int(80)
 	case "png":
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatPng
 	}
@@ -398,34 +364,23 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) {
 			filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
 			img, 0o664,
 		); err != nil {
-			if run.options.Logging.LogScanErrors {
-				logger.Error("could not write screenshot to disk", "err", err)
-			}
-			return
+			return nil, fmt.Errorf("could not write screenshot to disk: %w", err)
 		}
 
 		// calculate and set the perception hash
 		decoded, _, err := image.Decode(bytes.NewReader(img))
 		if err != nil {
-			logger.Error("failed to decode screenshot image", "err", err)
-			return
+			return nil, fmt.Errorf("failed to decode screenshot image: %w", err)
 		}
 
 		hash, err := goimagehash.PerceptionHash(decoded)
 		if err != nil {
-			logger.Error("failed to calculate image perception hash", "err", err)
-			return
+			return nil, fmt.Errorf("failed to calculate image perception hash: %w", err)
 		}
 		result.PerceptionHash = hash.ToString()
 	}
 
-	// we have everything we can enumerate!
-	// pass the result off the configured writers.
-	if err := runner.InvokeWriters(result); err != nil {
-		logger.Error("failed to write results", "err", err)
-	}
-
-	logger.Info("page result", "title", info.Title, "screenshot", !result.Failed)
+	return result, nil
 }
 
 // Close cleans up the Browser runner. The caller needs
