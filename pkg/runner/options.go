@@ -41,8 +41,8 @@ type Chrome struct {
 	WindowSize string
 
 	// parsed x,y size
-	windowX int
-	windowY int
+	WindowX int
+	WindowY int
 }
 
 // Writer options
@@ -58,6 +58,8 @@ type Writer struct {
 
 // Scan is scanning related options
 type Scan struct {
+	// The scan driver to use. Can be one of [gorod, chromedp]
+	Driver string
 	// Threads (not really) are the number of goroutines to use.
 	// More soecifically, its the go-rod page pool well use.
 	Threads int

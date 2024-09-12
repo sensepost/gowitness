@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/sensepost/gowitness/internal/ascii"
-	"github.com/sensepost/gowitness/pkg/log"
-	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -33,19 +31,14 @@ flags.`),
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		url, _ := cmd.Flags().GetString("url")
-		runner, err := runner.New(*opts, scanCmdWriters)
-		if err != nil {
-			log.Error("could not get a runner", "err", err)
-			return
-		}
-		defer runner.Close()
 
 		go func() {
-			runner.Targets <- url
-			close(runner.Targets)
+			scanRunner.Targets <- url
+			close(scanRunner.Targets)
 		}()
 
-		runner.Run()
+		scanRunner.Run()
+		scanRunner.Close()
 	},
 }
 
