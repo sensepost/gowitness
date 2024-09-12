@@ -69,8 +69,8 @@ func NewRunner(driver Driver, opts Options, writers []writers.Writer) (*Runner, 
 	}, nil
 }
 
-// InvokeWriters takes a result and passes it to writers
-func (run *Runner) InvokeWriters(result *models.Result) error {
+// runWriters takes a result and passes it to writers
+func (run *Runner) runWriters(result *models.Result) error {
 	for _, writer := range run.writers {
 		if err := writer.Write(result); err != nil {
 			return err
@@ -107,7 +107,6 @@ func (run *Runner) Run() {
 		go func() {
 			defer wg.Done()
 			for target := range run.Targets {
-				log.Info("working with target")
 				// validate the target
 				if err := run.checkUrl(target); err != nil {
 					if run.options.Logging.LogScanErrors {
@@ -118,7 +117,22 @@ func (run *Runner) Run() {
 
 				// process the target
 				// TODO: bubble an error up from witness()
-				run.Driver.Witness(target, run)
+				result, err := run.Driver.Witness(target, run)
+				if err != nil {
+					if run.options.Logging.LogScanErrors {
+						log.Error("failed to witness target", "target", target, "err", err)
+					}
+				} else {
+					if err := run.runWriters(result); err != nil {
+						log.Error("failed to write result for target", "target", target)
+					}
+
+					log.Info("result 🤖",
+						"target", target,
+						"status-code", result.ResponseCode,
+						"title", result.Title,
+						"have-screenshot", !result.Failed)
+				}
 			}
 		}()
 	}
