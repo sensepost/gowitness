@@ -25,7 +25,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Code,
-  SearchSlashIcon,
   ClockIcon
 } from 'lucide-react';
 import {
