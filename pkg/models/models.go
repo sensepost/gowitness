@@ -16,15 +16,16 @@ const (
 type Result struct {
 	ID uint `json:"id" gorm:"primarykey"`
 
-	URL            string `json:"url"`
-	FinalURL       string `json:"final_url"`
-	ResponseCode   int    `json:"response_code"`
-	ResponseReason string `json:"response_reason"`
-	Protocol       string `json:"protocol"`
-	ContentLength  int64  `json:"content_length"`
-	HTML           string `json:"html" gorm:"index"`
-	Title          string `json:"title" gorm:"index"`
-	PerceptionHash string `json:"perception_hash" gorm:"index"`
+	URL            string    `json:"url"`
+	ProbedAt       time.Time `json:"probed_at"`
+	FinalURL       string    `json:"final_url"`
+	ResponseCode   int       `json:"response_code"`
+	ResponseReason string    `json:"response_reason"`
+	Protocol       string    `json:"protocol"`
+	ContentLength  int64     `json:"content_length"`
+	HTML           string    `json:"html" gorm:"index"`
+	Title          string    `json:"title" gorm:"index"`
+	PerceptionHash string    `json:"perception_hash" gorm:"index"`
 
 	// Name of the screenshot file
 	Filename string `json:"file_name"`

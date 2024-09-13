@@ -116,7 +116,10 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	// know what the results of the first request is to save as an overall
 	// url result for output writers.
 	var (
-		result      = &models.Result{URL: target}
+		result = &models.Result{
+			URL:      target,
+			ProbedAt: time.Now(),
+		}
 		resultMutex sync.Mutex
 		first       *network.EventRequestWillBeSent
 		netlog      = make(map[string]models.NetworkLog)

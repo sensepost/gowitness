@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
@@ -18,13 +19,14 @@ type galleryResponse struct {
 }
 
 type galleryContent struct {
-	ID           uint     `json:"id"`
-	URL          string   `json:"url"`
-	ResponseCode int      `json:"response_code"`
-	Title        string   `json:"title"`
-	Filename     string   `json:"file_name"`
-	Failed       bool     `json:"failed"`
-	Technologies []string `json:"technologies"`
+	ID           uint      `json:"id"`
+	ProbedAt     time.Time `json:"probed_at"`
+	URL          string    `json:"url"`
+	ResponseCode int       `json:"response_code"`
+	Title        string    `json:"title"`
+	Filename     string    `json:"file_name"`
+	Failed       bool      `json:"failed"`
+	Technologies []string  `json:"technologies"`
 }
 
 func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +121,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		// Append the processed data to the response
 		results.Results = append(results.Results, &galleryContent{
 			ID:           result.ID,
+			ProbedAt:     result.ProbedAt,
 			URL:          result.URL,
 			ResponseCode: result.ResponseCode,
 			Title:        result.Title,

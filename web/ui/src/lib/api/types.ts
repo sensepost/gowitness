@@ -29,6 +29,7 @@ type gallery = {
 type galleryResult = {
   id: number;
   url: string;
+  probed_at: string;
   title: string;
   response_code: number;
   file_name: string;
@@ -107,6 +108,7 @@ interface consolelog {
 interface detail {
   id: number;
   url: string;
+  probed_at: string;
   final_url: string;
   response_code: number;
   response_reason: string;
