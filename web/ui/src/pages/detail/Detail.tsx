@@ -107,16 +107,19 @@ const ScreenshotDetail = () => {
     return "bg-blue-500 text-white";
   };
 
-  const copyHtmlContent = () => {
-    navigator.clipboard.writeText(detail?.html || "")
-      .then(() => {
-        toast({
-          description: "DOM content copied to clipboard"
-        });
-      })
-      .catch(err => {
-        console.error('Failed to copy HTML content: ', err);
+  const copyToClipboard = (content: string, type: string) => {
+    navigator.clipboard.writeText(content).then(() => {
+      toast({
+        description: `${type} copied to clipboard`,
       });
+    }).catch((err) => {
+      console.error('Failed to copy content: ', err);
+      toast({
+        title: "Error",
+        description: "Failed to copy content",
+        variant: "destructive",
+      });
+    });
   };
 
   const getIconUrl = (tech: string): string | undefined => {
@@ -198,7 +201,7 @@ const ScreenshotDetail = () => {
                   <ScrollArea className="h-[350px] w-full rounded-md border p-4">
                     <pre className="text-sm">{detail.html}</pre>
                   </ScrollArea>
-                  <Button onClick={copyHtmlContent}>
+                  <Button onClick={() => copyToClipboard(detail.html, 'HTML Source')}>
                     Copy HTML Content
                   </Button>
                 </DialogContent>
@@ -336,45 +339,50 @@ const ScreenshotDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>HTTP</TableHead>
-                        <TableHead></TableHead>
-                        <TableHead>URL</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detail.network.map((log, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
-                              {log.status_code}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                                    <ClockIcon className="w-3 h-3" />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom" className="text-xs">
-                                  <p>{format(new Date(log.time), "PPpp")}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell>
-                            <a href={log.url} target="_blank" rel="noopener noreferrer" className="break-all">
-                              {log.url}
-                            </a>
-                          </TableCell>
+                  {detail.network.length === 0 ? (
+                    <div className="text-center text-muted-foreground">No data</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>HTTP</TableHead>
+                          <TableHead></TableHead>
+                          <TableHead>URL</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.network.map((log, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
+                                {log.status_code}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                                      <ClockIcon className="w-3 h-3" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="text-xs">
+                                    <p>{format(new Date(log.time), "PPpp")}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell
+                              className="break-all cursor-pointer"
+                              onClick={() => copyToClipboard(log.url, 'URL')}
+                            >
+                              {log.url}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -387,28 +395,35 @@ const ScreenshotDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Message</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detail.console.map((log, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
-                              {log.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-mono break-all">{log.value}</span>
-                          </TableCell>
+                  {detail.console.length === 0 ? (
+                    <div className="text-center text-muted-foreground">No data</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Message</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.console.map((log, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
+                                {log.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell
+                              className="break-all cursor-pointer"
+                              onClick={() => copyToClipboard(log.value, 'Message')}
+                            >
+                              <span className="font-mono break-all">{log.value}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -421,22 +436,36 @@ const ScreenshotDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Header</TableHead>
-                        <TableHead>Value</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detail.headers.map((header) => (
-                        <TableRow key={header.id}>
-                          <TableCell className="font-mono text-nowrap">{header.key}</TableCell>
-                          <TableCell className="font-mono break-all ">{header.value ? header.value : "No Value"}</TableCell>
+                  {detail.headers.length === 0 ? (
+                    <div className="text-center text-muted-foreground">No data</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Header</TableHead>
+                          <TableHead>Value</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.headers.map((header) => (
+                          <TableRow key={header.id}>
+                            <TableCell
+                              className="font-mono text-nowrap cursor-pointer"
+                              onClick={() => copyToClipboard(header.key, 'Header key')}
+                            >
+                              {header.key}
+                            </TableCell>
+                            <TableCell
+                              className="font-mono break-all cursor-pointer"
+                              onClick={() => copyToClipboard(header.value || "No Value", 'Header value')}
+                            >
+                              {header.value ? header.value : "No Value"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -449,64 +478,81 @@ const ScreenshotDetail = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Value</TableHead>
-                        <TableHead>Domain</TableHead>
-                        <TableHead>Expires</TableHead>
-                        <TableHead>Attributes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detail.cookies.map((cookie) => (
-                        <TableRow key={cookie.id}>
-                          <TableCell className="font-mono break-all">{cookie.name}</TableCell>
-                          <TableCell>
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="font-mono truncate inline-block max-w-[150px]">
-                                    {cookie.value}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="max-w-[300px] break-all">{cookie.value}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell>{cookie.domain}</TableCell>
-                          <TableCell>
-                            {cookie.expires ? (
+                  {detail.cookies.length === 0 ? (
+                    <div className="text-center text-muted-foreground">No data</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead>Domain</TableHead>
+                          <TableHead>Expires</TableHead>
+                          <TableHead>Attributes</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {detail.cookies.map((cookie) => (
+                          <TableRow key={cookie.id}>
+                            <TableCell
+                              className="font-mono break-all cursor-pointer"
+                              onClick={() => copyToClipboard(cookie.name, 'Cookie name')}
+                            >
+                              {cookie.name}
+                            </TableCell>
+                            <TableCell
+                              className="font-mono text-nowrap cursor-pointer"
+                              onClick={() => copyToClipboard(cookie.value, 'Cookie value')}
+                            >
                               <TooltipProvider delayDuration={0}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span>
-                                      {formatDistanceToNow(new Date(cookie.expires), { addSuffix: true })}
+                                    <span className="font-mono truncate inline-block max-w-[150px]">
+                                      {cookie.value}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>{format(new Date(cookie.expires), "PPpp")}</p>
+                                    <p className="max-w-[300px] break-all">{cookie.value}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                            ) : (
-                              "Session"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {cookie.http_only && <Badge variant="secondary">HttpOnly</Badge>}
-                              {cookie.secure && <Badge variant="secondary">Secure</Badge>}
-                              {cookie.session && <Badge variant="secondary">Session</Badge>}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            </TableCell>
+                            <TableCell
+                              className="cursor-pointer"
+                              onClick={() => copyToClipboard(cookie.domain, 'Cookie domain')}
+                            >
+                              {cookie.domain}
+                            </TableCell>
+                            <TableCell>
+                              {cookie.expires ? (
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        {formatDistanceToNow(new Date(cookie.expires), { addSuffix: true })}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{format(new Date(cookie.expires), "PPpp")}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                ""
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {cookie.http_only && <Badge variant="secondary">HttpOnly</Badge>}
+                                {cookie.secure && <Badge variant="secondary">Secure</Badge>}
+                                {cookie.session && <Badge variant="secondary">Session</Badge>}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
