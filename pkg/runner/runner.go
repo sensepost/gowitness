@@ -115,8 +115,6 @@ func (run *Runner) Run() {
 					continue
 				}
 
-				// process the target
-				// TODO: bubble an error up from witness()
 				result, err := run.Driver.Witness(target, run)
 				if err != nil {
 					if run.options.Logging.LogScanErrors {
@@ -127,11 +125,8 @@ func (run *Runner) Run() {
 						log.Error("failed to write result for target", "target", target)
 					}
 
-					log.Info("result 🤖",
-						"target", target,
-						"status-code", result.ResponseCode,
-						"title", result.Title,
-						"have-screenshot", !result.Failed)
+					log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
+						"title", result.Title, "have-screenshot", !result.Failed)
 				}
 			}
 		}()

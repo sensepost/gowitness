@@ -19,7 +19,25 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Perform various scans",
 	Long: ascii.LogoHelp(`Perform various scans using sources such as a file,
-nmap XML's, Nessus exports or by scanning network CIDR ranges.`),
+nmap XML's, Nessus exports or by scanning network CIDR ranges.
+
+By default, gowitness will only take screenshots. However, that is only half
+the fun! You can add multiple "writers" that will collect information such as
+response codes, content and more. You can specify multiple writers using the
+--writer-* flags (see --help).
+
+There are also two "drivers" to choose from, being either "chromedp" or "gorod".
+Which to choose depends on a tradeoff. For speed, but a higher chance of failed
+screenshots (still recording what gowitness could get using a --writer-*), use
+"gorod". If you prefer a *much* better chance of having a screenshot taken, use
+"chromedp" (the default). The "chromedp" driver tradeoff is resource usage, however.
+`),
+	Example: `  Scan targets from a file, dont prepend http:// to URI targets and filter by port 80:
+   $ gowitness scan nessus -f ./scan-results.nessus --port 80
+  Scan a CIDR, logging scan errors (can be verbose!) and using 20 'threads':
+   $ gowitness scan cidr -t 20 --log-scan-errors -c 10.20.20.0/28
+  Scan a single target, writing results to a SQLite database and JSON lines:
+   $ gowitness scan single -u https://sensepost.com --write-db --write-jsonl`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		var err error
 
