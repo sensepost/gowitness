@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/sensepost/gowitness/internal/islazy"
-	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/ysmood/gson"
@@ -27,11 +27,13 @@ type Gorod struct {
 	browser *rod.Browser
 	// options for the Runner to consider
 	options runner.Options
+	// logger
+	log *slog.Logger
 }
 
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the instance.
-func NewGorod(opts runner.Options) (*Gorod, error) {
+func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 	var url string
 	if opts.Chrome.WSS == "" {
 		// get chrome ready
@@ -60,10 +62,10 @@ func NewGorod(opts runner.Options) (*Gorod, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Debug("got a browser up", "control-url", url)
+		logger.Debug("got a browser up", "control-url", url)
 	} else {
 		url = opts.Chrome.WSS
-		log.Debug("using a user specified WSS url", "control-url", url)
+		logger.Debug("using a user specified WSS url", "control-url", url)
 	}
 
 	// connect to the control-url
@@ -80,13 +82,14 @@ func NewGorod(opts runner.Options) (*Gorod, error) {
 	return &Gorod{
 		browser: browser,
 		options: opts,
+		log:     logger,
 	}, nil
 }
 
 // witness does the work of probing a url.
 // This is where everything comes together as far as the runner is concerned.
 func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result, error) {
-	logger := log.With("target", target)
+	logger := run.log.With("target", target)
 	logger.Debug("witnessing 👀")
 
 	page, err := run.browser.Page(proto.TargetCreateTarget{})
@@ -403,7 +406,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 // Close cleans up the Browser runner. The caller needs
 // to close the Targets channel
 func (run *Gorod) Close() {
-	log.Debug("closing the browser instance")
+	run.log.Debug("closing the browser instance")
 
 	run.browser.Close()
 }
