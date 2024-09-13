@@ -118,6 +118,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 
 	// set extra headers, if any
 	if len(run.options.Chrome.Headers) > 0 {
+		var headers []string
 		for _, header := range run.options.Chrome.Headers {
 			kv := strings.SplitN(header, ":", 2)
 			if len(kv) != 2 {
@@ -125,10 +126,11 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 				continue
 			}
 
-			_, err := page.SetExtraHeaders([]string{kv[0], kv[1]})
-			if err != nil {
-				return nil, fmt.Errorf("could not set extra headers for page: %s", err)
-			}
+			headers = append(headers, strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1]))
+		}
+		_, err := page.SetExtraHeaders(headers)
+		if err != nil {
+			return nil, fmt.Errorf("could not set extra headers for page: %s", err)
 		}
 	}
 
@@ -232,8 +234,8 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 							SubjectName:              e.Response.SecurityDetails.SubjectName,
 							SanList:                  sanlist,
 							Issuer:                   e.Response.SecurityDetails.Issuer,
-							ValidFrom:                float64(e.Response.SecurityDetails.ValidFrom),
-							ValidTo:                  float64(e.Response.SecurityDetails.ValidTo),
+							ValidFrom:                islazy.Float64ToTime(float64(e.Response.SecurityDetails.ValidFrom)),
+							ValidTo:                  islazy.Float64ToTime(float64(e.Response.SecurityDetails.ValidTo)),
 							ServerSignatureAlgorithm: int64(*e.Response.SecurityDetails.ServerSignatureAlgorithm),
 							EncryptedClientHello:     e.Response.SecurityDetails.EncryptedClientHello,
 						}
@@ -300,6 +302,29 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 		}
 	}
 
+	// get cookies
+	cookies, err := page.Cookies([]string{})
+	if err != nil {
+		logger.Error("could not get cookies", "err", err)
+	} else {
+		for _, cookie := range cookies {
+			result.Cookies = append(result.Cookies, models.Cookie{
+				Name:         cookie.Name,
+				Value:        cookie.Value,
+				Domain:       cookie.Domain,
+				Path:         cookie.Path,
+				Expires:      cookie.Expires.Time(),
+				Size:         int64(cookie.Size),
+				HTTPOnly:     cookie.HTTPOnly,
+				Secure:       cookie.Secure,
+				Session:      cookie.Session,
+				Priority:     string(cookie.Priority),
+				SourceScheme: string(cookie.SourceScheme),
+				SourcePort:   int64(cookie.SourcePort),
+			})
+		}
+	}
+
 	// get and set the last results info before triggering the
 	info, err := page.Info()
 	if err != nil {
@@ -354,7 +379,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
 		if err := os.WriteFile(
 			filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
-			img, 0o664,
+			img, os.FileMode(0664),
 		); err != nil {
 			return nil, fmt.Errorf("could not write screenshot to disk: %w", err)
 		}

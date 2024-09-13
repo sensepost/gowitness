@@ -14,6 +14,7 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/storage"
 	"github.com/chromedp/chromedp"
 	"github.com/corona10/goimagehash"
 	"github.com/sensepost/gowitness/internal/islazy"
@@ -26,14 +27,18 @@ import (
 // Implementation ref: https://github.com/chromedp/examples/blob/master/multi/main.go
 type Chromedp struct {
 	// browser context for chromedp
-	browserctx    context.Context
+	browserCtx    context.Context
 	browserCancel context.CancelFunc
+	allocCancel   context.CancelFunc
 	// options for the Runner to consider
 	options runner.Options
 }
 
 func NewChromedp(opts runner.Options) (*Chromedp, error) {
-	var ctx context.Context
+	var (
+		allocCtx    context.Context
+		allocCancel context.CancelFunc
+	)
 
 	if opts.Chrome.WSS == "" {
 		// set up chrome context and launch options
@@ -59,19 +64,20 @@ func NewChromedp(opts runner.Options) (*Chromedp, error) {
 			allocOpts = append(allocOpts, chromedp.ExecPath(opts.Chrome.Path))
 		}
 
-		ctx, _ = chromedp.NewExecAllocator(context.Background(), allocOpts...)
+		allocCtx, allocCancel = chromedp.NewExecAllocator(context.Background(), allocOpts...)
 
 	} else {
-		ctx, _ = chromedp.NewRemoteAllocator(context.Background(), opts.Chrome.WSS)
+		allocCtx, allocCancel = chromedp.NewRemoteAllocator(context.Background(), opts.Chrome.WSS)
 		log.Debug("using a user specified WSS url", "control-url", opts.Chrome.WSS)
 	}
 
-	browserCtx, cancel := chromedp.NewContext(ctx)
+	browserCtx, cancel := chromedp.NewContext(allocCtx)
 	log.Debug("got a browser context")
 
 	return &Chromedp{
-		browserctx:    browserCtx,
+		browserCtx:    browserCtx,
 		browserCancel: cancel,
+		allocCancel:   allocCancel,
 		options:       opts,
 	}, nil
 }
@@ -83,7 +89,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	logger.Debug("witnessing 👀")
 
 	// get a tab
-	tabCtx, tabCancel := chromedp.NewContext(run.browserctx)
+	tabCtx, tabCancel := chromedp.NewContext(run.browserCtx)
 	defer tabCancel()
 
 	// get a timeout context for navigation
@@ -104,11 +110,11 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 				continue
 			}
 
-			headers[kv[0]] = kv[1]
+			headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
 
-			if err := chromedp.Run(navigationCtx, network.SetExtraHTTPHeaders((headers))); err != nil {
-				return nil, fmt.Errorf("could not set extra http headers: %w", err)
-			}
+		if err := chromedp.Run(navigationCtx, network.SetExtraHTTPHeaders((headers))); err != nil {
+			return nil, fmt.Errorf("could not set extra http headers: %w", err)
 		}
 	}
 
@@ -188,6 +194,15 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 							})
 						}
 
+						// urgh, paaaaain.
+						var validFromTime, validToTime time.Time
+						if e.Response.SecurityDetails.ValidFrom != nil {
+							validFromTime = e.Response.SecurityDetails.ValidFrom.Time()
+						}
+						if e.Response.SecurityDetails.ValidTo != nil {
+							validToTime = e.Response.SecurityDetails.ValidTo.Time()
+						}
+
 						result.TLS = models.TLS{
 							Protocol:                 e.Response.SecurityDetails.Protocol,
 							KeyExchange:              e.Response.SecurityDetails.KeyExchange,
@@ -195,8 +210,8 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 							SubjectName:              e.Response.SecurityDetails.SubjectName,
 							SanList:                  sanlist,
 							Issuer:                   e.Response.SecurityDetails.Issuer,
-							ValidFrom:                float64(e.Response.SecurityDetails.ValidFrom.Time().UnixMilli()),
-							ValidTo:                  float64(e.Response.SecurityDetails.ValidTo.Time().UnixMilli()),
+							ValidFrom:                validFromTime,
+							ValidTo:                  validToTime,
 							ServerSignatureAlgorithm: e.Response.SecurityDetails.ServerSignatureAlgorithm,
 							EncryptedClientHello:     e.Response.SecurityDetails.EncryptedClientHello,
 						}
@@ -261,6 +276,33 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		}
 	}
 
+	// get cookies
+	var cookies []*network.Cookie
+	if err := chromedp.Run(navigationCtx, chromedp.ActionFunc(func(ctx context.Context) error {
+		var err error
+		cookies, err = storage.GetCookies().Do(ctx)
+		return err
+	})); err != nil {
+		logger.Error("could not get cookies", "err", err)
+	} else {
+		for _, cookie := range cookies {
+			result.Cookies = append(result.Cookies, models.Cookie{
+				Name:         cookie.Name,
+				Value:        cookie.Value,
+				Domain:       cookie.Domain,
+				Path:         cookie.Path,
+				Expires:      islazy.Float64ToTime(cookie.Expires),
+				Size:         cookie.Size,
+				HTTPOnly:     cookie.HTTPOnly,
+				Secure:       cookie.Secure,
+				Session:      cookie.Session,
+				Priority:     cookie.Priority.String(),
+				SourceScheme: cookie.SourceScheme.String(),
+				SourcePort:   cookie.SourcePort,
+			})
+		}
+	}
+
 	// grab the title
 	if err := chromedp.Run(navigationCtx, chromedp.Title(&result.Title)); err != nil {
 		logger.Error("could not get page title", "err", err)
@@ -305,7 +347,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
 		if err := os.WriteFile(
 			filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
-			img, 0o664,
+			img, os.FileMode(0664),
 		); err != nil {
 			return nil, fmt.Errorf("could not write screenshot to disk: %w", err)
 		}
@@ -328,4 +370,5 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 func (run *Chromedp) Close() {
 	run.browserCancel()
+	run.allocCancel()
 }

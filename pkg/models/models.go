@@ -41,6 +41,7 @@ type Result struct {
 	Headers []Header     `json:"headers"`
 	Network []NetworkLog `json:"network"`
 	Console []ConsoleLog `json:"console"`
+	Cookies []Cookie     `json:"cookies"`
 }
 
 func (r *Result) HeaderMap() map[string][]string {
@@ -63,8 +64,8 @@ type TLS struct {
 	SubjectName              string       `json:"subject_name"`
 	SanList                  []TLSSanList `json:"san_list"`
 	Issuer                   string       `json:"issuer"`
-	ValidFrom                float64      `json:"valid_from"`
-	ValidTo                  float64      `json:"valid_to"`
+	ValidFrom                time.Time    `json:"valid_from"`
+	ValidTo                  time.Time    `json:"valid_to"`
 	ServerSignatureAlgorithm int64        `json:"server_signature_algorithm"`
 	EncryptedClientHello     bool         `json:"encrypted_client_hello"`
 }
@@ -110,4 +111,22 @@ type ConsoleLog struct {
 
 	Type  string `json:"type"`
 	Value string `json:"value" gorm:"index"`
+}
+
+type Cookie struct {
+	ID       uint `json:"id" gorm:"primarykey"`
+	ResultID uint `json:"result_id"`
+
+	Name         string    `json:"name"`
+	Value        string    `json:"value"`
+	Domain       string    `json:"domain"`
+	Path         string    `json:"path"`
+	Expires      time.Time `json:"expires"`
+	Size         int64     `json:"size"`
+	HTTPOnly     bool      `json:"http_only"`
+	Secure       bool      `json:"secure"`
+	Session      bool      `json:"session"`
+	Priority     string    `json:"priority"`
+	SourceScheme string    `json:"source_scheme"`
+	SourcePort   int64     `json:"source_port"`
 }
