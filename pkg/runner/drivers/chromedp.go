@@ -26,15 +26,14 @@ import (
 // Implementation ref: https://github.com/chromedp/examples/blob/master/multi/main.go
 type Chromedp struct {
 	// browser context for chromedp
-	ctx    context.Context
-	cancel context.CancelFunc
+	browserctx    context.Context
+	browserCancel context.CancelFunc
 	// options for the Runner to consider
 	options runner.Options
 }
 
 func NewChromedp(opts runner.Options) (*Chromedp, error) {
 	var ctx context.Context
-	var allocCancel context.CancelFunc
 
 	if opts.Chrome.WSS == "" {
 		// set up chrome context and launch options
@@ -60,7 +59,7 @@ func NewChromedp(opts runner.Options) (*Chromedp, error) {
 			allocOpts = append(allocOpts, chromedp.ExecPath(opts.Chrome.Path))
 		}
 
-		ctx, allocCancel = chromedp.NewExecAllocator(context.Background(), allocOpts...)
+		ctx, _ = chromedp.NewExecAllocator(context.Background(), allocOpts...)
 
 	} else {
 		ctx, _ = chromedp.NewRemoteAllocator(context.Background(), opts.Chrome.WSS)
@@ -68,18 +67,12 @@ func NewChromedp(opts runner.Options) (*Chromedp, error) {
 	}
 
 	browserCtx, cancel := chromedp.NewContext(ctx)
-	// ensure the first tab is up.
-	// https://github.com/chromedp/chromedp/blob/896fbe60c209c643ac02d6cb757793d81dac3488/example_test.go#L80
-	if err := chromedp.Run(browserCtx); err != nil {
-		allocCancel() // cleanup, if we can?
-		return nil, err
-	}
-	log.Debug("got a chrome browser ready")
+	log.Debug("got a browser context")
 
 	return &Chromedp{
-		ctx:     browserCtx,
-		cancel:  cancel,
-		options: opts,
+		browserctx:    browserCtx,
+		browserCancel: cancel,
+		options:       opts,
 	}, nil
 }
 
@@ -90,15 +83,34 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	logger.Debug("witnessing 👀")
 
 	// get a tab
-	tabCtx, cancel := chromedp.NewContext(run.ctx)
-	defer cancel()
-	// ... but wrap it in a timeout
-	tabCtx, tabCancel := context.WithTimeout(tabCtx,
-		time.Duration(run.options.Scan.Timeout)*time.Second)
+	tabCtx, tabCancel := chromedp.NewContext(run.browserctx)
 	defer tabCancel()
 
-	// TODO: viewport
-	// TODO: headers
+	// get a timeout context for navigation
+	navigationCtx, navigationCancel := context.WithTimeout(tabCtx, time.Duration(run.options.Scan.Timeout)*time.Second)
+	defer navigationCancel()
+
+	if err := chromedp.Run(navigationCtx, network.Enable()); err != nil {
+		return nil, fmt.Errorf("error enabling network tracking: %w", err)
+	}
+
+	// set extra headers, if any
+	if len(run.options.Chrome.Headers) > 0 {
+		headers := make(network.Headers)
+		for _, header := range run.options.Chrome.Headers {
+			kv := strings.SplitN(header, ":", 2)
+			if len(kv) != 2 {
+				logger.Warn("custom header did not parse correctly", "header", header)
+				continue
+			}
+
+			headers[kv[0]] = kv[1]
+
+			if err := chromedp.Run(navigationCtx, network.SetExtraHTTPHeaders((headers))); err != nil {
+				return nil, fmt.Errorf("could not set extra http headers: %w", err)
+			}
+		}
+	}
 
 	// use page events to grab information about targets. It's how we
 	// know what the results of the first request is to save as an overall
@@ -110,13 +122,12 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		netlog      = make(map[string]models.NetworkLog)
 	)
 
-	go chromedp.ListenTarget(tabCtx, func(ev interface{}) {
+	go chromedp.ListenTarget(navigationCtx, func(ev interface{}) {
 		switch e := ev.(type) {
 		// dismiss any javascript dialogs
 		case *page.EventJavascriptDialogOpening:
-			if err := chromedp.Run(tabCtx, page.HandleJavaScriptDialog(true)); err != nil {
+			if err := chromedp.Run(navigationCtx, page.HandleJavaScriptDialog(true)); err != nil {
 				logger.Error("failed to handle a javascript dialog", "err", err)
-				tabCancel()
 			}
 		// log console.* calls
 		case *runtime.EventConsoleAPICalled:
@@ -224,24 +235,36 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 				resultMutex.Unlock()
 			}
 		}
+
+		// TODO: wss
 	})
 
 	// navigate to the target
-	if err := chromedp.Run(tabCtx,
-		network.Enable(),
-		chromedp.Navigate(target),
-		chromedp.Sleep(time.Duration(run.options.Scan.Delay)*time.Second),
-	); err != nil {
+	if err := chromedp.Run(
+		navigationCtx, chromedp.Navigate(target),
+	); err != nil && err != context.DeadlineExceeded {
 		return nil, fmt.Errorf("could not navigate to target: %w", err)
 	}
 
-	// grab some title and html content
-	if err := chromedp.Run(tabCtx, chromedp.Title(&result.Title)); err != nil {
+	// just wait if there is a delay
+	if run.options.Scan.Delay > 0 {
+		time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
+	}
+
+	// run any javascript we have
+	if run.options.Scan.JavaScript != "" {
+		if err := chromedp.Run(navigationCtx, chromedp.Evaluate(run.options.Scan.JavaScript, nil)); err != nil {
+			logger.Error("failed to evaluate user-provided javascript", "err", err)
+		}
+	}
+
+	// grab the title
+	if err := chromedp.Run(navigationCtx, chromedp.Title(&result.Title)); err != nil {
 		logger.Error("could not get page title", "err", err)
 	}
 
 	// get html
-	if err := chromedp.Run(tabCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
+	if err := chromedp.Run(navigationCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
 		logger.Error("could not get page html", "err", err)
 	}
 
@@ -254,9 +277,9 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		}
 	}
 
-	// screensot time!
+	// grab a screenshot
 	var img []byte
-	err := chromedp.Run(tabCtx,
+	err := chromedp.Run(navigationCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			img, err = page.CaptureScreenshot().
@@ -269,7 +292,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 	if err != nil {
 		if run.options.Logging.LogScanErrors {
-			logger.Error("could not complete scree screenshot", "err", err)
+			logger.Error("could not grab screenshot", "err", err)
 		}
 
 		result.Failed = true
@@ -301,5 +324,5 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 }
 
 func (run *Chromedp) Close() {
-	run.cancel()
+	run.browserCancel()
 }

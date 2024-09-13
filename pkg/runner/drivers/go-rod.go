@@ -2,7 +2,6 @@ package driver
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -285,22 +284,12 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 		return nil, fmt.Errorf("could not navigate to target: %s", err)
 	}
 
-	// // wait for navigation to complete
-	// if err := page.WaitDOMStable(time.Duration(run.options.Scan.Delay)*time.Second, 10); err != nil {
-	// 	if run.options.Logging.LogScanErrors {
-	// 		logger.Warn("could not wait for window.onload", "err", err)
-	// 	}
-	// }
-
 	// wait for the configured delay
-	time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
-
-	// sanity check
-	if first == "" {
-		return nil, errors.New("🤔 could not determine first request. how??")
+	if run.options.Scan.Delay > 0 {
+		time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
 	}
 
-	// if run any JavaScript if we have
+	// run any javascript we have
 	if run.options.Scan.JavaScript != "" {
 		_, err := page.Eval(run.options.Scan.JavaScript)
 		if err != nil {
@@ -352,7 +341,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	img, err := page.Screenshot(run.options.Scan.ScreenshotFullPage, screenshotOptions)
 	if err != nil {
 		if run.options.Logging.LogScanErrors {
-			logger.Error("could not take screenshot", "err", err)
+			logger.Error("could not grab screenshot", "err", err)
 		}
 
 		result.Failed = true
