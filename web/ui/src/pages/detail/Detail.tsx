@@ -138,24 +138,18 @@ const ScreenshotDetail = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex space-x-2">
-          <Link to={"/screenshot/" + (parseInt(id) - 1).toString()}>
-            <Button variant="outline" size="sm" disabled={parseInt(id) <= 1}>
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Previous
-            </Button>
-          </Link>
-          <Link to={"/screenshot/" + (parseInt(id) + 1).toString()}>
-            <Button variant="outline" size="sm">
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-        <Button variant="outline" size="sm">
-          <SearchSlashIcon className="mr-2 h-4 w-4" />
-          Visually Similar
-        </Button>
+        <Link to={"/screenshot/" + (parseInt(id) - 1).toString()}>
+          <Button variant="outline" size="sm" disabled={parseInt(id) <= 1}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Previous
+          </Button>
+        </Link>
+        <Link to={"/screenshot/" + (parseInt(id) + 1).toString()}>
+          <Button variant="outline" size="sm">
+            Next
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4">
