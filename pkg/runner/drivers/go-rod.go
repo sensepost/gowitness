@@ -136,8 +136,11 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	// know what the results of the first request is to save as an overall
 	// url result for output writers.
 	var (
-		first         = ""
-		result        = &models.Result{URL: target}
+		first  *proto.NetworkRequestWillBeSent
+		result = &models.Result{
+			URL:      target,
+			ProbedAt: time.Now(),
+		}
 		resultMutex   = sync.Mutex{}
 		netlog        = make(map[string]models.NetworkLog)
 		dismissEvents = false // set to true to stop EachEvent callbacks
@@ -178,8 +181,8 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 		func(e *proto.NetworkRequestWillBeSent) bool {
 			// note the request id for the first request. well get back
 			// to this afterwards to extract information about the probe.
-			if first == "" {
-				first = string(e.RequestID)
+			if first == nil {
+				first = e
 			}
 
 			// record the new request
@@ -197,7 +200,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 			// grab an existing requestid, and add response info
 			if entry, ok := netlog[string(e.RequestID)]; ok {
 				// update the first request details (headers, tls, etc.)
-				if first == string(e.RequestID) {
+				if first != nil && first.RequestID == e.RequestID {
 					resultMutex.Lock()
 					result.FinalURL = e.Response.URL
 					result.ResponseCode = e.Response.Status
@@ -260,7 +263,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 				resultMutex.Lock()
 
 				// update the first request details
-				if first == string(e.RequestID) {
+				if first != nil && first.RequestID == e.RequestID {
 					result.Failed = true
 					result.FailedReason = e.ErrorText
 				} else {

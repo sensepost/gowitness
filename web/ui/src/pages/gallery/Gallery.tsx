@@ -20,6 +20,7 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ClockIcon,
   ExternalLinkIcon,
   EyeIcon,
   EyeOffIcon,
@@ -54,6 +55,10 @@ import {
   CommandItem,
   CommandList
 } from "@/components/ui/command";
+import {
+  formatDistanceToNow,
+  format
+} from 'date-fns';
 import { cn } from "@/lib/utils";
 
 
@@ -220,6 +225,10 @@ const GalleryPage = () => {
   };
 
   const renderGalleryCard = (screenshot: apitypes.galleryResult) => {
+    const probedDate = new Date(screenshot.probed_at);
+    const timeAgo = formatDistanceToNow(probedDate, { addSuffix: true });
+    const rawDate = format(probedDate, "PPpp"); // Formats the date in a readable format
+
     return (
       <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
         <Card className="group overflow-hidden transition-all hover:shadow-lg flex flex-col h-full">
@@ -264,29 +273,44 @@ const GalleryPage = () => {
                 {screenshot.url}
               </div>
             </div>
-            <div className="flex flex-wrap justify-end w-full gap-1 mt-2">
-              {screenshot.technologies?.map(tech => {
-                const iconUrl = getIconUrl(tech);
-                return iconUrl ? (
-                  <TooltipProvider key={tech}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-6 h-6 flex items-center justify-center">
-                          <img
-                            src={iconUrl}
-                            alt={tech}
-                            loading="lazy"
-                            className="w-5 h-5 object-contain"
-                          />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{tech}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : null;
-              })}
+            <div className="w-full flex items-center justify-between mt-2">
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <ClockIcon className="w-3 h-3" />
+                      <span className="text-nowrap">{timeAgo}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    <p>{rawDate}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="flex flex-wrap justify-end gap-1">
+                {screenshot.technologies?.map(tech => {
+                  const iconUrl = getIconUrl(tech);
+                  return iconUrl ? (
+                    <TooltipProvider key={tech} delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            <img
+                              src={iconUrl}
+                              alt={tech}
+                              loading="lazy"
+                              className="w-5 h-5 object-contain"
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{tech}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : null;
+                })}
+              </div>
             </div>
           </CardFooter>
         </Card>

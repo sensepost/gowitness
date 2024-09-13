@@ -27,7 +27,8 @@ import {
   Code,
   SearchSlashIcon,
   ChevronUpIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ClockIcon
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,12 +46,16 @@ import {
 } from 'react-router-dom';
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
-import { format } from 'date-fns';
+import {
+  format,
+  formatDistanceToNow
+} from 'date-fns';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const ScreenshotDetail = () => {
@@ -95,8 +100,7 @@ const ScreenshotDetail = () => {
   };
 
   const getLogTypeColor = (type: string) => {
-    if (type === 'warn') return "bg-yellow-500 text-black";
-    if (type === 'error') return "bg-red-500 text-white";
+    if (type === 'console.warning' || type === 'console.warn') return "bg-yellow-500 text-black";
     return "bg-blue-500 text-white";
   };
 
@@ -120,6 +124,16 @@ const ScreenshotDetail = () => {
 
   if (loading) return <WideSkeleton />;
   if (!detail) return;
+
+  const probedDate = new Date(detail.probed_at);
+  const timeAgo = formatDistanceToNow(probedDate, { addSuffix: true });
+  const rawDate = format(probedDate, "PPpp");
+
+  const fadeIn = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.5 }
+  };
 
   return (
     <div className="space-y-6">
@@ -271,10 +285,27 @@ const ScreenshotDetail = () => {
               </Badge>
             </CardHeader>
             <CardContent>
-              <p className="mb-6 ">
-                The final URL was <a href={detail.final_url} target="_blank" rel="noopener noreferrer" className="font-mono underline">
-                  {detail.final_url}
-                </a> responding with an HTTP <span className="font-mono">{detail.response_code}</span> and <span className="font-mono">{detail.content_length}</span> bytes of content.
+              <p className="mb-6">
+                The final URL was{" "}
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={detail.final_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono underline inline-block max-w-[300px] truncate align-bottom"
+                      >
+                        {detail.final_url}
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-[400px] break-all">
+                      <p>{detail.final_url}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>{" "}
+                responding with an HTTP <span className="font-mono">{detail.response_code}</span> and{" "}
+                <span className="font-mono">{detail.content_length}</span> bytes of content.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
@@ -293,6 +324,21 @@ const ScreenshotDetail = () => {
                   <p className="text-3xl font-bold">{detail.technologies.length}</p>
                   <p className="text-sm">Technologies</p>
                 </div>
+              </div>
+              <div className="mt-4 flex items-center justify-end">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center space-x-1 text-sm text-white">
+                        <ClockIcon className="w-4 h-4" />
+                        <span className="text-nowrap">Probed {timeAgo}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      <p>{rawDate}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </CardContent>
           </Card>
@@ -317,6 +363,7 @@ const ScreenshotDetail = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>HTTP</TableHead>
+                          <TableHead></TableHead>
                           <TableHead>URL</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -327,6 +374,20 @@ const ScreenshotDetail = () => {
                               <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
                                 {log.status_code}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                                      <ClockIcon className="w-3 h-3" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="text-xs">
+                                    <p>{format(new Date(log.time), "PPpp")}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </TableCell>
                             <TableCell>
                               <a href={log.url} target="_blank" rel="noopener noreferrer" className="break-all">
