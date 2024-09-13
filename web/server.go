@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/sensepost/gowitness/web/docs"
-	_ "github.com/sensepost/gowitness/web/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/go-chi/chi/v5"
