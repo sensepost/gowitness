@@ -78,5 +78,7 @@ func (s *Server) Run() {
 	r.Handle("/*", SpaHandler())
 
 	log.Info("starting web server", "port", s.Port)
-	http.ListenAndServe(":"+strconv.Itoa(s.Port), r)
+	if err := http.ListenAndServe(":"+strconv.Itoa(s.Port), r); err != nil {
+		log.Error("server listen error", "err", err)
+	}
 }
