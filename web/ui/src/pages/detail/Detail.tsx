@@ -129,12 +129,6 @@ const ScreenshotDetail = () => {
   const timeAgo = formatDistanceToNow(probedDate, { addSuffix: true });
   const rawDate = format(probedDate, "PPpp");
 
-  const fadeIn = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    transition: { duration: 0.5 }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
