@@ -2,13 +2,13 @@ package runner
 
 import (
 	"errors"
+	"log/slog"
 	"net/url"
 	"os"
 	"sync"
 
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 	"github.com/sensepost/gowitness/internal/islazy"
-	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/writers"
 )
@@ -22,6 +22,8 @@ type Runner struct {
 	options Options
 	// writers are the result writers to use
 	writers []writers.Writer
+	// log handler
+	log *slog.Logger
 
 	// Targets to scan.
 	// This would typically be fed from a gowitness/pkg/reader.
@@ -30,13 +32,13 @@ type Runner struct {
 
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the runner
-func NewRunner(driver Driver, opts Options, writers []writers.Writer) (*Runner, error) {
+func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []writers.Writer) (*Runner, error) {
 	screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
 	if err != nil {
 		return nil, err
 	}
 	opts.Scan.ScreenshotPath = screenshotPath
-	log.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
+	logger.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
 
 	// screenshot format check
 	if !islazy.SliceHasStr([]string{"jpeg", "png"}, opts.Scan.ScreenshotFormat) {
@@ -66,6 +68,7 @@ func NewRunner(driver Driver, opts Options, writers []writers.Writer) (*Runner, 
 		options:    opts,
 		writers:    writers,
 		Targets:    make(chan string),
+		log:        logger,
 	}, nil
 }
 
@@ -110,7 +113,7 @@ func (run *Runner) Run() {
 				// validate the target
 				if err := run.checkUrl(target); err != nil {
 					if run.options.Logging.LogScanErrors {
-						log.Error("invalid target to scan", "target", target, "err", err)
+						run.log.Error("invalid target to scan", "target", target, "err", err)
 					}
 					continue
 				}
@@ -118,14 +121,14 @@ func (run *Runner) Run() {
 				result, err := run.Driver.Witness(target, run)
 				if err != nil {
 					if run.options.Logging.LogScanErrors {
-						log.Error("failed to witness target", "target", target, "err", err)
+						run.log.Error("failed to witness target", "target", target, "err", err)
 					}
 				} else {
 					if err := run.runWriters(result); err != nil {
-						log.Error("failed to write result for target", "target", target)
+						run.log.Error("failed to write result for target", "target", target)
 					}
 
-					log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
+					run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
 						"title", result.Title, "have-screenshot", !result.Failed)
 				}
 			}

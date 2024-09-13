@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,6 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/corona10/goimagehash"
 	"github.com/sensepost/gowitness/internal/islazy"
-	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/runner"
 )
@@ -32,9 +32,11 @@ type Chromedp struct {
 	allocCancel   context.CancelFunc
 	// options for the Runner to consider
 	options runner.Options
+	// logger
+	log *slog.Logger
 }
 
-func NewChromedp(opts runner.Options) (*Chromedp, error) {
+func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 	var (
 		allocCtx    context.Context
 		allocCancel context.CancelFunc
@@ -68,24 +70,25 @@ func NewChromedp(opts runner.Options) (*Chromedp, error) {
 
 	} else {
 		allocCtx, allocCancel = chromedp.NewRemoteAllocator(context.Background(), opts.Chrome.WSS)
-		log.Debug("using a user specified WSS url", "control-url", opts.Chrome.WSS)
+		logger.Debug("using a user specified WSS url", "control-url", opts.Chrome.WSS)
 	}
 
 	browserCtx, cancel := chromedp.NewContext(allocCtx)
-	log.Debug("got a browser context")
+	logger.Debug("got a browser context")
 
 	return &Chromedp{
 		browserCtx:    browserCtx,
 		browserCancel: cancel,
 		allocCancel:   allocCancel,
 		options:       opts,
+		log:           logger,
 	}, nil
 }
 
 // witness does the work of probing a url.
 // This is where everything comes together as far as the runner is concerned.
 func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Result, error) {
-	logger := log.With("target", target)
+	logger := run.log.With("target", target)
 	logger.Debug("witnessing 👀")
 
 	// get a tab
@@ -369,6 +372,8 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 }
 
 func (run *Chromedp) Close() {
+	run.log.Debug("closing browser contexts")
+
 	run.browserCancel()
 	run.allocCancel()
 }

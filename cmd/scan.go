@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/pkg/log"
@@ -48,15 +49,18 @@ screenshots (still recording what gowitness could get using a --writer-*), use
 			return err
 		}
 
+		// an slog capable logger to use with drivers and runners
+		logger := slog.New(log.Logger)
+
 		// configure the driver
 		switch opts.Scan.Driver {
 		case "gorod":
-			scanDriver, err = driver.NewGorod(*opts)
+			scanDriver, err = driver.NewGorod(logger, *opts)
 			if err != nil {
 				return err
 			}
 		case "chromedp":
-			scanDriver, err = driver.NewChromedp(*opts)
+			scanDriver, err = driver.NewChromedp(logger, *opts)
 			if err != nil {
 				return err
 			}
@@ -97,7 +101,7 @@ screenshots (still recording what gowitness could get using a --writer-*), use
 		}
 
 		// get the runner up. basically all of the subcommands will use this.
-		scanRunner, err = runner.NewRunner(scanDriver, *opts, scanWriters)
+		scanRunner, err = runner.NewRunner(logger, scanDriver, *opts, scanWriters)
 		if err != nil {
 			return err
 		}
