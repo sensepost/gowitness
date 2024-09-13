@@ -12,6 +12,15 @@ type technologyListResponse struct {
 	Value []string `json:"technologies"`
 }
 
+// TechnologyListHandler lists technologies
+//
+//	@Summary		Get Technology Results
+//	@Description	Get all the unique technology detected.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	technologyListResponse
+//	@Router			/results/technology [get]
 func (h *ApiHandler) TechnologyListHandler(w http.ResponseWriter, r *http.Request) {
 	var results = &technologyListResponse{}
 

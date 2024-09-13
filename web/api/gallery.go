@@ -29,6 +29,21 @@ type galleryContent struct {
 	Technologies []string  `json:"technologies"`
 }
 
+// GalleryHandler gets a paginated gallery
+//
+//	@Summary		Gallery
+//	@Description	Get a paginated list of results.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Param			page			query		int		false	"The page to load."
+//	@Param			limit			query		int		false	"Number of results per page."
+//	@Param			technologies	query		string	false	"A comma seperated list of technologies to filter by."
+//	@Param			status			query		string	false	"A comma seperated list of HTTP status codes to filter by."
+//	@Param			perception		query		boolean	false	"Order the results by perception hash."
+//	@Param			failed			query		boolean	false	"Include failed screenshots in the results."
+//	@Success		200				{object}	galleryResponse
+//	@Router			/results/gallery [get]
 func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 	var results = &galleryResponse{
 		Page:  1,

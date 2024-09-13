@@ -32,6 +32,15 @@ type searchResult struct {
 }
 
 // SearchHandler handles search
+//
+//	@Summary		Search for results
+//	@Description	Searches for results based on free form text, or operators.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Param			query	body		searchRequest	true	"The search term to search for. Supports search operators: `title:`, `tech:`, `header:`"
+//	@Success		200		{object}	searchResult
+//	@Router			/search [post]
 func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var request searchRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
