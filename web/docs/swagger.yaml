@@ -1,0 +1,475 @@
+definitions:
+  api.galleryContent:
+    properties:
+      failed:
+        type: boolean
+      file_name:
+        type: string
+      id:
+        type: integer
+      probed_at:
+        type: string
+      response_code:
+        type: integer
+      technologies:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  api.galleryResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/api.galleryContent'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  api.listResponse:
+    properties:
+      content_length:
+        type: integer
+      failed:
+        description: Failed flag set if the result should be considered failed
+        type: boolean
+      failed_reason:
+        type: string
+      final_url:
+        type: string
+      id:
+        type: integer
+      protocol:
+        type: string
+      response_code:
+        type: integer
+      response_reason:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  api.searchRequest:
+    properties:
+      query:
+        type: string
+    type: object
+  api.searchResult:
+    properties:
+      content_length:
+        type: integer
+      failed:
+        type: boolean
+      failed_reason:
+        type: string
+      file_name:
+        type: string
+      final_url:
+        type: string
+      id:
+        type: integer
+      matched_fields:
+        items:
+          type: string
+        type: array
+      protocol:
+        type: string
+      response_code:
+        type: integer
+      response_reason:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  api.statisticsResponse:
+    properties:
+      consolelogs:
+        type: integer
+      dbsize:
+        type: integer
+      headers:
+        type: integer
+      networklogs:
+        type: integer
+      response_code_stats:
+        items:
+          $ref: '#/definitions/api.statisticsResponseCode'
+        type: array
+      results:
+        type: integer
+    type: object
+  api.statisticsResponseCode:
+    properties:
+      code:
+        type: integer
+      count:
+        type: integer
+    type: object
+  api.technologyListResponse:
+    properties:
+      technologies:
+        items:
+          type: string
+        type: array
+    type: object
+  models.ConsoleLog:
+    properties:
+      id:
+        type: integer
+      result_id:
+        type: integer
+      type:
+        type: string
+      value:
+        type: string
+    type: object
+  models.Cookie:
+    properties:
+      domain:
+        type: string
+      expires:
+        type: string
+      http_only:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      path:
+        type: string
+      priority:
+        type: string
+      result_id:
+        type: integer
+      secure:
+        type: boolean
+      session:
+        type: boolean
+      size:
+        type: integer
+      source_port:
+        type: integer
+      source_scheme:
+        type: string
+      value:
+        type: string
+    type: object
+  models.Header:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      result_id:
+        type: integer
+      value:
+        type: string
+    type: object
+  models.NetworkLog:
+    properties:
+      error:
+        type: string
+      id:
+        type: integer
+      mime_type:
+        type: string
+      remote_ip:
+        type: string
+      request_type:
+        $ref: '#/definitions/models.RequestType'
+      result_id:
+        type: integer
+      status_code:
+        type: integer
+      time:
+        type: string
+      url:
+        type: string
+    type: object
+  models.RequestType:
+    enum:
+    - 0
+    - 0
+    type: integer
+    x-enum-varnames:
+    - HTTP
+    - WS
+  models.Result:
+    properties:
+      console:
+        items:
+          $ref: '#/definitions/models.ConsoleLog'
+        type: array
+      content_length:
+        type: integer
+      cookies:
+        items:
+          $ref: '#/definitions/models.Cookie'
+        type: array
+      failed:
+        description: Failed flag set if the result should be considered failed
+        type: boolean
+      failed_reason:
+        type: string
+      file_name:
+        description: Name of the screenshot file
+        type: string
+      final_url:
+        type: string
+      headers:
+        items:
+          $ref: '#/definitions/models.Header'
+        type: array
+      html:
+        type: string
+      id:
+        type: integer
+      is_pdf:
+        type: boolean
+      network:
+        items:
+          $ref: '#/definitions/models.NetworkLog'
+        type: array
+      perception_hash:
+        type: string
+      probed_at:
+        type: string
+      protocol:
+        type: string
+      response_code:
+        type: integer
+      response_reason:
+        type: string
+      technologies:
+        items:
+          $ref: '#/definitions/models.Technology'
+        type: array
+      title:
+        type: string
+      tls:
+        $ref: '#/definitions/models.TLS'
+      url:
+        type: string
+    type: object
+  models.TLS:
+    properties:
+      cipher:
+        type: string
+      encrypted_client_hello:
+        type: boolean
+      id:
+        type: integer
+      issuer:
+        type: string
+      key_exchange:
+        type: string
+      protocol:
+        type: string
+      resultid:
+        type: integer
+      san_list:
+        items:
+          $ref: '#/definitions/models.TLSSanList'
+        type: array
+      server_signature_algorithm:
+        type: integer
+      subject_name:
+        type: string
+      valid_from:
+        type: string
+      valid_to:
+        type: string
+    type: object
+  models.TLSSanList:
+    properties:
+      id:
+        type: integer
+      tls_id:
+        type: integer
+      value:
+        type: string
+    type: object
+  models.Technology:
+    properties:
+      id:
+        type: integer
+      result_id:
+        type: integer
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/ping:
+    get:
+      consumes:
+      - application/json
+      description: Returns a simple "pong" response to test server availability.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: pong
+          schema:
+            type: string
+      summary: Ping the server
+      tags:
+      - Health
+  /results/detail/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details for a result.
+      parameters:
+      - description: The screenshot ID to load.
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Result'
+      summary: Results detail
+      tags:
+      - Results
+  /results/gallery:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of results.
+      parameters:
+      - description: The page to load.
+        in: query
+        name: page
+        type: integer
+      - description: Number of results per page.
+        in: query
+        name: limit
+        type: integer
+      - description: A comma seperated list of technologies to filter by.
+        in: query
+        name: technologies
+        type: string
+      - description: A comma seperated list of HTTP status codes to filter by.
+        in: query
+        name: status
+        type: string
+      - description: Order the results by perception hash.
+        in: query
+        name: perception
+        type: boolean
+      - description: Include failed screenshots in the results.
+        in: query
+        name: failed
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.galleryResponse'
+      summary: Gallery
+      tags:
+      - Results
+  /results/list:
+    get:
+      consumes:
+      - application/json
+      description: Get a simple list of all results.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.listResponse'
+      summary: Results list
+      tags:
+      - Results
+  /results/technology:
+    get:
+      consumes:
+      - application/json
+      description: Get all the unique technology detected.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.technologyListResponse'
+      summary: Get Technology Results
+      tags:
+      - Results
+  /search:
+    post:
+      consumes:
+      - application/json
+      description: Searches for results based on free form text, or operators.
+      parameters:
+      - description: 'The search term to search for. Supports search operators: `title:`,
+          `tech:`, `header:`'
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.searchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.searchResult'
+      summary: Search for results
+      tags:
+      - Results
+  /statistics:
+    get:
+      consumes:
+      - application/json
+      description: Get database statistics.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.statisticsResponse'
+      summary: Database Statistics
+      tags:
+      - Results
+  /wappalyzer:
+    get:
+      consumes:
+      - application/json
+      description: Get all of the available wappalyzer data.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get Wappalyzer Data
+      tags:
+      - Results
+swagger: "2.0"

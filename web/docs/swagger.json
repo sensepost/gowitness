@@ -1,0 +1,724 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/ping": {
+            "get": {
+                "description": "Returns a simple \"pong\" response to test server availability.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Ping the server",
+                "responses": {
+                    "200": {
+                        "description": "pong",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/detail/{id}": {
+            "get": {
+                "description": "Get details for a result.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Results detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The screenshot ID to load.",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Result"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/gallery": {
+            "get": {
+                "description": "Get a paginated list of results.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Gallery",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The page to load.",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page.",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A comma seperated list of technologies to filter by.",
+                        "name": "technologies",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A comma seperated list of HTTP status codes to filter by.",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Order the results by perception hash.",
+                        "name": "perception",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include failed screenshots in the results.",
+                        "name": "failed",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.galleryResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/list": {
+            "get": {
+                "description": "Get a simple list of all results.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Results list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.listResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/results/technology": {
+            "get": {
+                "description": "Get all the unique technology detected.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Get Technology Results",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.technologyListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "post": {
+                "description": "Searches for results based on free form text, or operators.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Search for results",
+                "parameters": [
+                    {
+                        "description": "The search term to search for. Supports search operators: `title:`, `tech:`, `header:`",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.searchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.searchResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/statistics": {
+            "get": {
+                "description": "Get database statistics.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Database Statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.statisticsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wappalyzer": {
+            "get": {
+                "description": "Get all of the available wappalyzer data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Get Wappalyzer Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.galleryContent": {
+            "type": "object",
+            "properties": {
+                "failed": {
+                    "type": "boolean"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "probed_at": {
+                    "type": "string"
+                },
+                "response_code": {
+                    "type": "integer"
+                },
+                "technologies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.galleryResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.galleryContent"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.listResponse": {
+            "type": "object",
+            "properties": {
+                "content_length": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "description": "Failed flag set if the result should be considered failed",
+                    "type": "boolean"
+                },
+                "failed_reason": {
+                    "type": "string"
+                },
+                "final_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "response_code": {
+                    "type": "integer"
+                },
+                "response_reason": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.searchRequest": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.searchResult": {
+            "type": "object",
+            "properties": {
+                "content_length": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "boolean"
+                },
+                "failed_reason": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "final_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "matched_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "response_code": {
+                    "type": "integer"
+                },
+                "response_reason": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.statisticsResponse": {
+            "type": "object",
+            "properties": {
+                "consolelogs": {
+                    "type": "integer"
+                },
+                "dbsize": {
+                    "type": "integer"
+                },
+                "headers": {
+                    "type": "integer"
+                },
+                "networklogs": {
+                    "type": "integer"
+                },
+                "response_code_stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.statisticsResponseCode"
+                    }
+                },
+                "results": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.statisticsResponseCode": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.technologyListResponse": {
+            "type": "object",
+            "properties": {
+                "technologies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.ConsoleLog": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "result_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Cookie": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "http_only": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "result_id": {
+                    "type": "integer"
+                },
+                "secure": {
+                    "type": "boolean"
+                },
+                "session": {
+                    "type": "boolean"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "source_port": {
+                    "type": "integer"
+                },
+                "source_scheme": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Header": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "result_id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.NetworkLog": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "remote_ip": {
+                    "type": "string"
+                },
+                "request_type": {
+                    "$ref": "#/definitions/models.RequestType"
+                },
+                "result_id": {
+                    "type": "integer"
+                },
+                "status_code": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RequestType": {
+            "type": "integer",
+            "enum": [
+                0,
+                0
+            ],
+            "x-enum-varnames": [
+                "HTTP",
+                "WS"
+            ]
+        },
+        "models.Result": {
+            "type": "object",
+            "properties": {
+                "console": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ConsoleLog"
+                    }
+                },
+                "content_length": {
+                    "type": "integer"
+                },
+                "cookies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Cookie"
+                    }
+                },
+                "failed": {
+                    "description": "Failed flag set if the result should be considered failed",
+                    "type": "boolean"
+                },
+                "failed_reason": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "description": "Name of the screenshot file",
+                    "type": "string"
+                },
+                "final_url": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Header"
+                    }
+                },
+                "html": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_pdf": {
+                    "type": "boolean"
+                },
+                "network": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.NetworkLog"
+                    }
+                },
+                "perception_hash": {
+                    "type": "string"
+                },
+                "probed_at": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "response_code": {
+                    "type": "integer"
+                },
+                "response_reason": {
+                    "type": "string"
+                },
+                "technologies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Technology"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "tls": {
+                    "$ref": "#/definitions/models.TLS"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TLS": {
+            "type": "object",
+            "properties": {
+                "cipher": {
+                    "type": "string"
+                },
+                "encrypted_client_hello": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issuer": {
+                    "type": "string"
+                },
+                "key_exchange": {
+                    "type": "string"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "resultid": {
+                    "type": "integer"
+                },
+                "san_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TLSSanList"
+                    }
+                },
+                "server_signature_algorithm": {
+                    "type": "integer"
+                },
+                "subject_name": {
+                    "type": "string"
+                },
+                "valid_from": {
+                    "type": "string"
+                },
+                "valid_to": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TLSSanList": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "tls_id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Technology": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "result_id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

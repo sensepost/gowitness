@@ -22,6 +22,15 @@ type statisticsResponseCode struct {
 	Count int64 `json:"count"`
 }
 
+// StatisticsHandler returns database statistics
+//
+//	@Summary		Database Statistics
+//	@Description	Get database statistics.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	statisticsResponse
+//	@Router			/statistics [get]
 func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
 	response := &statisticsResponse{}
 

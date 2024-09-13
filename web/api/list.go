@@ -24,6 +24,15 @@ type listResponse struct {
 	FailedReason string `json:"failed_reason"`
 }
 
+// ListHandler returns a simple list of results
+//
+//	@Summary		Results list
+//	@Description	Get a simple list of all results.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	listResponse
+//	@Router			/results/list [get]
 func (h *ApiHandler) ListHandler(w http.ResponseWriter, r *http.Request) {
 	var results = []*listResponse{}
 

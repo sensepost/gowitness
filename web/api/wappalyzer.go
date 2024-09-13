@@ -9,6 +9,15 @@ import (
 // probably not the smartest idea, but he
 const iconBase = `https://raw.githubusercontent.com/enthec/webappanalyzer/main/src/images/icons/`
 
+// WappalyzerHandler returns wappalyzer data
+//
+//	@Summary		Get Wappalyzer Data
+//	@Description	Get all of the available wappalyzer data.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	map[string]string
+//	@Router			/wappalyzer [get]
 func (h *ApiHandler) WappalyzerHandler(w http.ResponseWriter, r *http.Request) {
 	response := make(map[string]string)
 

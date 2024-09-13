@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sensepost/gowitness/web/docs"
+	_ "github.com/sensepost/gowitness/web/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -38,6 +42,14 @@ func isJSON(next http.Handler) http.Handler {
 
 // Run a server
 func (s *Server) Run() {
+
+	// configure our swagger docs
+	docs.SwaggerInfo.Title = "gowitness v3 api"
+	docs.SwaggerInfo.Description = "API documentation for gowitness v3"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.BasePath = "/api"
+
+	// get the router ready
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -66,15 +78,17 @@ func (s *Server) Run() {
 
 		r.Get("/results/gallery", apih.GalleryHandler)
 		r.Get("/results/list", apih.ListHandler)
-		r.Get("/results/detail/{id}", apih.GalleryDetailHandler)
+		r.Get("/results/detail/{id}", apih.DetailHandler)
 		r.Get("/results/technology", apih.TechnologyListHandler)
 	})
 
-	r.Mount("/screenshots",
-		http.StripPrefix(
-			"/screenshots/", http.FileServer(http.Dir(s.ScreenshotPath)),
-		),
-	)
+	// screenshot files
+	r.Mount("/screenshots", http.StripPrefix("/screenshots/", http.FileServer(http.Dir(s.ScreenshotPath))))
+
+	// swagger documentation
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+
+	// the spa
 	r.Handle("/*", SpaHandler())
 
 	log.Info("starting web server", "port", s.Port)

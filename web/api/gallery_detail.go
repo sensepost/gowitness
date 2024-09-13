@@ -10,7 +10,17 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (h *ApiHandler) GalleryDetailHandler(w http.ResponseWriter, r *http.Request) {
+// DetailHandler returns the detail for a screenshot
+//
+//	@Summary		Results detail
+//	@Description	Get details for a result.
+//	@Tags			Results
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"The screenshot ID to load."
+//	@Success		200	{object}	models.Result
+//	@Router			/results/detail/{id} [get]
+func (h *ApiHandler) DetailHandler(w http.ResponseWriter, r *http.Request) {
 	var response = &models.Result{}
 
 	if err := h.DB.Model(&models.Result{}).
