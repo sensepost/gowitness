@@ -26,8 +26,6 @@ import {
   ChevronRight,
   Code,
   SearchSlashIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   ClockIcon
 } from 'lucide-react';
 import {
@@ -51,17 +49,22 @@ import {
   formatDistanceToNow
 } from 'date-fns';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/tabs';
 
 
 const ScreenshotDetail = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
-  const [isNetworkLogOpen, setIsNetworkLogOpen] = useState(true);
-  const [isConsoleLogOpen, setIsConsoleLogOpen] = useState(true);
+  const [selectedTab, setSelectedTab] = useState('network');
   const [detail, setDetail] = useState<apitypes.detail>();
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -229,8 +232,8 @@ const ScreenshotDetail = () => {
               <p><strong>Issuer:</strong> {detail.tls.issuer}</p>
               <p><strong>Protocol:</strong> {detail.tls.protocol}</p>
               <p><strong>Cipher:</strong> {detail.tls.cipher}</p>
-              <p><strong>Valid From:</strong> {format(new Date(detail.tls.valid_from * 1000), 'PPP')}</p>
-              <p><strong>Valid To:</strong> {format(new Date(detail.tls.valid_to * 1000), 'PPP')}</p>
+              <p><strong>Valid From:</strong> {format(new Date(detail.tls.valid_from), 'PPpp')}</p>
+              <p><strong>Valid To:</strong> {format(new Date(detail.tls.valid_to), 'PPpp')}</p>
               <details className="mt-4">
                 <summary className="cursor-pointer font-semibold">
                   SAN List ({detail.tls.san_list.length})
@@ -241,30 +244,6 @@ const ScreenshotDetail = () => {
                   ))}
                 </ul>
               </details>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Headers</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Header</TableHead>
-                    <TableHead>Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detail.headers.map((header) => (
-                    <TableRow key={header.id}>
-                      <TableCell className="font-mono text-nowrap">{header.key}</TableCell>
-                      <TableCell className="font-mono">{header.value ? header.value : "No Value"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
             </CardContent>
           </Card>
         </div>
@@ -301,10 +280,10 @@ const ScreenshotDetail = () => {
                 responding with an HTTP <span className="font-mono">{detail.response_code}</span> and{" "}
                 <span className="font-mono">{detail.content_length}</span> bytes of content.
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
                   <p className="text-3xl font-bold">{detail.network.length}</p>
-                  <p className="text-sm">Network Requests</p>
+                  <p className="text-sm">Requests</p>
                 </div>
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
                   <p className="text-3xl font-bold">{detail.console.length}</p>
@@ -317,6 +296,10 @@ const ScreenshotDetail = () => {
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
                   <p className="text-3xl font-bold">{detail.technologies.length}</p>
                   <p className="text-sm">Technologies</p>
+                </div>
+                <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">{detail.cookies.length}</p>
+                  <p className="text-sm">Cookies</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center justify-end">
@@ -337,109 +320,197 @@ const ScreenshotDetail = () => {
             </CardContent>
           </Card>
 
-          {detail.network.length > 0 &&
+          <Tabs defaultValue={selectedTab} onValueChange={(t) => setSelectedTab(t)}>
+            <TabsList>
+              <TabsTrigger value="network">Network Log</TabsTrigger>
+              <TabsTrigger value="console">Console Log</TabsTrigger>
+              <TabsTrigger value="headers">Response Headers</TabsTrigger>
+              <TabsTrigger value="cookies">Cookies</TabsTrigger>
+            </TabsList>
 
-            <Collapsible open={isNetworkLogOpen} onOpenChange={setIsNetworkLogOpen}>
+            <TabsContent value="network">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Network Log</CardTitle>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        {isNetworkLogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                      </Button>
-                    </CollapsibleTrigger>
                   </div>
                 </CardHeader>
-                <CollapsibleContent>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>HTTP</TableHead>
-                          <TableHead></TableHead>
-                          <TableHead>URL</TableHead>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>HTTP</TableHead>
+                        <TableHead></TableHead>
+                        <TableHead>URL</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detail.network.map((log, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
+                              {log.status_code}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                                    <ClockIcon className="w-3 h-3" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs">
+                                  <p>{format(new Date(log.time), "PPpp")}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell>
+                            <a href={log.url} target="_blank" rel="noopener noreferrer" className="break-all">
+                              {log.url}
+                            </a>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {detail.network.map((log, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Badge variant="outline" className={`${getStatusColor(log.status_code)} text-xs px-1 py-0`}>
-                                {log.status_code}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <TooltipProvider delayDuration={0}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                                      <ClockIcon className="w-3 h-3" />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" className="text-xs">
-                                    <p>{format(new Date(log.time), "PPpp")}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </TableCell>
-                            <TableCell>
-                              <a href={log.url} target="_blank" rel="noopener noreferrer" className="break-all">
-                                {log.url}
-                              </a>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </CollapsibleContent>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
               </Card>
-            </Collapsible>
-          }
+            </TabsContent>
 
-          {detail.console.length > 0 &&
-            <Collapsible open={isConsoleLogOpen} onOpenChange={setIsConsoleLogOpen}>
+            <TabsContent value="console">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle>Console Logs</CardTitle>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        {isConsoleLogOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                      </Button>
-                    </CollapsibleTrigger>
+                    <CardTitle>Console Log</CardTitle>
                   </div>
                 </CardHeader>
-                <CollapsibleContent>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Message</TableHead>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Message</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detail.console.map((log, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
+                              {log.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono break-all">{log.value}</span>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {detail.console.map((log, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Badge variant="outline" className={`${getLogTypeColor(log.type)} text-xs px-1 py-0`}>
-                                {log.type}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <span className="font-mono">{log.value}</span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </CollapsibleContent>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
               </Card>
-            </Collapsible>
-          }
+            </TabsContent>
+
+            <TabsContent value="headers">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Response Headers</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Header</TableHead>
+                        <TableHead>Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detail.headers.map((header) => (
+                        <TableRow key={header.id}>
+                          <TableCell className="font-mono text-nowrap">{header.key}</TableCell>
+                          <TableCell className="font-mono break-all ">{header.value ? header.value : "No Value"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="cookies">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Cookies</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Value</TableHead>
+                        <TableHead>Domain</TableHead>
+                        <TableHead>Expires</TableHead>
+                        <TableHead>Attributes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detail.cookies.map((cookie) => (
+                        <TableRow key={cookie.id}>
+                          <TableCell className="font-mono break-all">{cookie.name}</TableCell>
+                          <TableCell>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="font-mono truncate inline-block max-w-[150px]">
+                                    {cookie.value}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="max-w-[300px] break-all">{cookie.value}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell>{cookie.domain}</TableCell>
+                          <TableCell>
+                            {cookie.expires ? (
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span>
+                                      {formatDistanceToNow(new Date(cookie.expires), { addSuffix: true })}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{format(new Date(cookie.expires), "PPpp")}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              "Session"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {cookie.http_only && <Badge variant="secondary">HttpOnly</Badge>}
+                              {cookie.secure && <Badge variant="secondary">Secure</Badge>}
+                              {cookie.session && <Badge variant="secondary">Session</Badge>}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
