@@ -26,20 +26,36 @@ import (
 // Chromedp is a driver that probes web targets using chromedp
 // Implementation ref: https://github.com/chromedp/examples/blob/master/multi/main.go
 type Chromedp struct {
-	// browser context for chromedp
-	allocCtx      context.Context
-	allocCancel   context.CancelFunc
-	browserCtx    context.Context
-	browserCancel context.CancelFunc
-	// user data directory
-	userData string
 	// options for the Runner to consider
 	options runner.Options
 	// logger
 	log *slog.Logger
 }
 
-func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
+// browserInstance is an instance used by one run of Witness
+type browserInstance struct {
+	allocCtx    context.Context
+	allocCancel context.CancelFunc
+	userData    string
+}
+
+// Close closes the allocator, and cleans up the user dir.
+func (b *browserInstance) Close() {
+	b.allocCancel()
+	<-b.allocCtx.Done()
+
+	// cleanup the user data directory
+	if err := os.RemoveAll(b.userData); err != nil {
+		fmt.Printf("could not remove temp directory: %w\n", err)
+	}
+}
+
+// getChromedpAllocator is a helper function to get a chrome allocation context.
+//
+// see Witness for more information on why we're explicitly not using tabs
+// (to do that we would alloc in the NewChromedp function and make sure that
+// we have the browser started with chromedp.Run(browserCtx)).
+func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 	var (
 		allocCtx    context.Context
 		allocCancel context.CancelFunc
@@ -81,20 +97,20 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 
 	} else {
 		allocCtx, allocCancel = chromedp.NewRemoteAllocator(context.Background(), opts.Chrome.WSS)
-		logger.Debug("using a user specified WSS url", "control-url", opts.Chrome.WSS)
 	}
 
-	browserCtx, cancel := chromedp.NewContext(allocCtx)
-	logger.Debug("got a browser context")
+	return &browserInstance{
+		allocCtx:    allocCtx,
+		allocCancel: allocCancel,
+		userData:    userData,
+	}, nil
+}
 
+// NewChromedp returns a new Chromedp instance
+func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 	return &Chromedp{
-		allocCtx:      allocCtx,
-		allocCancel:   allocCancel,
-		browserCtx:    browserCtx,
-		browserCancel: cancel,
-		userData:      userData,
-		options:       opts,
-		log:           logger,
+		options: opts,
+		log:     logger,
 	}, nil
 }
 
@@ -104,8 +120,21 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	logger := run.log.With("target", target)
 	logger.Debug("witnessing 👀")
 
+	// this might be weird to see, but when screenshotting a large list, using
+	// tabs means the chances of the screenshot failing is madly high. could be
+	// a resources thing I guess with a parent browser process? so, using this
+	// driver now means the resource usage will be higher, but, your accuracy
+	// will also be amazing.
+	allocator, err := getChromedpAllocator(run.options)
+	if err != nil {
+		return nil, err
+	}
+	defer allocator.Close()
+	browserCtx, cancel := chromedp.NewContext(allocator.allocCtx)
+	defer cancel()
+
 	// get a tab
-	tabCtx, tabCancel := chromedp.NewContext(run.browserCtx)
+	tabCtx, tabCancel := chromedp.NewContext(browserCtx)
 	defer tabCancel()
 
 	// get a timeout context for navigation
@@ -340,7 +369,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 	// grab a screenshot
 	var img []byte
-	err := chromedp.Run(navigationCtx,
+	err = chromedp.Run(navigationCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			img, err = page.CaptureScreenshot().
@@ -385,19 +414,5 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 }
 
 func (run *Chromedp) Close() {
-	run.log.Debug("closing browser contexts")
-	run.browserCancel()
-	run.allocCancel()
-
-	// wait for the browser to close
-	<-run.allocCtx.Done()
-	<-run.browserCtx.Done()
-
-	// cleaning user data
-	if run.userData != "" {
-		run.log.Debug("cleaning user data directory", "directory", run.userData)
-		if err := os.RemoveAll(run.userData); err != nil {
-			run.log.Error("could not cleanup temporary user data dir", "dir", run.userData, "err", err)
-		}
-	}
+	run.log.Debug("closing browser allocation context")
 }
