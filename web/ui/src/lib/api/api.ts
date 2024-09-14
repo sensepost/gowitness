@@ -47,6 +47,10 @@ const endpoints = {
     path: `/search`,
     returnas: {} as searchresult
   },
+  delete: {
+    path: `/results/delete`,
+    returnas: "" as string
+  }
 };
 
 type Endpoints = typeof endpoints;

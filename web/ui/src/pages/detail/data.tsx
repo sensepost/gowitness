@@ -39,4 +39,23 @@ const getData = async (
   }
 };
 
-export { getData };
+const deleteResult = async (id: string): Promise<boolean> => {
+  try {
+    await api.post('delete', { id });
+  } catch (error) {
+    toast({
+      title: "API Error",
+      variant: "destructive",
+      description: `Failed to delete result: ${error}`
+    });
+
+    return false;
+  }
+  toast({
+    description: "Result deleted"
+  });
+
+  return true;
+};
+
+export { getData, deleteResult };

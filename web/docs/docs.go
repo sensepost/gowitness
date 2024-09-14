@@ -38,6 +38,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/results/delete": {
+            "post": {
+                "description": "Deletes a result, by id, and all of its associated data from the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Delete a result",
+                "parameters": [
+                    {
+                        "description": "The result ID to delete",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.deleteResultRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/results/detail/{id}": {
             "get": {
                 "description": "Get details for a result.",
@@ -262,6 +296,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.deleteResultRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.galleryContent": {
             "type": "object",
             "properties": {

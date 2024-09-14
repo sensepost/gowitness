@@ -44,6 +44,7 @@ type searchResult struct {
 func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 	var request searchRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Error("failed to read json request", "err", err)
 		http.Error(w, "Error reading JSON request", http.StatusInternalServerError)
 		return
 	}
