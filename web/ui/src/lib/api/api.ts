@@ -1,12 +1,4 @@
-import {
-  gallery,
-  list,
-  statistics,
-  wappalyzer,
-  detail,
-  searchresult,
-  technologylist,
-} from "@/lib/api/types";
+import { gallery, list, statistics, wappalyzer, detail, searchresult, technologylist } from "@/lib/api/types";
 
 const endpoints = {
   // api base path

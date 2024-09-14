@@ -24,7 +24,7 @@ type statisticsResponseCode struct {
 
 // StatisticsHandler returns database statistics
 //
-//	@Summary		Database Statistics
+//	@Summary		Database statistics
 //	@Description	Get database statistics.
 //	@Tags			Results
 //	@Accept			json

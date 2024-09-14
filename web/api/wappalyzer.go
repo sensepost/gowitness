@@ -11,7 +11,7 @@ const iconBase = `https://raw.githubusercontent.com/enthec/webappanalyzer/main/s
 
 // WappalyzerHandler returns wappalyzer data
 //
-//	@Summary		Get Wappalyzer Data
+//	@Summary		Get wappalyzer data
 //	@Description	Get all of the available wappalyzer data.
 //	@Tags			Results
 //	@Accept			json

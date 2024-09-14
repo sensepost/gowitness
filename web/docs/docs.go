@@ -166,7 +166,7 @@ const docTemplate = `{
                 "tags": [
                     "Results"
                 ],
-                "summary": "Get Technology Results",
+                "summary": "Get technology results",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -223,7 +223,7 @@ const docTemplate = `{
                 "tags": [
                     "Results"
                 ],
-                "summary": "Database Statistics",
+                "summary": "Database statistics",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -246,7 +246,7 @@ const docTemplate = `{
                 "tags": [
                     "Results"
                 ],
-                "summary": "Get Wappalyzer Data",
+                "summary": "Get wappalyzer data",
                 "responses": {
                     "200": {
                         "description": "OK",
