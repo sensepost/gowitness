@@ -45,7 +45,10 @@ import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import {
   format,
-  formatDistanceToNow
+  formatDistanceToNow,
+  differenceInMilliseconds,
+  formatDuration,
+  intervalToDuration,
 } from 'date-fns';
 import {
   Tooltip,
@@ -65,6 +68,7 @@ const ScreenshotDetail = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('network');
   const [detail, setDetail] = useState<apitypes.detail>();
+  const [duration, setDuration] = useState<string>('');
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -81,6 +85,15 @@ const ScreenshotDetail = () => {
         ]);
         setDetail(detailData);
         setWappalyzer(wappalyzerData);
+
+        // calculate duration
+        if (detailData.network && detailData.network.length > 0) {
+          const probedAt = new Date(detailData.probed_at);
+          const lastNetworkEntry = new Date(detailData.network[detailData.network.length - 1].time);
+          const durationMs = differenceInMilliseconds(lastNetworkEntry, probedAt);
+          const durationObj = intervalToDuration({ start: 0, end: durationMs });
+          setDuration(formatDuration(durationObj, { format: ['minutes', 'seconds'] }));
+        }
       } catch (err) {
         toast({
           title: "API Error",
@@ -274,7 +287,8 @@ const ScreenshotDetail = () => {
                   </Tooltip>
                 </TooltipProvider>{" "}
                 responding with an HTTP <span className="font-mono">{detail.response_code}</span> and{" "}
-                <span className="font-mono">{detail.content_length}</span> bytes of content.
+                <span className="font-mono">{detail.content_length}</span> bytes of content. Probing (first
+                to last request) took roughly {duration}.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
