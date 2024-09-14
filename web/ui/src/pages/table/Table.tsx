@@ -2,14 +2,14 @@ import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { WideSkeleton } from "@/components/loading";
 import { Link } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUpDown, RefreshCw, XIcon } from "lucide-react";
-import * as api from "@/lib/api/api";
+import { ArrowUpDown, XIcon } from "lucide-react";
 import * as apitypes from "@/lib/api/types";
+import { copyToClipboard, getStatusColor } from "@/lib/common";
+import { getData } from "./data";
 
 export default function TablePage() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -20,31 +20,9 @@ export default function TablePage() {
   const [filterStatus, setFilterStatus] = useState<"all" | "success" | "error">("all");
 
   useEffect(() => {
-    fetchData();
+    getData(setLoading, setList);
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const s = await api.get('list');
-      setList(s);
-    } catch (err) {
-      toast({
-        title: "API Error",
-        variant: "destructive",
-        description: `Failed to get list: ${err}`
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusColor = (code: number) => {
-    if (code >= 200 && code < 300) return "bg-green-500 text-white";
-    if (code >= 400 && code < 500) return "bg-yellow-500 text-black";
-    if (code >= 500) return "bg-red-500 text-white";
-    return "bg-gray-500 text-white";
-  };
 
   const handleSort = (column: keyof apitypes.list) => {
     if (column === sortColumn) {
@@ -53,21 +31,6 @@ export default function TablePage() {
       setSortColumn(column);
       setSortDirection("asc");
     }
-  };
-
-  const copyToClipboard = (content: string, type: string) => {
-    navigator.clipboard.writeText(content).then(() => {
-      toast({
-        description: `${type} copied to clipboard`,
-      });
-    }).catch((err) => {
-      console.error('Failed to copy content: ', err);
-      toast({
-        title: "Error",
-        description: "Failed to copy content",
-        variant: "destructive",
-      });
-    });
   };
 
   const filteredAndSortedList = useMemo(() => {
@@ -116,9 +79,6 @@ export default function TablePage() {
               <SelectItem value="error">Error</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={fetchData}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
         </div>
       </div>
       <div className="rounded-md border">

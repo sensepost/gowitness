@@ -1,18 +1,10 @@
-import {
-  Link,
-  useLoaderData,
-  useNavigation
-} from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Link, useLoaderData, useNavigation } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { WideSkeleton } from "@/components/loading";
+import { getStatusColor } from "@/lib/common";
 
 
 export default function SearchResultsPage() {
@@ -22,13 +14,6 @@ export default function SearchResultsPage() {
   if (!data || data.length === 0) {
     return <div className="text-center mt-8">No results found.</div>;
   }
-
-  const getStatusCodeColor = (code: number) => {
-    if (code >= 200 && code < 300) return "bg-green-500";
-    if (code >= 300 && code < 400) return "bg-blue-500";
-    if (code >= 400 && code < 500) return "bg-yellow-500";
-    return "bg-red-500";
-  };
 
   if (navigation.state === 'loading') return <WideSkeleton />;
 
@@ -49,7 +34,7 @@ export default function SearchResultsPage() {
                   className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
                 />
                 <Badge
-                  className={`absolute top-2 right-2 ${getStatusCodeColor(result.response_code)} text-white`}
+                  className={`absolute top-2 right-2 ${getStatusColor(result.response_code)} text-white`}
                 >
                   {result.response_code}
                 </Badge>

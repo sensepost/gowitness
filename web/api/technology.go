@@ -14,7 +14,7 @@ type technologyListResponse struct {
 
 // TechnologyListHandler lists technologies
 //
-//	@Summary		Get Technology Results
+//	@Summary		Get technology results
 //	@Description	Get all the unique technology detected.
 //	@Tags			Results
 //	@Accept			json

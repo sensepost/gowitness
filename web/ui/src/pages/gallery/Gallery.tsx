@@ -1,65 +1,20 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter
-} from "@/components/ui/card";
-import {
-  useEffect,
-  useMemo,
-  useState
-} from "react";
-import {
-  Link,
-  useSearchParams
-} from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { WideSkeleton } from "@/components/loading";
 import { Badge } from "@/components/ui/badge";
-import {
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ClockIcon,
-  ExternalLinkIcon,
-  EyeIcon,
-  EyeOffIcon,
-  FilterIcon,
-  XIcon
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon, EyeIcon, EyeOffIcon, FilterIcon, XIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { formatDistanceToNow, format } from 'date-fns';
+import { cn } from "@/lib/utils";
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from "@/components/ui/command";
-import {
-  formatDistanceToNow,
-  format
-} from 'date-fns';
-import { cn } from "@/lib/utils";
+import { getData, getWappalyzerData } from "./data";
+import { getIconUrl, getStatusColor } from "@/lib/common";
 
 
 const GalleryPage = () => {
@@ -81,64 +36,15 @@ const GalleryPage = () => {
   const showFailed = searchParams.get("failed") !== "false"; // Default to true
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const [wappalyzerData, technologyData] = await Promise.all([
-          await api.get('wappalyzer'),
-          await api.get('technology')
-        ]);
-        setWappalyzer(wappalyzerData);
-        setTechnology(technologyData);
-      } catch (err) {
-        toast({
-          title: "API Error",
-          variant: "destructive",
-          description: `Failed to get wappalyzer / technology: ${err}`
-        });
-      }
-    };
-    getData();
+    getWappalyzerData(setWappalyzer, setTechnology);
   }, []);
 
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const s = await api.get('gallery', {
-          page,
-          limit,
-          technologies: technologyFilter,
-          status: statusFilter,
-          perception: perceptionGroup ? 'true' : 'false',
-          failed: showFailed ? 'true' : 'false',
-        });
-        setGallery(s.results);
-        setTotalPages(Math.ceil(s.total_count / limit));
-      } catch (err) {
-        toast({
-          title: "API Error",
-          variant: "destructive",
-          description: `Failed to get gallery: ${err}`
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    getData();
+    getData(
+      setLoading, setGallery, setTotalPages,
+      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed
+    );
   }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
-
-  const getStatusColor = (code: number) => {
-    if (code >= 200 && code < 300) return "bg-green-500 text-white";
-    if (code >= 400 && code < 500) return "bg-yellow-500 text-black";
-    if (code >= 500) return "bg-red-500 text-white";
-    return "bg-gray-500 text-white";
-  };
-
-  const getIconUrl = (tech: string): string | undefined => {
-    if (!wappalyzer || !(tech in wappalyzer)) return undefined;
-
-    return wappalyzer[tech];
-  };
 
   const handlePageChange = (newPage: number) => {
     setSearchParams(prev => {
@@ -289,7 +195,7 @@ const GalleryPage = () => {
               </TooltipProvider>
               <div className="flex flex-wrap justify-end gap-1">
                 {screenshot.technologies?.map(tech => {
-                  const iconUrl = getIconUrl(tech);
+                  const iconUrl = getIconUrl(tech, wappalyzer);
                   return iconUrl ? (
                     <TooltipProvider key={tech} delayDuration={0}>
                       <Tooltip>

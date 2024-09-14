@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { WideSkeleton } from "@/components/loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { DatabaseIcon, FileTextIcon, HardDriveIcon, NetworkIcon, TerminalIcon, TrendingUpIcon } from "lucide-react";
+import { DatabaseIcon, FileTextIcon, HardDriveIcon, NetworkIcon, TerminalIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
+import { getData } from "./data";
 
 const chartConfig = {
   count: {
@@ -19,7 +18,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: number | string; icon: React.ElementType; trend?: number; }) => (
+const StatCard = ({ title, value, icon: Icon }: { title: string; value: number | string; icon: React.ElementType; }) => (
   <Card className="overflow-hidden transition-all hover:shadow-lg">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -36,22 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const getData = async () => {
-      setLoading(true);
-      try {
-        const s = await api.get('statistics');
-        setStats(s);
-      } catch (err) {
-        toast({
-          title: "API Error",
-          variant: "destructive",
-          description: `Failed to get statistics: ${err}`
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    getData();
+    getData(setLoading, setStats);
   }, []);
 
   if (loading) return <WideSkeleton />;
@@ -64,31 +48,26 @@ export default function DashboardPage() {
           title="Database Size"
           value={`${stats ? (stats.dbsize / (1024 * 1024)).toFixed(1) : 0} MB`}
           icon={DatabaseIcon}
-          trend={2.5}
         />
         <StatCard
           title="Total Results"
           value={stats ? stats.results : 0}
           icon={FileTextIcon}
-          trend={-1.2}
         />
         <StatCard
           title="Headers"
           value={stats ? stats.headers : 0}
           icon={HardDriveIcon}
-          trend={5.7}
         />
         <StatCard
           title="Network Logs"
           value={stats ? stats.networklogs : 0}
           icon={NetworkIcon}
-          trend={0.8}
         />
         <StatCard
           title="Console Logs"
           value={stats ? stats.consolelogs : 0}
           icon={TerminalIcon}
-          trend={-3.2}
         />
       </div>
       <Card>

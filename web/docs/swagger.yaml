@@ -414,7 +414,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/api.technologyListResponse'
-      summary: Get Technology Results
+      summary: Get technology results
       tags:
       - Results
   /search:
@@ -452,7 +452,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/api.statisticsResponse'
-      summary: Database Statistics
+      summary: Database statistics
       tags:
       - Results
   /wappalyzer:
@@ -469,7 +469,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get Wappalyzer Data
+      summary: Get wappalyzer data
       tags:
       - Results
 swagger: "2.0"

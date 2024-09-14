@@ -1,4 +1,3 @@
-import * as api from "@/lib/api/api";
 import { redirect } from "react-router-dom";
 
 // searchAction grabs the form to search, encodes the data and
@@ -14,16 +13,4 @@ const searchAction = async ({ request }: { request: Request; }) => {
   return redirect(`/search?query=${encodeURIComponent(searchQuery as string)}`);
 };
 
-// searchLoader loads search data from the api
-const searchLoader = async ({ request }: { request: Request; }) => {
-  const url = new URL(request.url);
-  const searchQuery = url.searchParams.get("query");
-
-  if (!searchQuery) {
-    return { error: "No search query provided" };
-  }
-
-  return await api.post('search', { query: decodeURIComponent(searchQuery) });
-};
-
-export { searchAction, searchLoader };
+export { searchAction };
