@@ -4,10 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
+import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
-import { Link, useParams } from 'react-router-dom';
+import { Form, Link, useParams } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,7 @@ import { getData } from './data';
 
 const ScreenshotDetailPage = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('network');
   const [detail, setDetail] = useState<apitypes.detail>();
   const [duration, setDuration] = useState<string>('');
@@ -45,20 +46,49 @@ const ScreenshotDetailPage = () => {
   const rawDate = format(probedDate, "PPpp");
 
   const getNavigation = (id: string) => {
-    return <div className="flex justify-between items-center">
-      <Link to={"/screenshot/" + (parseInt(id) - 1).toString()}>
-        <Button variant="outline" size="sm" disabled={parseInt(id) <= 1}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Previous
-        </Button>
-      </Link>
-      <Link to={"/screenshot/" + (parseInt(id) + 1).toString()}>
-        <Button variant="outline" size="sm">
-          Next
-          <ChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </Link>
-    </div>;
+    return (
+      <div className="flex justify-between items-center">
+        <div className="flex space-x-2">
+          <Link to={"/screenshot/" + (parseInt(id) - 1).toString()}>
+            <Button variant="outline" size="sm" disabled={parseInt(id) <= 1}>
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Previous
+            </Button>
+          </Link>
+          <Link to={"/screenshot/" + (parseInt(id) + 1).toString()}>
+            <Button variant="outline" size="sm">
+              Next
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2Icon className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you sure you want to delete this result?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete the screenshot and all associated data.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Form method="post">
+                <Button type="submit" variant="destructive" onClick={() => setIsDeleteDialogOpen(false)}>
+                  Delete
+                </Button>
+              </Form>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   };
 
   const infoCard = (detail: apitypes.detail) => {

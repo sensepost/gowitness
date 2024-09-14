@@ -35,13 +35,13 @@ type Result struct {
 	Failed       bool   `json:"failed"`
 	FailedReason string `json:"failed_reason"`
 
-	TLS          TLS          `json:"tls"`
-	Technologies []Technology `json:"technologies"`
+	TLS          TLS          `json:"tls" gorm:"constraint:OnDelete:CASCADE"`
+	Technologies []Technology `json:"technologies" gorm:"constraint:OnDelete:CASCADE"`
 
-	Headers []Header     `json:"headers"`
-	Network []NetworkLog `json:"network"`
-	Console []ConsoleLog `json:"console"`
-	Cookies []Cookie     `json:"cookies"`
+	Headers []Header     `json:"headers" gorm:"constraint:OnDelete:CASCADE"`
+	Network []NetworkLog `json:"network" gorm:"constraint:OnDelete:CASCADE"`
+	Console []ConsoleLog `json:"console" gorm:"constraint:OnDelete:CASCADE"`
+	Cookies []Cookie     `json:"cookies" gorm:"constraint:OnDelete:CASCADE"`
 }
 
 func (r *Result) HeaderMap() map[string][]string {

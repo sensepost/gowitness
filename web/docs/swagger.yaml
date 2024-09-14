@@ -1,4 +1,9 @@
 definitions:
+  api.deleteResultRequest:
+    properties:
+      id:
+        type: integer
+    type: object
   api.galleryContent:
     properties:
       failed:
@@ -326,6 +331,29 @@ paths:
       summary: Ping the server
       tags:
       - Health
+  /results/delete:
+    post:
+      consumes:
+      - application/json
+      description: Deletes a result, by id, and all of its associated data from the
+        database.
+      parameters:
+      - description: The result ID to delete
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.deleteResultRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Delete a result
+      tags:
+      - Results
   /results/detail/{id}:
     get:
       consumes:

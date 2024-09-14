@@ -14,6 +14,7 @@ import SearchResultsPage from '@/pages/search/Search';
 
 import { searchAction } from '@/pages/search/action';
 import { searchLoader } from '@/pages/search/loader';
+import { deleteAction } from '@/pages/detail/actions';
 
 const router = createBrowserRouter([
   {
@@ -35,7 +36,8 @@ const router = createBrowserRouter([
       },
       {
         path: 'screenshot/:id',
-        element: <ScreenshotDetailPage />
+        element: <ScreenshotDetailPage />,
+        action: deleteAction
       },
       {
         path: 'search',
