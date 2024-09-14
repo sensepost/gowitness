@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { HomeIcon, ImageIcon, MonitorDownIcon, SearchIcon, TableIcon } from "lucide-react";
+import { HomeIcon, ImageIcon, MonitorDownIcon, ScanIcon, SearchIcon, TableIcon } from "lucide-react";
 import { Form, NavLink, useSubmit } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -55,7 +55,7 @@ const Navigation = () => {
     <>
       <nav className="container flex h-14 items-center">
         <NavLink to="/" className="flex items-center space-x-2 p-2">
-          <MonitorDownIcon className="h-6 w-6" />
+          <ScanIcon className="h-6 w-6" />
           <span className="font-bold">gowitness, v3</span>
         </NavLink>
         {navs.map(nav => {
