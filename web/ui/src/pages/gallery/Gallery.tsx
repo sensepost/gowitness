@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { WideSkeleton } from "@/components/loading";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon, EyeIcon, EyeOffIcon, FilterIcon, XIcon } from "lucide-react";
+import {
+  AlertOctagonIcon, BanIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon,
+  FilterIcon, GroupIcon, ShieldCheckIcon, XIcon
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,6 +18,8 @@ import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { getData, getWappalyzerData } from "./data";
 import { getIconUrl, getStatusColor } from "@/lib/common";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 
 const GalleryPage = () => {
@@ -107,6 +112,15 @@ const GalleryPage = () => {
       return prev;
     });
   };
+
+  const sortedTechnologies = useMemo(() => {
+    if (!technology) return [];
+    const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
+    return [
+      ...selectedTechnologies,
+      ...technology.technologies.filter(tech => !selectedTechnologies.includes(tech))
+    ];
+  }, [technology, technologyFilter]);
 
   const renderPageButtons = (visible: number) => {
     const pageButtons = [];
@@ -224,14 +238,7 @@ const GalleryPage = () => {
     );
   };
 
-  const sortedTechnologies = useMemo(() => {
-    if (!technology) return [];
-    const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
-    return [
-      ...selectedTechnologies,
-      ...technology.technologies.filter(tech => !selectedTechnologies.includes(tech))
-    ];
-  }, [technology, technologyFilter]);
+
 
   if (loading) return <WideSkeleton />;
 
@@ -281,44 +288,40 @@ const GalleryPage = () => {
             variant={statusFilter.includes("200") ? "secondary" : "outline"}
             onClick={() => handleStatusFilter("200")}
           >
+            <ShieldCheckIcon className="mr-2 h-4 w-4" />
             200
           </Button>
           <Button
             variant={statusFilter.includes("403") ? "secondary" : "outline"}
             onClick={() => handleStatusFilter("403")}
           >
+            <BanIcon className="mr-2 h-4 w-4" />
             403
           </Button>
           <Button
             variant={statusFilter.includes("500") ? "secondary" : "outline"}
             onClick={() => handleStatusFilter("500")}
           >
+            <AlertOctagonIcon className="mr-2 h-4 w-4" />
             500
           </Button>
           <Button
             variant={perceptionGroup ? "secondary" : "outline"}
             onClick={handleGroupBySimilar}
           >
+            <GroupIcon className="mr-2 h-4 w-4" />
             Group by Similar
           </Button>
-          <Button
-            variant={showFailed ? "secondary" : "outline"}
-            onClick={handleToggleShowFailed}
-          >
-            {
-              showFailed
-                ? (
-                  <>
-                    <EyeIcon className="mr-2 h-4 w-4" />
-                    Exclude Failed
-                  </>
-                )
-                : <>
-                  <EyeOffIcon className="mr-2 h-4 w-4" />
-                  Include Failed
-                </>
-            }
-          </Button>
+          <div className="flex items-center space-x-2 p-2">
+            <Switch
+              id="show-failed"
+              checked={showFailed}
+              onCheckedChange={handleToggleShowFailed}
+            />
+            <Label htmlFor="show-failed" className="text-sm">
+              Show Failed
+            </Label>
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button
