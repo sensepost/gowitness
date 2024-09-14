@@ -27,9 +27,12 @@ import (
 // Implementation ref: https://github.com/chromedp/examples/blob/master/multi/main.go
 type Chromedp struct {
 	// browser context for chromedp
+	allocCtx      context.Context
+	allocCancel   context.CancelFunc
 	browserCtx    context.Context
 	browserCancel context.CancelFunc
-	allocCancel   context.CancelFunc
+	// user data directory
+	userData string
 	// options for the Runner to consider
 	options runner.Options
 	// logger
@@ -40,9 +43,16 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 	var (
 		allocCtx    context.Context
 		allocCancel context.CancelFunc
+		userData    string
+		err         error
 	)
 
 	if opts.Chrome.WSS == "" {
+		userData, err = os.MkdirTemp("", "gowitness-v3-chromedp-*")
+		if err != nil {
+			return nil, err
+		}
+
 		// set up chrome context and launch options
 		allocOpts := append(chromedp.DefaultExecAllocatorOptions[:],
 			chromedp.IgnoreCertErrors,
@@ -54,6 +64,7 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 			chromedp.Flag("disable-renderer-backgrounding", true),
 			chromedp.Flag("deny-permission-prompts", true),
 			chromedp.WindowSize(opts.Chrome.WindowX, opts.Chrome.WindowY),
+			chromedp.UserDataDir(userData),
 		)
 
 		// Set proxy if specified
@@ -77,9 +88,11 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 	logger.Debug("got a browser context")
 
 	return &Chromedp{
+		allocCtx:      allocCtx,
+		allocCancel:   allocCancel,
 		browserCtx:    browserCtx,
 		browserCancel: cancel,
-		allocCancel:   allocCancel,
+		userData:      userData,
 		options:       opts,
 		log:           logger,
 	}, nil
@@ -373,7 +386,18 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 func (run *Chromedp) Close() {
 	run.log.Debug("closing browser contexts")
-
 	run.browserCancel()
 	run.allocCancel()
+
+	// wait for the browser to close
+	<-run.allocCtx.Done()
+	<-run.browserCtx.Done()
+
+	// cleaning user data
+	if run.userData != "" {
+		run.log.Debug("cleaning user data directory", "directory", run.userData)
+		if err := os.RemoveAll(run.userData); err != nil {
+			run.log.Error("could not cleanup temporary user data dir", "dir", run.userData, "err", err)
+		}
+	}
 }

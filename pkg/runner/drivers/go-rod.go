@@ -16,6 +16,7 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/sensepost/gowitness/internal/islazy"
+	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/runner"
 	"github.com/ysmood/gson"
@@ -25,6 +26,8 @@ import (
 type Gorod struct {
 	// browser is a go-rod browser instance
 	browser *rod.Browser
+	// user data directory
+	userData string
 	// options for the Runner to consider
 	options runner.Options
 	// logger
@@ -34,11 +37,22 @@ type Gorod struct {
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the instance.
 func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
-	var url string
+	var (
+		url      string
+		userData string
+		err      error
+	)
+
 	if opts.Chrome.WSS == "" {
+		userData, err = os.MkdirTemp("", "gowitness-v3-gorod-*")
+		if err != nil {
+			return nil, err
+		}
+
 		// get chrome ready
 		chrmLauncher := launcher.New().
 			// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
+			Set("user-data-dir", userData).
 			Set("disable-features", "MediaRouter").
 			Set("disable-client-side-phishing-detection").
 			Set("disable-default-apps").
@@ -80,9 +94,10 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 	}
 
 	return &Gorod{
-		browser: browser,
-		options: opts,
-		log:     logger,
+		browser:  browser,
+		userData: userData,
+		options:  opts,
+		log:      logger,
 	}, nil
 }
 
@@ -408,5 +423,16 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 func (run *Gorod) Close() {
 	run.log.Debug("closing the browser instance")
 
-	run.browser.Close()
+	if err := run.browser.Close(); err != nil {
+		log.Error("could not close the browser", "err", err)
+		return
+	}
+
+	// cleaning user data
+	if run.userData != "" {
+		run.log.Debug("cleaning user data directory", "directory", run.userData)
+		if err := os.RemoveAll(run.userData); err != nil {
+			run.log.Error("could not cleanup temporary user data dir", "dir", run.userData, "err", err)
+		}
+	}
 }
