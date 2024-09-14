@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/charmbracelet/log v0.4.0
+	github.com/charmbracelet/x/term v0.2.0
 	github.com/chromedp/cdproto v0.0.0-20240801214329-3f85d328b335
 	github.com/chromedp/chromedp v0.10.0
 	github.com/corona10/goimagehash v1.1.0

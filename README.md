@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-    🔍 gowitness
+    gowitness
   <br>
   <br>
 </h1>
@@ -23,7 +23,7 @@ Inspiration for `gowitness` comes from [Eyewitness](https://github.com/ChrisTrun
 
 ## features
 
-The main goal of `gowitness` is to take website screenshots (and do that well!), while optionally sav any information it can gather along the way. That said, a short list of features include:
+The main goal of `gowitness` is to take website screenshots (and do that well!), while optionally saving any information it gathered along the way. That said, a short list of features include:
 
 - Take website screenshots, obviously..., but fast and accurate!
 - Ability to grab and save data (i.e., a request log, console logs, headers, cookies, etc.)
@@ -55,7 +55,9 @@ For installation information and other documentation, please refer to the wiki [
 
 ![gallery](images/gowitness-gallery.png)
 
-![gallery](images/gowitness-detail.png)
+![detail](images/gowitness-detail.png)
+
+![terminal](images/gowitness-terminal.png)
 
 ## credits
 
