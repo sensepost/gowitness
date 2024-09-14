@@ -27,7 +27,7 @@ For installation information and other documentation, please refer to the wiki [
 
 ## screenshots
 
-![dark](images/gowitness-detail.png)
+![dark](images/gowitness-gallery.png)
 
 ## credits
 
