@@ -120,6 +120,28 @@ definitions:
       count:
         type: integer
     type: object
+  api.submitRequest:
+    properties:
+      options:
+        $ref: '#/definitions/api.submitRequestOptions'
+      urls:
+        items:
+          type: string
+        type: array
+    type: object
+  api.submitRequestOptions:
+    properties:
+      format:
+        type: string
+      timeout:
+        type: integer
+      user_agent:
+        type: string
+      window_x:
+        type: integer
+      window_y:
+        type: integer
+    type: object
   api.technologyListResponse:
     properties:
       technologies:
@@ -481,6 +503,29 @@ paths:
           schema:
             $ref: '#/definitions/api.statisticsResponse'
       summary: Database statistics
+      tags:
+      - Results
+  /submit:
+    post:
+      consumes:
+      - application/json
+      description: Starts a new scanning routine for a list of URL's and options,
+        writing results to the database.
+      parameters:
+      - description: The URL scanning request object
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.submitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Probing started
+          schema:
+            type: string
+      summary: Submit URL's for scanning
       tags:
       - Results
   /wappalyzer:

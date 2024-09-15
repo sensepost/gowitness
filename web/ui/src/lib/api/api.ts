@@ -50,6 +50,10 @@ const endpoints = {
   delete: {
     path: `/results/delete`,
     returnas: "" as string
+  },
+  submit: {
+    path: `/submit`,
+    returnas: "" as string
   }
 };
 

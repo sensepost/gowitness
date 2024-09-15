@@ -268,6 +268,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/submit": {
+            "post": {
+                "description": "Starts a new scanning routine for a list of URL's and options, writing results to the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Submit URL's for scanning",
+                "parameters": [
+                    {
+                        "description": "The URL scanning request object",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.submitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Probing started",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/wappalyzer": {
             "get": {
                 "description": "Get all of the available wappalyzer data.",
@@ -477,6 +511,40 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.submitRequest": {
+            "type": "object",
+            "properties": {
+                "options": {
+                    "$ref": "#/definitions/api.submitRequestOptions"
+                },
+                "urls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api.submitRequestOptions": {
+            "type": "object",
+            "properties": {
+                "format": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "window_x": {
+                    "type": "integer"
+                },
+                "window_y": {
                     "type": "integer"
                 }
             }
