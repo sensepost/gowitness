@@ -51,6 +51,7 @@ type Writer struct {
 	CsvFile   string
 	Jsonl     bool
 	JsonlFile string
+	Stdout    bool
 }
 
 // Scan is scanning related options
