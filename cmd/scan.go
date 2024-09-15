@@ -33,8 +33,10 @@ screenshots (still recording what gowitness could get using a --writer-*), use
 "gorod". If you prefer a *much* better chance of having a screenshot taken, use
 "chromedp" (the default). The "chromedp" driver tradeoff is resource usage, however.
 `),
-	Example: `  Scan targets from a file, dont prepend http:// to URI targets and filter by port 80:
+	Example: `  Scan targets from a nessus results file, dont prepend http:// to URI targets and filter by port 80:
    $ gowitness scan nessus -f ./scan-results.nessus --port 80
+  Scan a targets from a file, skipping http urls and storing network request content as well:
+   $ gowitness scan file -f ~/targets.txt --no-http --save-content
   Scan a CIDR, logging scan errors (can be verbose!) and using 20 'threads':
    $ gowitness scan cidr -t 20 --log-scan-errors -c 10.20.20.0/28
   Scan a single target, writing results to a SQLite database and JSON lines:
@@ -128,6 +130,7 @@ func init() {
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotFullPage, "screenshot-fullpage", false, "Do fullpage screenshots, instead of just the viewport")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScript, "javascript", "", "A JavaScript function to evaluate on every page, before a screenshot. Note: It must be a JavaScript function! eg: () => console.log('gowitness');")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScriptFile, "javascript-file", "", "A file containing a JavaScript function to evaluate on every page, before a screenshot. See --javascript")
+	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SaveContent, "save-content", false, "Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size")
 
 	// chrome options
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Path, "chrome-path", "", "The path to a Google Chrome binary to use (downloads a platform appropriate binary by default)")
