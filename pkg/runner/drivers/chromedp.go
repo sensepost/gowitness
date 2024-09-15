@@ -374,8 +374,10 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	}
 
 	// get html
-	if err := chromedp.Run(navigationCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
-		logger.Error("could not get page html", "err", err)
+	if !run.options.Scan.SkipHTML {
+		if err := chromedp.Run(navigationCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
+			logger.Error("could not get page html", "err", err)
+		}
 	}
 
 	// fingerprint technologies in the first response

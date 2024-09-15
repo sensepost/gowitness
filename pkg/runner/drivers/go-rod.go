@@ -369,11 +369,13 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 		result.Title = info.Title
 	}
 
-	html, err := page.HTML()
-	if err != nil {
-		logger.Error("could not get page html", "err", err)
-	} else {
-		result.HTML = html
+	if !run.options.Scan.SkipHTML {
+		html, err := page.HTML()
+		if err != nil {
+			logger.Error("could not get page html", "err", err)
+		} else {
+			result.HTML = html
+		}
 	}
 
 	// stop the event handlers
