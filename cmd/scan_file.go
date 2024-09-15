@@ -28,6 +28,9 @@ disable either using the --no-http / --no-https flags.
 URLs in the source file should be newline-separated. Invalid URLs are simply
 ignored.
 
+If any ports are added (via --port or one of the ports collections), then URL
+candidates will also be generated with the port section specified.
+
 **Note**: By default, no metadata is saved except for screenshots that are
 stored in the configured --screenshot-path. For later parsing (i.e., using the
 gowitness reporting feature), you need to specify where to write results (db,
@@ -72,4 +75,8 @@ func init() {
 	fileCmd.Flags().StringVarP(&fileCmdOptions.Source, "file", "f", "", "A file with targets to scan. Use - for stdin")
 	fileCmd.Flags().BoolVar(&fileCmdOptions.NoHTTP, "no-http", false, "Do not add 'http://' to targets where missing")
 	fileCmd.Flags().BoolVar(&fileCmdOptions.NoHTTPS, "no-https", false, "Do not add 'https://' to targets where missing")
+	fileCmd.Flags().IntSliceVarP(&fileCmdOptions.Ports, "port", "p", []int{80, 443}, "Ports on targets to scan. Supports multiple --port flags")
+	fileCmd.Flags().BoolVar(&fileCmdOptions.PortsSmall, "ports-small", false, "Include a small ports list when scanning targets")
+	fileCmd.Flags().BoolVar(&fileCmdOptions.PortsMedium, "ports-medium", false, "Include a medium ports list when scanning targets")
+	fileCmd.Flags().BoolVar(&fileCmdOptions.PortsLarge, "ports-large", false, "Include a large ports list when scanning targets")
 }
