@@ -204,6 +204,10 @@ definitions:
     type: object
   models.NetworkLog:
     properties:
+      content:
+        items:
+          type: integer
+        type: array
       error:
         type: string
       id:
