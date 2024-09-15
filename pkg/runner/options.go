@@ -67,6 +67,8 @@ type Scan struct {
 	// UriFilter are URI's that are okay to process. This should normally
 	// be http and https
 	UriFilter []string
+	// Don't write HTML response content
+	SkipHTML bool
 	// ScreenshotPath is the path where screenshot images will be stored
 	ScreenshotPath string
 	// ScreenshotFormat to save as

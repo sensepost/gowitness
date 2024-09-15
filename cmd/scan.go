@@ -130,6 +130,7 @@ func init() {
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScript, "javascript", "", "A JavaScript function to evaluate on every page, before a screenshot. Note: It must be a JavaScript function! e.g., () => console.log('gowitness');")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScriptFile, "javascript-file", "", "A file containing a JavaScript function to evaluate on every page, before a screenshot. See --javascript")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SaveContent, "save-content", false, "Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size")
+	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SkipHTML, "skip-html", false, "Don't include the first request's HTML response when writing results")
 
 	// Chrome options
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Path, "chrome-path", "", "The path to a Google Chrome binary to use (downloads a platform-appropriate binary by default)")

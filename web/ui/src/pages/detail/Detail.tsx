@@ -145,7 +145,7 @@ const ScreenshotDetailPage = () => {
           <CardTitle>Technologies</CardTitle>
           <Dialog open={isHtmlModalOpen} onOpenChange={setIsHtmlModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={detail.technologies.length === 0}>
+              <Button variant="outline" size="sm" disabled={detail.html.length === 0}>
                 <Code className="mr-2 h-4 w-4" />
                 View HTML
               </Button>
