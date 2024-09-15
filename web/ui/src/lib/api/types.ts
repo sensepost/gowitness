@@ -96,6 +96,7 @@ interface networklog {
   mime_type: string;
   time: string;
   error: string;
+  content: string;
 }
 
 interface consolelog {

@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
 import { Form, Link, useParams } from 'react-router-dom';
@@ -36,6 +36,29 @@ const ScreenshotDetailPage = () => {
   const getLogTypeColor = (type: string) => {
     if (type === 'console.warning' || type === 'console.warn') return "bg-yellow-500 text-black";
     return "bg-blue-500 text-white";
+  };
+
+  const handleDownload = (base64Content: string, url: string) => {
+    const binaryString = atob(base64Content);
+
+    // Create an array of 8-bit unsigned integers from the binary string
+    const binaryLength = binaryString.length;
+    const bytes = new Uint8Array(binaryLength);
+    for (let i = 0; i < binaryLength; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+
+    // Extract the last part of the URL for the filename
+    const urlParts = new URL(url).pathname.split('/');
+    const fileName = urlParts[urlParts.length - 1] || 'download';
+    link.download = fileName;
+
+    link.click();
+    window.URL.revokeObjectURL(link.href);
   };
 
   if (loading) return <WideSkeleton />;
@@ -285,6 +308,7 @@ const ScreenshotDetailPage = () => {
                   <TableRow>
                     <TableHead>HTTP</TableHead>
                     <TableHead></TableHead>
+                    <TableHead></TableHead>
                     <TableHead>URL</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -312,6 +336,16 @@ const ScreenshotDetailPage = () => {
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
+                      </TableCell>
+                      <TableCell>
+                        {log.content && log.content.length > 0 && (
+                          <div
+                            className="cursor-pointer"
+                            onClick={() => handleDownload(log.content, log.url)}
+                          >
+                            <DownloadIcon className="w-3 h-3" />
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell
                         className="break-all cursor-pointer"

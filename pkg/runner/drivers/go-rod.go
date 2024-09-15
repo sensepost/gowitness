@@ -269,8 +269,26 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 
 				// write the network log
 				resultMutex.Lock()
+				entryIndex := len(result.Network)
 				result.Network = append(result.Network, entry)
 				resultMutex.Unlock()
+
+				// if we need to write the body, do that
+				if run.options.Scan.SaveContent {
+					go func(index int) {
+						body, err := proto.NetworkGetResponseBody{RequestID: e.RequestID}.Call(page)
+						if err != nil {
+							if run.options.Logging.LogScanErrors {
+								run.log.Error("could not get network request response body", "url", e.Response.URL, "err", err)
+								return
+							}
+						}
+
+						resultMutex.Lock()
+						result.Network[index].Content = []byte(body.Body)
+						resultMutex.Unlock()
+					}(entryIndex)
+				}
 			}
 
 			return dismissEvents

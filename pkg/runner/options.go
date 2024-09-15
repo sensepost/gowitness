@@ -76,6 +76,9 @@ type Scan struct {
 	// JavaScript to evaluate on every page
 	JavaScript     string
 	JavaScriptFile string
+	// Save content stores content from network requests (warning) this
+	// could make written artefacts huge
+	SaveContent bool
 }
 
 // NewDefaultOptions returns Options with some default values

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
@@ -272,9 +273,30 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 				// write the network log
 				resultMutex.Lock()
+				entryIndex := len(result.Network)
 				result.Network = append(result.Network, entry)
 				resultMutex.Unlock()
 
+				// if we need to write the body, do that
+				// https://github.com/chromedp/chromedp/issues/543
+				if run.options.Scan.SaveContent {
+					go func(index int) {
+						c := chromedp.FromContext(navigationCtx)
+						p := network.GetResponseBody(e.RequestID)
+						body, err := p.Do(cdp.WithExecutor(navigationCtx, c.Target))
+						if err != nil {
+							if run.options.Logging.LogScanErrors {
+								run.log.Error("could not get network request response body", "url", e.Response.URL, "err", err)
+								return
+							}
+						}
+
+						resultMutex.Lock()
+						result.Network[index].Content = body
+						resultMutex.Unlock()
+
+					}(entryIndex)
+				}
 			}
 		// mark a request as failed
 		case *network.EventLoadingFailed:

@@ -62,7 +62,7 @@ type TLS struct {
 	KeyExchange              string       `json:"key_exchange"`
 	Cipher                   string       `json:"cipher"`
 	SubjectName              string       `json:"subject_name"`
-	SanList                  []TLSSanList `json:"san_list"`
+	SanList                  []TLSSanList `json:"san_list" gorm:"constraint:OnDelete:CASCADE"`
 	Issuer                   string       `json:"issuer"`
 	ValidFrom                time.Time    `json:"valid_from"`
 	ValidTo                  time.Time    `json:"valid_to"`
@@ -102,6 +102,7 @@ type NetworkLog struct {
 	RemoteIP    string      `json:"remote_ip"`
 	MIMEType    string      `json:"mime_type"`
 	Time        time.Time   `json:"time"`
+	Content     []byte      `json:"content"`
 	Error       string      `json:"error"`
 }
 
