@@ -24,6 +24,8 @@ type NmapReaderOptions struct {
 	OpenOnly bool
 	// Ports to limit scans to
 	Ports []int
+	// Ports to exclude, no matter what
+	ExcludePorts []int
 	// SkipPorts are ports to not scan
 	SkipPorts []int
 	// ServiceContains is a partial service filter
@@ -64,6 +66,11 @@ func (nr *NmapReader) Read(ch chan<- string) error {
 			for _, port := range host.Ports {
 				// filter only open ports
 				if nr.Options.OpenOnly && port.State.State != "open" {
+					continue
+				}
+
+				// if this port should always be excluded
+				if len(nr.Options.ExcludePorts) > 0 && !islazy.SliceHasInt(nr.Options.ExcludePorts, port.PortId) {
 					continue
 				}
 

@@ -34,6 +34,11 @@ you'd want to specify the ports or services to parse using the --port and
 - --service https
 - --service https-alt
 
+On ports, when specifying --port (can be multiple), target candidates will only
+be generated for results that match one of the specified ports. In contrast,
+when --exclude-port (can also be multiple) is set, no candidates for that port
+will be generated.
+
 **Note**: By default, no metadata is saved except for screenshots that are
 stored in the configured --screenshot-path. For later parsing (i.e., using the
 gowitness reporting feature), you need to specify where to write results (db,
@@ -79,6 +84,7 @@ func init() {
 	nmapCmd.Flags().BoolVar(&nmapCmdOptions.NoHTTPS, "no-https", false, "Do not add 'https://' to targets where missing")
 	nmapCmd.Flags().BoolVarP(&nmapCmdOptions.OpenOnly, "open-only", "o", false, "Only scan ports marked as open")
 	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.Ports, "port", []int{}, "A port filter to apply. Supports multiple --port flags")
+	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.ExcludePorts, "exclude-port", []int{}, "A port exclusion filter to apply. Supports multiple --exclude-port flags")
 	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.SkipPorts, "skip-port", []int{}, "Do not scan these ports. Supports multiple --skip-port flags")
 	nmapCmd.Flags().StringVar(&nmapCmdOptions.ServiceContains, "service-contains", "", "A service name filter. Will check if service 'contains' this value first")
 	nmapCmd.Flags().StringSliceVar(&nmapCmdOptions.Services, "service", []string{}, "A service filter to apply. Supports multiple --service flags")
