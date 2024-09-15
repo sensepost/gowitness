@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/sensepost/gowitness/pkg/database"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/web/api"
 )
@@ -56,13 +55,11 @@ func (s *Server) Run() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 
-	// get a db handle
-	conn, err := database.Connection(s.DbUri, false)
+	apih, err := api.NewApiHandler(s.DbUri, s.ScreenshotPath)
 	if err != nil {
-		log.Fatal("could not connect to the database", "err", err)
+		log.Error("could not get api handler up", "err", err)
 		return
 	}
-	apih := api.NewApiHandler(conn)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(isJSON)
@@ -74,6 +71,7 @@ func (s *Server) Run() {
 		r.Get("/statistics", apih.StatisticsHandler)
 		r.Get("/wappalyzer", apih.WappalyzerHandler)
 		r.Post("/search", apih.SearchHandler)
+		r.Post("/submit", apih.SubmitHandler)
 
 		r.Get("/results/gallery", apih.GalleryHandler)
 		r.Get("/results/list", apih.ListHandler)

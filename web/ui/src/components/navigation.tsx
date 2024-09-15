@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ImageIcon, LayoutDashboardIcon, ScanIcon, SearchIcon, TableIcon } from "lucide-react";
+import { ImageIcon, ImagePlusIcon, LayoutDashboardIcon, ScanIcon, SearchIcon, TableIcon } from "lucide-react";
 import { Form, NavLink, useSubmit } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -11,6 +11,7 @@ const navs = [
   { name: `Dashboard`, icon: <LayoutDashboardIcon className="mr-2 h-4 w-4" />, to: `/` },
   { name: `Gallery`, icon: <ImageIcon className="mr-2 h-4 w-4" />, to: `/gallery` },
   { name: `Overview`, icon: <TableIcon className="mr-2 h-4 w-4" />, to: `/overview` },
+  { name: `New Probe`, icon: <ImagePlusIcon className="mr-2 h-4 w-4" />, to: `/submit` }
 ];
 
 const searchOperators = [

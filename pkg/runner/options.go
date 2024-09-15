@@ -77,3 +77,25 @@ type Scan struct {
 	JavaScript     string
 	JavaScriptFile string
 }
+
+// NewDefaultOptions returns Options with some default values
+func NewDefaultOptions() *Options {
+	return &Options{
+		Chrome: Chrome{
+			UserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+			WindowX:   1920,
+			WindowY:   1080,
+		},
+		Scan: Scan{
+			Driver:           "chromedp",
+			Threads:          6,
+			Timeout:          60,
+			UriFilter:        []string{"http", "https"},
+			ScreenshotFormat: "jpeg",
+		},
+		Logging: Logging{
+			Debug:         true,
+			LogScanErrors: true,
+		},
+	}
+}

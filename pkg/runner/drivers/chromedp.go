@@ -45,9 +45,7 @@ func (b *browserInstance) Close() {
 	<-b.allocCtx.Done()
 
 	// cleanup the user data directory
-	if err := os.RemoveAll(b.userData); err != nil {
-		fmt.Printf("could not remove temp directory: %w\n", err)
-	}
+	os.RemoveAll(b.userData)
 }
 
 // getChromedpAllocator is a helper function to get a chrome allocation context.

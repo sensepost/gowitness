@@ -11,10 +11,12 @@ import GalleryPage from '@/pages/gallery/Gallery';
 import TablePage from '@/pages/table/Table';
 import ScreenshotDetailPage from '@/pages/detail/Detail';
 import SearchResultsPage from '@/pages/search/Search';
+import JobSubmissionPage from '@/pages/submit/Submit';
 
 import { searchAction } from '@/pages/search/action';
 import { searchLoader } from '@/pages/search/loader';
 import { deleteAction } from '@/pages/detail/actions';
+import { submitAction } from '@/pages/submit/action';
 
 const router = createBrowserRouter([
   {
@@ -44,6 +46,11 @@ const router = createBrowserRouter([
         element: <SearchResultsPage />,
         action: searchAction,
         loader: searchLoader,
+      },
+      {
+        path: 'submit',
+        element: <JobSubmissionPage />,
+        action: submitAction,
       },
     ]
   }
