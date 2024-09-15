@@ -36,6 +36,6 @@ func init() {
 	reportCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().IntVar(&serverCmdFlags.Port, "port", 7171, "The port to start the web server on")
-	serverCmd.Flags().StringVar(&serverCmdFlags.DbUri, "db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite and Postgres and MySQL (eg: postgres://user:pass@host:port/db)")
+	serverCmd.Flags().StringVar(&serverCmdFlags.DbUri, "db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite, Postgres, and MySQL (e.g., postgres://user:pass@host:port/db)")
 	serverCmd.Flags().StringVar(&serverCmdFlags.ScreenshotPath, "screenshot-path", "./screenshots", "The path where screenshots are stored")
 }

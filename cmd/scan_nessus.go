@@ -29,7 +29,7 @@ By default, the parser will search for web services using the following rules:
 
 With these defaults, the parser should detect most web services from a Nessus
 scan export. You can adjust the filters to include more Plugin Names, Service
-Names, or Plugin Output filters using the --service-name, --plugin-output and
+Names, or Plugin Output filters using the --service-name, --plugin-output, and
 --plugin-name flags.
 
 Including the --hostnames flag will have the parser add a scan target based on
@@ -56,7 +56,7 @@ flags.`)),
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("starting nessus file scanning", "file", nessusCmdOptions.Source)
+		log.Debug("starting Nessus file scanning", "file", nessusCmdOptions.Source)
 
 		reader := readers.NewNessusReader(nessusCmdOptions)
 		go func() {
@@ -78,8 +78,8 @@ func init() {
 	nessusCmd.Flags().BoolVar(&nessusCmdOptions.NoHTTP, "no-http", false, "Do not add 'http://' to targets where missing")
 	nessusCmd.Flags().BoolVar(&nessusCmdOptions.NoHTTPS, "no-https", false, "Do not add 'https://' to targets where missing")
 	nessusCmd.Flags().BoolVar(&nessusCmdOptions.Hostnames, "hostnames", false, "Enable hostname scanning")
-	nessusCmd.Flags().StringSliceVar(&nessusCmdOptions.Services, "service-name", []string{"www", "http"}, "Service name is filter. Supports multiple --service flags")
+	nessusCmd.Flags().StringSliceVar(&nessusCmdOptions.Services, "service-name", []string{"www", "http"}, "Service name filter. Supports multiple --service-name flags")
 	nessusCmd.Flags().StringSliceVar(&nessusCmdOptions.PluginOutputs, "plugin-output", []string{"web server"}, "Plugin output contains filter. Supports multiple --plugin-output flags")
-	nessusCmd.Flags().StringSliceVar(&nessusCmdOptions.PluginNames, "plugin-name", []string{"Service Detection"}, "Plugin name is filter. Supports multiple --plugin-name flags")
+	nessusCmd.Flags().StringSliceVar(&nessusCmdOptions.PluginNames, "plugin-name", []string{"Service Detection"}, "Plugin name filter. Supports multiple --plugin-name flags")
 	nessusCmd.Flags().IntSliceVar(&nessusCmdOptions.Ports, "port", []int{}, "Port filter. Supports multiple --port flags")
 }

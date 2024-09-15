@@ -30,15 +30,15 @@ var convertCmdFlags = struct {
 }{}
 var convertCmd = &cobra.Command{
 	Use:   "convert",
-	Short: "Convert between SQLite and JSON lines file formats",
+	Short: "Convert between SQLite and JSON Lines file formats",
 	Long: ascii.LogoHelp(ascii.Markdown(`
 # report convert
 
-Convert between SQLite and JSON lines file formats.
-	
-A --from-file and --to-file must be specified. The extention used for the
+Convert between SQLite and JSON Lines file formats.
+
+A --from-file and --to-file must be specified. The extension used for the
 specified filenames will be used to determine the conversion direction and
-target`)),
+target.`)),
 	Example: ascii.Markdown(`
 - gowitness report convert --from-file gowitness.sqlite3 --to-file data.jsonl
 - gowitness report convert --from-file gowitness.jsonl --to-file db.sqlite3`),
@@ -84,7 +84,7 @@ target`)),
 				return
 			}
 			if err := convertFromJsonlTo(convertCmdFlags.fromFile, writer); err != nil {
-				log.Error("failed to convert to sqlite", "err", err)
+				log.Error("failed to convert to SQLite", "err", err)
 				return
 			}
 		} else if convertCmdFlags.toExt == ".jsonl" {
@@ -95,11 +95,11 @@ target`)),
 			}
 			writer, err = writers.NewJsonWriter(toFile)
 			if err != nil {
-				log.Error("could not get a json writer up", "err", err)
+				log.Error("could not get a JSON writer up", "err", err)
 				return
 			}
 			if err := convertFromDbTo(convertCmdFlags.fromFile, writer); err != nil {
-				log.Error("failed to convert to jsonl", "err", err)
+				log.Error("failed to convert to JSON Lines", "err", err)
 				return
 			}
 		}
@@ -110,7 +110,7 @@ func init() {
 	reportCmd.AddCommand(convertCmd)
 
 	convertCmd.Flags().StringVar(&convertCmdFlags.fromFile, "from-file", "", "The file to convert from")
-	convertCmd.Flags().StringVar(&convertCmdFlags.toFile, "to-file", "", "The file to convert to. Use .sqlite3 for converstion to SQLite, and .jsonl for converstion to JSON lines")
+	convertCmd.Flags().StringVar(&convertCmdFlags.toFile, "to-file", "", "The file to convert to. Use .sqlite3 for conversion to SQLite, and .jsonl for conversion to JSON Lines")
 }
 
 func convertFromDbTo(from string, writer writers.Writer) error {
@@ -172,6 +172,6 @@ func convertFromJsonlTo(from string, writer writers.Writer) error {
 		}
 	}
 
-	log.Info("converted from a json lines file", "rows", c)
+	log.Info("converted from a JSON Lines file", "rows", c)
 	return nil
 }
