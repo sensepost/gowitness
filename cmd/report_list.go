@@ -25,15 +25,15 @@ var listCmdFlags = struct {
 }{}
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List a summary of results from a datasource",
+	Short: "List a summary of results from a data source",
 	Long: ascii.LogoHelp(ascii.Markdown(`
 # report list
 
-List a summary of results from a datasource, like an SQLite database or a JSON
+List a summary of results from a data source, like an SQLite database or a JSON
 lines file.`)),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if listCmdFlags.DbURI == "" && listCmdFlags.JsonFile == "" {
-			return errors.New("no datasource defined")
+			return errors.New("no data source defined")
 		}
 		return nil
 	},
@@ -100,7 +100,7 @@ func init() {
 	reportCmd.AddCommand(listCmd)
 
 	listCmd.Flags().StringVar(&listCmdFlags.DbURI, "db-uri", "sqlite://gowitness.sqlite3", "The location of an SQLite database containing gowitness results")
-	listCmd.Flags().StringVar(&listCmdFlags.JsonFile, "json-file", "", "The location of a JSON lines file containing gowitness results (eg: ./gowitness.jsonl). That flag takes precedence over --db-uri")
+	listCmd.Flags().StringVar(&listCmdFlags.JsonFile, "json-file", "", "The location of a JSON Lines file containing gowitness results (e.g., ./gowitness.jsonl). This flag takes precedence over --db-uri")
 }
 
 func renderTable(results []*models.Result) {

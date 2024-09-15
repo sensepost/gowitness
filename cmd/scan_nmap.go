@@ -19,14 +19,14 @@ var nmapCmd = &cobra.Command{
 
 Scan targets from an Nmap XML file.
 
-When performing nmap scans, specify the -oX nmap.xml flag to store data in an
-XML formatted file that gowitness can parse.
+When performing Nmap scans, specify the -oX nmap.xml flag to store data in an
+XML-formatted file that gowitness can parse.
 
 By default, this command will try and screenshot all ports specified in an
 nmap.xml results file. That means it will try and do silly things like
 screenshot SSH services, which obviously won't work. It's for this reason that
 you'd want to specify the ports or services to parse using the --port and
---service / --service-contains flags. For most http-based services, try:
+--service / --service-contains flags. For most HTTP-based services, try:
 - --service http
 - --service http-alt
 - --service http-mgmt
@@ -56,7 +56,7 @@ flags.`)),
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Debug("starting nmap file scanning", "file", nmapCmdOptions.Source)
+		log.Debug("starting Nmap file scanning", "file", nmapCmdOptions.Source)
 
 		reader := readers.NewNmapReader(nmapCmdOptions)
 		go func() {
@@ -78,8 +78,8 @@ func init() {
 	nmapCmd.Flags().BoolVar(&nmapCmdOptions.NoHTTP, "no-http", false, "Do not add 'http://' to targets where missing")
 	nmapCmd.Flags().BoolVar(&nmapCmdOptions.NoHTTPS, "no-https", false, "Do not add 'https://' to targets where missing")
 	nmapCmd.Flags().BoolVarP(&nmapCmdOptions.OpenOnly, "open-only", "o", false, "Only scan ports marked as open")
-	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.Ports, "port", []int{}, "A port filter to apply. Suports multiple --port flags")
-	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.SkipPorts, "skip-port", []int{}, "Do not scan these ports. Suports multiple --skip-port flags")
+	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.Ports, "port", []int{}, "A port filter to apply. Supports multiple --port flags")
+	nmapCmd.Flags().IntSliceVar(&nmapCmdOptions.SkipPorts, "skip-port", []int{}, "Do not scan these ports. Supports multiple --skip-port flags")
 	nmapCmd.Flags().StringVar(&nmapCmdOptions.ServiceContains, "service-contains", "", "A service name filter. Will check if service 'contains' this value first")
 	nmapCmd.Flags().StringSliceVar(&nmapCmdOptions.Services, "service", []string{}, "A service filter to apply. Supports multiple --service flags")
 	nmapCmd.Flags().BoolVar(&nmapCmdOptions.Hostnames, "hostnames", false, "Add hostnames in URL candidates (useful for virtual hosting)")

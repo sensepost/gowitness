@@ -30,7 +30,7 @@ flags.`)),
 `),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if singleCmdOptions.URL == "" {
-			return errors.New("a url must be specified")
+			return errors.New("a URL must be specified")
 		}
 		return nil
 	},

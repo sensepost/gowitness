@@ -51,13 +51,13 @@ and as a result will remain empty.`)),
 		}
 
 		if !isV2Database(source) {
-			log.Error("the source database dot not appear to be a gowitness v2 database. table 'urls' not found")
+			log.Error("the source database does not appear to be a gowitness v2 database. table 'urls' not found")
 			return
 		}
 
 		targetFile := fmt.Sprintf("%s.v3-migrated.sqlite3",
 			strings.TrimSuffix(migrateCmdFlags.Source, filepath.Ext(migrateCmdFlags.Source)))
-		log.Info("writing to new sqlite database file", "target", targetFile)
+		log.Info("writing to new SQLite database file", "target", targetFile)
 
 		writer, err := writers.NewDbWriter(fmt.Sprintf("sqlite://%s", targetFile), false)
 		if err != nil {
@@ -65,7 +65,7 @@ and as a result will remain empty.`)),
 			return
 		}
 
-		// read url's from the source database, and Write to the destination
+		// read URLs from the source database, and write to the destination
 		var v2URLs []oldv2.URL
 		source.Preload("Headers").
 			Preload("Technologies").
@@ -73,13 +73,13 @@ and as a result will remain empty.`)),
 			Preload("Console").
 			Preload("Network").
 			Find(&v2URLs)
-		log.Info("total urls to process", "total", len(v2URLs))
+		log.Info("total URLs to process", "total", len(v2URLs))
 
 		for _, v2URL := range v2URLs {
 			v3result := mapV2ToV3(v2URL)
 
 			if err := writer.Write(&v3result); err != nil {
-				log.Error("could not write v2 url result to v3 database", "err", err)
+				log.Error("could not write v2 URL result to v3 database", "err", err)
 			}
 		}
 

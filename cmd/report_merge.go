@@ -76,18 +76,18 @@ their data.`)),
 		if mergeCmdFlags.SourcePath != "" {
 			filesFromDir, err := findSQLiteDatabases(mergeCmdFlags.SourcePath)
 			if err != nil {
-				log.Error("failed to find sqlite databases", "err", err)
+				log.Error("failed to find SQLite databases", "err", err)
 				return
 			}
 			if len(filesFromDir) == 0 && len(dbFiles) == 0 {
-				log.Error("no sqlite databases found in the specified directory or files")
+				log.Error("no SQLite databases found in the specified directory or files")
 				return
 			}
 			dbFiles = append(dbFiles, filesFromDir...)
 		}
 
 		if len(dbFiles) == 0 {
-			log.Error("no sqlite databases to process")
+			log.Error("no SQLite databases to process")
 			return
 		}
 

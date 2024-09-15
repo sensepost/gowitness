@@ -13,11 +13,11 @@ import (
 var fileCmdOptions = &readers.FileReaderOptions{}
 var fileCmd = &cobra.Command{
 	Use:   "file",
-	Short: "Scan targets sourced from a file, or stdin",
+	Short: "Scan targets sourced from a file or stdin",
 	Long: ascii.LogoHelp(ascii.Markdown(`
 # scan file
 
-Scan targets sourced from a file, or stdin.
+Scan targets sourced from a file or stdin.
 
 ## description
 
@@ -25,7 +25,7 @@ This command will check the structure of a target URL to ensure that a protocol
 is defined. If it is not set, it will prepend 'http://' and 'https://'. You can
 disable either using the --no-http / --no-https flags.
 
-URLs in the source file should be newline separated. Invalid URLs are simply
+URLs in the source file should be newline-separated. Invalid URLs are simply
 ignored.
 
 **Note**: By default, no metadata is saved except for screenshots that are
