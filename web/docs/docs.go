@@ -644,6 +644,12 @@ const docTemplate = `{
         "models.NetworkLog": {
             "type": "object",
             "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "error": {
                     "type": "string"
                 },
