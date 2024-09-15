@@ -7,8 +7,12 @@ import (
 
 var reportCmd = &cobra.Command{
 	Use:   "report",
-	Short: "Reporting tools",
-	Long:  ascii.LogoHelp(`Reporting tools.`),
+	Short: "Work with gowitness reports",
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report
+
+Work with gowitness reports.
+`)),
 }
 
 func init() {

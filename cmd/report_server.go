@@ -13,8 +13,15 @@ var serverCmdFlags = struct {
 }{}
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the report web server user interface",
-	Long:  ascii.LogoHelp(`Start the report web server user interface.`),
+	Short: "Start the web user interface",
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report server
+
+Start the web user interface.`)),
+	Example: ascii.Markdown(`
+- gowitness report server
+- gowitness report server --port 8080 --db-uri /tmp/gowitness.sqlite3
+- gowitness report server --screenshot-path /tmp/screenshots`),
 	Run: func(cmd *cobra.Command, args []string) {
 		server := web.NewServer(
 			serverCmdFlags.Port,

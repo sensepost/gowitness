@@ -14,32 +14,36 @@ var nmapCmdOptions = &readers.NmapReaderOptions{}
 var nmapCmd = &cobra.Command{
 	Use:   "nmap",
 	Short: "Scan targets from an Nmap XML file",
-	Long: ascii.LogoHelp(`Scan targets from an Nmap XML file.
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# scan nmap
+
+Scan targets from an Nmap XML file.
 
 When performing nmap scans, specify the -oX nmap.xml flag to store data in an
 XML formatted file that gowitness can parse.
 
 By default, this command will try and screenshot all ports specified in an
 nmap.xml results file. That means it will try and do silly things like
-screenshot SSH services, which obviously won't work. It's for this reason
-that you'd want to specify the ports or services to parse using the --port
-and --service / --service-contains flags. For most http-based services, try:
- --service http --service http-alt --service http-mgmt --service http-proxy
- --service https --service https-alt
+screenshot SSH services, which obviously won't work. It's for this reason that
+you'd want to specify the ports or services to parse using the --port and
+--service / --service-contains flags. For most http-based services, try:
+- --service http
+- --service http-alt
+- --service http-mgmt
+- --service http-proxy
+- --service https
+- --service https-alt
 
-Note: By default, no metadata is saved except for screenshots that are
-stored in the configured --screenshot-path. For later parsing (i.e., using
-the gowitness reporting feature), you need to specify where to write results
-(db, csv, jsonl) using the --write-* set of flags. See --help for available
-flags.`),
-	Example: `  Scan targets from a file (warning: scans everything, incl. ssh for example):
-   $ gowitness scan nmap -f ~/Desktop/targets.xml
-  Scan targets from a file, using 50 'threads' without trying https service:
-   $ gowitness scan nmap -f targets.xml --threads 50 --no-https
-  Scan targets from a file, filtering by only open ports that are port 80, 443 and 8080
-   $ gowitness scan nmap -f /tmp/targets.xml --open-only --port 80 --port 443 --port 8080
-  Scan targets from a file, filter to only open ports for specific services:
-   $ gowitness scan nmap -f ~/target.xml --open-only --service-contains http --service https`,
+**Note**: By default, no metadata is saved except for screenshots that are
+stored in the configured --screenshot-path. For later parsing (i.e., using the
+gowitness reporting feature), you need to specify where to write results (db,
+csv, jsonl) using the _--write-*_ set of flags. See _--help_ for available
+flags.`)),
+	Example: ascii.Markdown(`
+- gowitness scan nmap -f ~/Desktop/targets.xml --write-json --write-db
+- gowitness scan nmap -f targets.xml --threads 50 --no-http --service https
+- gowitness scan nmap -f /tmp/n.xml --open-only --port 80 --port 443 --port 8080
+- gowitness scan nmap -f ~/nmap.xml --open-only --service-contains http`),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if nmapCmdOptions.Source == "" {
 			return errors.New("a source must be specified")

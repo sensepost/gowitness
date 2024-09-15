@@ -31,14 +31,17 @@ var convertCmdFlags = struct {
 var convertCmd = &cobra.Command{
 	Use:   "convert",
 	Short: "Convert between SQLite and JSON lines file formats",
-	Long: ascii.LogoHelp(`Convert between SQLite and JSON lines file formats.
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report convert
+
+Convert between SQLite and JSON lines file formats.
 	
-A --from-file and --to-file must be specified. The extention used in for the specified filenames
-will be used to determine the conversion types`),
-	Example: `  Convert from a SQLite database to JSON lines
-   $ gowitness report convert --from-file gowitness.sqlite3 --to-file gowitness.jsonl
-  Convert from a JSON lines file to a SQLite database
-   $ gowitness report convert --from-file gowitness.jsonl --to-file gowitness.sqlite3`,
+A --from-file and --to-file must be specified. The extention used for the
+specified filenames will be used to determine the conversion direction and
+target`)),
+	Example: ascii.Markdown(`
+- gowitness report convert --from-file gowitness.sqlite3 --to-file data.jsonl
+- gowitness report convert --from-file gowitness.jsonl --to-file db.sqlite3`),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if convertCmdFlags.fromFile == "" {
 			return errors.New("from file not set")
