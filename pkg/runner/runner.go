@@ -125,7 +125,7 @@ func (run *Runner) Run() {
 					}
 				} else {
 					if err := run.runWriters(result); err != nil {
-						run.log.Error("failed to write result for target", "target", target)
+						run.log.Error("failed to write result for target", "target", target, "err", err)
 					}
 
 					run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
