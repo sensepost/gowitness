@@ -14,31 +14,31 @@ var cidrCmdOptions = &readers.CidrReaderOptions{}
 var cidrCmd = &cobra.Command{
 	Use:   "cidr",
 	Short: "Scan cidr targets on a network",
-	Long: ascii.LogoHelp(`Scan CIDR targets on a network.
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# scan cidr
+
+Scan CIDR targets on a network.
 
 This command takes input CIDR ranges, optional extra ports and other
-configuration and generates permutations to scan for web services to
-screenshot. URL schemes are automatically added as 'http://' and 'https://'
-unless either the --no-http or --no-https flags are present.
+configuration and generates permutations to scan for web services to screenshot.
+URL schemes are automatically added as 'http://' and 'https://' unless either
+the --no-http or --no-https flags are present.
 
-By default, this command will scan targets sequentially. If the --random
-flag is set, targets will go through a shuffling phase before scanning
-starts. This is useful in places where scanning too many ports in sequence
-may trigger port scanning related alerts.
+By default, this command will scan targets sequentially. If the --random flag is
+set, targets will go through a shuffling phase before scanning starts. This is
+useful in places where scanning too many ports in sequence may trigger port
+scanning related alerts.
 
-Note: By default, no metadata is saved except for screenshots that are
-stored in the configured --screenshot-path. For later parsing (i.e., using
-the gowitness reporting feature), you need to specify where to write results
-(db, csv, jsonl) using the --write-* set of flags. See --help for available
-flags.`),
-	Example: `  Scan multiple CIDR's, using the default ports which are 80 and 443:
-   $ gowitness scan cidr --cidr 192.168.0.0/24 --cidr 10.0.50.0/24
-  Scan a CIDR (specified using the shorthand -c) with additional ports:
-   $ gowitness scan cidr -c 10.0.50.0/24 --port 8888 --port 8443
-  Scan multiple CIDR's, using the addition medium set of ports, ignoring http URI's:
-   $ gowitness scan cidr -c 172.16.1.0/24 -c 10.10.10.0/24 --no-http --ports-medium
-  Scan a CIDR, logging scan errors (can be verbose!) and using 20 'threads':
-   $ gowitness scan cidr -t 20 --log-scan-errors -c 10.20.20.0/28`,
+**Note**: By default, no metadata is saved except for screenshots that are
+stored in the configured --screenshot-path. For later parsing (i.e., using the
+gowitness reporting feature), you need to specify where to write results (db,
+csv, jsonl) using the _--write-*_ set of flags. See _--help_ for available
+flags.`)),
+	Example: ascii.Markdown(`
+- gowitness scan cidr --cidr 192.168.0.0/24 --cidr 10.0.50.0/24
+- gowitness scan cidr -c 10.0.50.0/24 --port 8888 --port 8443
+- gowitness scan cidr -c 172.16.1.0/24 -c 10.10.10.0/24 --no-http --ports-medium
+- gowitness scan cidr -t 20 --log-scan-errors -c 10.20.20.0/28`),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if cidrCmdOptions.Source == "" && len(cidrCmdOptions.Cidrs) == 0 {
 			return errors.New("need targets to scan via either a --cidr-file for --cidr")

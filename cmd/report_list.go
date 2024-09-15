@@ -26,8 +26,11 @@ var listCmdFlags = struct {
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List a summary of results from a datasource",
-	Long: ascii.LogoHelp(`List a summary of results from a datasource, like
-an SQLite database or a JSON lines file.`),
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report list
+
+List a summary of results from a datasource, like an SQLite database or a JSON
+lines file.`)),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if listCmdFlags.DbURI == "" && listCmdFlags.JsonFile == "" {
 			return errors.New("no datasource defined")

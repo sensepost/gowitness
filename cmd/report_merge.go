@@ -24,15 +24,18 @@ var mergeCmdFlags = struct {
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merge multiple SQLite databases into a single database",
-	Long: ascii.LogoHelp(`Merge multiple SQLite databases into a single database.
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report merge
 
-You can specify source files using --source-file (can be specified multiple times) or a directory
-containing multiple SQLite databases using --source-path. The command will scan for databases that
-match the required schema and merge their data.`),
-	Example: `  Merge multiple SQLite databases from a directory:
-   $ gowitness report merge --source-path ./databases --output-file merged.sqlite3
-  Merge multiple SQLite databases by specifying files:
-   $ gowitness report merge --source-file db1.sqlite3 --source-file db2.sqlite3 --output-file merged.sqlite3`,
+Merge multiple SQLite databases into a single database.
+
+You can specify source files using --source-file (can be specified multiple
+times) or a directory containing multiple SQLite databases using --source-path.
+The command will scan for databases that match the required schema and merge
+their data.`)),
+	Example: ascii.Markdown(`
+- gowitness report merge --source-path ./databases --output-file merged.sqlite3
+- gowitness report merge --source-file gowitness.db --source-file db2.sqlite3 --output-file merged.sqlite3`),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(mergeCmdFlags.SourceFiles) == 0 && mergeCmdFlags.SourcePath == "" {
 			return errors.New("either --source-file or --source-path must be specified")

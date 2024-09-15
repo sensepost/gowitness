@@ -23,12 +23,19 @@ var migrateCmdFlags = struct {
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Migrate a gowitness v2 SQLite database to v3",
-	Long: ascii.LogoHelp(`Migrate a gowitness v2 SQLite database to v3.
+	Long: ascii.LogoHelp(ascii.Markdown(`
+# report migrate
 
-Given a source gowitness v2 SQLite database, this command will read and map the data
-to the appropriate v3 structure, writing results to a new database file. Naturally,
-not all fields that exist in a v3 database will be in a v2 database, and as a result
-will remain empty.`),
+Migrate a gowitness v2 SQLite database to v3.
+
+Given a source gowitness v2 SQLite database, this command will read and map data
+to the appropriate v3 structure, writing results to a new database file. The new
+database file will be next to the source file, titled _*-v3-migrated.sqlite3_.
+
+Naturally, not all fields that exist in a v3 database will be in a v2 database,
+and as a result will remain empty.`)),
+	Example: ascii.Markdown(`
+- gowitness report migrate -s ~/gowitnessv2.sqlite3`),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if migrateCmdFlags.Source == "" {
 			return errors.New("a source must be specified")

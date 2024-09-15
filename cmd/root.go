@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sensepost/gowitness/internal/ascii"
@@ -33,8 +34,24 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.SilenceErrors = true
 	err := rootCmd.Execute()
 	if err != nil {
+		var cmd string
+		c, _, cerr := rootCmd.Find(os.Args[1:])
+		if cerr == nil {
+			cmd = c.Name()
+		}
+
+		v := "\n"
+
+		if cmd != "" {
+			v += fmt.Sprintf("An error occured running the `%s` command\n", cmd)
+		}
+
+		v += "The error was:\n\n" + fmt.Sprintf("```%s```", err)
+		fmt.Println(ascii.Markdown(v))
+
 		os.Exit(1)
 	}
 }
