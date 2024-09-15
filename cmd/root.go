@@ -41,5 +41,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Debug, "debug-log", "D", false, "Enable debug logging")
-	rootCmd.PersistentFlags().BoolVar(&opts.Logging.Silence, "silence-log", false, "Silence all (well almost all) logging")
+	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Silence, "quiet", "q", false, "Silence (almost all) logging")
 }
