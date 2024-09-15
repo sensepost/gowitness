@@ -97,6 +97,14 @@ flags.`)),
 			scanWriters = append(scanWriters, w)
 		}
 
+		if opts.Writer.Stdout {
+			w, err := writers.NewStdoutWriter()
+			if err != nil {
+				return err
+			}
+			scanWriters = append(scanWriters, w)
+		}
+
 		if len(scanWriters) == 0 {
 			log.Warn("no writers have been configured. only saving screenshots. add writers using --write-* flags")
 		}
@@ -149,4 +157,5 @@ func init() {
 	scanCmd.PersistentFlags().StringVar(&opts.Writer.CsvFile, "write-csv-file", "gowitness.csv", "The file to write CSV rows to")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Jsonl, "write-jsonl", false, "Write results as JSON lines")
 	scanCmd.PersistentFlags().StringVar(&opts.Writer.JsonlFile, "write-jsonl-file", "gowitness.jsonl", "The file to write JSON lines to")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Stdout, "write-stdout", false, "Write successful results to stdout (usefull in a shell pipeline)")
 }
