@@ -370,10 +370,16 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	err = chromedp.Run(navigationCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
-			img, err = page.CaptureScreenshot().
+			params := page.CaptureScreenshot().
 				WithQuality(80).
-				WithFormat(page.CaptureScreenshotFormat(run.options.Scan.ScreenshotFormat)).
-				Do(ctx)
+				WithFormat(page.CaptureScreenshotFormat(run.options.Scan.ScreenshotFormat))
+
+			// if fullpage
+			if run.options.Scan.ScreenshotFullPage {
+				params = params.WithCaptureBeyondViewport(true)
+			}
+
+			img, err = params.Do(ctx)
 			return err
 		}),
 	)
