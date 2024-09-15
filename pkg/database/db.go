@@ -35,6 +35,7 @@ func Connection(uri string, debug bool) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
+		c.Exec("PRAGMA foreign_keys = ON")
 	case "postgres":
 		c, err = gorm.Open(postgres.Open(uri), config)
 		if err != nil {
