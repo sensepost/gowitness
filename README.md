@@ -22,6 +22,7 @@
 The main goal of `gowitness` is to take website screenshots (**and do that well!**), while optionally saving any information it gathered along the way. That said, a short list of features include:
 
 - Take website screenshots, obviously..., but fast and accurate!
+- Scan a list of URLs, CIDRs, Nmap Results, Nessus Results and more.
 - Ability to grab and save data (i.e., a request log, console logs, headers, cookies, etc.)
 - Write data to many formats (sqlite database, jsonlines, csv, etc.)
 - An epic web-based results viewer (if you saved data to SQLite) including a fully featured API!
@@ -51,7 +52,7 @@ For advanced installation information and other documentation, please refer to t
 
 ## credits
 
-`gowitness` would not have been possible without some of these amazing projects: [chromedp](https://github.com/chromedp/chromedp), [tabler](https://github.com/tabler/tabler), [zerolog](https://github.com/rs/zerolog), [cobra](https://github.com/spf13/cobra), [gorm](https://github.com/go-gorm/gorm), [go-nmap](https://github.com/lair-framework/go-nmap), [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo), [goimagehash](https://github.com/corona10/goimagehash)
+`gowitness` would not have been possible without some of [these amazing projects](./go.mod): [chi](https://github.com/go-chi/chi), [chromedp](https://github.com/chromedp/chromedp), [go-rod](https://github.com/go-rod/rod), [cobra](https://github.com/spf13/cobra), [gorm](https://github.com/go-gorm/gorm), [glamour](https://github.com/charmbracelet/glamour), [go-nmap](https://github.com/lair-framework/go-nmap), [wappalyzergo](https://github.com/projectdiscovery/wappalyzergo), [goimagehash](https://github.com/corona10/goimagehash).
 
 ## license
 
