@@ -91,8 +91,8 @@ func (s *Server) Run() {
 	// the spa
 	r.Handle("/*", SpaHandler())
 
-	log.Info("starting web server", "port", s.Port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(s.Port), r); err != nil {
+	log.Info("starting web server", "host", s.Host, "port", s.Port)
+	if err := http.ListenAndServe(s.Host+":"+strconv.Itoa(s.Port), r); err != nil {
 		log.Error("server listen error", "err", err)
 	}
 }
