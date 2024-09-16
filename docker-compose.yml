@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  gowitness:
+    image: ghcr.io/sensepost/gowitness:latest
+    restart: unless-stopped
+    command: gowitness report server --host 0.0.0.0 --screenshot-path /data/screenshots --db-uri sqlite:///data/gowitness.sqlite3
+    volumes:
+      - ./gowitness.sqlite3:/data/gowitness.sqlite3
+      - ./screenshots:/data/screenshots
+    labels:
+      traefik.enable: true
+      traefik.http.routers.gowitness.rule: Host(`gowitness.local`)
+      traefik.http.routers.gowitness.entryPoints: web-secure
+      traefik.http.routers.gowitness.tls.certResolver: default
+      traefik.http.routers.gowitness.middlewares: basic-auth
+
+  traefik:
+    image: traefik:3.1
+    restart: unless-stopped
+    command:
+      - --log.level=INFO
+      - --api.dashboard=true
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+      - --entryPoints.web-secure.address=:443
+    ports:
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      traefik.enable: true
+      # configure http basic auth to protect the UI. either set it statically, or
+      # consider using something like trauth[1] to manage it.
+      # [1] https://github.com/leonjza/trauth
+      #
+      # example credentials here are:
+      #   gowitness:gowitness
+      # use `htpasswd` to get a hash for a different password. also note you need to escape $ with another $ to $$'s
+      traefik.http.middlewares.basic-auth.basicauth.users: gowitness:$$2y$$05$$7ADiPfM1kMABSUjofyUTOuJ7U6RcGi5fXeecyYnxjYwRluRRIO1..
+      traefik.http.middlewares.basic-auth.basicauth.realm: gowitness
