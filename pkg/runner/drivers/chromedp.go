@@ -3,6 +3,7 @@ package driver
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"image"
 	"log/slog"
@@ -416,6 +417,12 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		result.Failed = true
 		result.FailedReason = err.Error()
 	} else {
+
+		// give the writer a screenshot to deal with
+		if run.options.Scan.ScreenshotToWriter {
+			result.Screenshot = base64.StdEncoding.EncodeToString(img)
+		}
+
 		// write the screenshot to disk
 		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
 		if err := os.WriteFile(

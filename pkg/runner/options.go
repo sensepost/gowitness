@@ -76,6 +76,8 @@ type Scan struct {
 	ScreenshotFormat string
 	// ScreenshotFullPage saves full, scrolled web pages
 	ScreenshotFullPage bool
+	// ScreenshotToWriter passes screenshots as a model property to writers
+	ScreenshotToWriter bool
 	// JavaScript to evaluate on every page
 	JavaScript     string
 	JavaScriptFile string
