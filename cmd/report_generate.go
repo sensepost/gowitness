@@ -160,11 +160,6 @@ func generateHTML(results []models.Result) error {
 		return err
 	}
 
-	dir, err := os.MkdirTemp("", "gowitness3-export-*")
-	if err != nil {
-		return err
-	}
-
 	htmlOutputPath := filepath.Join(generateCmdFlags.TempDir, "index.html")
 	file, err := os.Create(htmlOutputPath)
 	if err != nil {
@@ -182,7 +177,7 @@ func generateHTML(results []models.Result) error {
 	cssOutputPath := copyCSS()
 
 	// archive the results
-	tempZipPath := filepath.Join(dir, "report.zip")
+	tempZipPath := filepath.Join(generateCmdFlags.TempDir, "report.zip")
 	err = createZipFile(tempZipPath, []string{htmlOutputPath, cssOutputPath}, generateCmdFlags.ScreenshotPath)
 	if err != nil {
 		return err
