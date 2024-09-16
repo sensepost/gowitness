@@ -7,6 +7,7 @@ import (
 )
 
 var serverCmdFlags = struct {
+	Host           string
 	Port           int
 	DbUri          string
 	ScreenshotPath string
@@ -24,6 +25,7 @@ Start the web user interface.`)),
 - gowitness report server --screenshot-path /tmp/screenshots`),
 	Run: func(cmd *cobra.Command, args []string) {
 		server := web.NewServer(
+			serverCmdFlags.Host,
 			serverCmdFlags.Port,
 			serverCmdFlags.DbUri,
 			serverCmdFlags.ScreenshotPath,
@@ -35,6 +37,7 @@ Start the web user interface.`)),
 func init() {
 	reportCmd.AddCommand(serverCmd)
 
+	serverCmd.Flags().StringVar(&serverCmdFlags.Host, "host", "127.0.0.1", "The host address to bind the webserver to")
 	serverCmd.Flags().IntVar(&serverCmdFlags.Port, "port", 7171, "The port to start the web server on")
 	serverCmd.Flags().StringVar(&serverCmdFlags.DbUri, "db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite, Postgres, and MySQL (e.g., postgres://user:pass@host:port/db)")
 	serverCmd.Flags().StringVar(&serverCmdFlags.ScreenshotPath, "screenshot-path", "./screenshots", "The path where screenshots are stored")
