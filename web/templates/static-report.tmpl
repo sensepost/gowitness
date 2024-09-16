@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gowitness screenshots</title>
+  <link href="./pico.min.css" rel="stylesheet">
+  <style>
+    button {
+      font-size: 0.8rem;
+      padding: 5px 10px;
+    }
+
+    /* Grid view styling */
+    .grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .grid-view img {
+      width: 100%;
+      height: auto;
+    }
+
+    .table-view {
+      display: block;
+    }
+
+    th {
+      cursor: pointer;
+    }
+
+    /* Flexbox for aligning toggle button and filter input */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    /* Filter input styling */
+    #filterInput {
+      padding: 5px;
+      width: 100%;
+      max-width: 300px;
+      display: inline-block;
+    }
+
+    /* Color code for HTTP status codes */
+    .status-2xx {
+      color: green;
+    }
+
+    .status-3xx {
+      color: blue;
+    }
+
+    .status-4xx {
+      color: orange;
+    }
+
+    .status-5xx {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Gowitness Results</h1>
+
+    <!-- Flexbox container for the toggle button and filter input -->
+    <div class="controls">
+      <!-- Toggle button -->
+      <button class="outline" id="toggleViewButton">Grid View</button>
+
+      <!-- Filter input -->
+      <input type="text" id="filterInput" onkeyup="filterResults()" placeholder="Filter results...">
+    </div>
+
+    <!-- Table view -->
+    <table id="resultsTable" class="table-view striped">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Screenshot</th>
+          <th onclick="sortTable(1)">URL</th>
+          <th onclick="sortTable(2)">Title</th>
+          <th onclick="sortTable(3)">Code</th>
+          <th onclick="sortTable(4)">Failed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Results}}
+        <tr>
+          <td>
+            <a href="./screenshots/{{.Filename}}" target="_blank">
+              <img src="./screenshots/{{.Filename}}" alt="Screenshot" style="width:200px">
+            </a>
+          </td>
+          <td><a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.URL}}</a></td>
+          <td>{{.Title}}</td>
+          <td class="{{statusClass .ResponseCode}}">{{.ResponseCode}}</td>
+          <td>{{if .Failed}}Yes{{else}}{{end}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+
+    <!-- Grid view (hidden by default) -->
+    <div id="gridView" class="grid-view" style="display: none;">
+      {{range .Results}}
+      <div class="grid-item">
+        <a href="./screenshots/{{.Filename}}" target="_blank">
+          <img src="./screenshots/{{.Filename}}" alt="Screenshot" style="width:200px">
+        </a>
+        <p><strong>URL:</strong> <a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.URL}}</a></p>
+        <p><strong>Title:</strong> {{.Title}}</p>
+        <p><strong>Code:</strong> <span class="{{statusClass .ResponseCode}}">{{.ResponseCode}}</span></p>
+      </div>
+      {{end}}
+    </div>
+  </main>
+
+  <script>
+    // Sort the table based on the selected column
+    function sortTable(columnIndex) {
+      const table = document.getElementById("resultsTable");
+      const rows = Array.from(table.getElementsByTagName("tr")).slice(1); // Skip header row
+      const isAscending = table.getAttribute("data-sort-order") === "asc";
+      const direction = isAscending ? 1 : -1;
+
+      rows.sort((rowA, rowB) => {
+        const cellA = rowA.getElementsByTagName("td")[columnIndex].textContent.trim();
+        const cellB = rowB.getElementsByTagName("td")[columnIndex].textContent.trim();
+
+        if (!isNaN(cellA) && !isNaN(cellB)) { // Sort numerically if the content is a number
+          return direction * (parseFloat(cellA) - parseFloat(cellB));
+        }
+
+        return direction * cellA.localeCompare(cellB); // Sort alphabetically otherwise
+      });
+
+      const tbody = table.getElementsByTagName("tbody")[0];
+      rows.forEach(row => tbody.appendChild(row));
+      table.setAttribute("data-sort-order", isAscending ? "desc" : "asc");
+    }
+
+    // Toggle between table view and grid view
+    const toggleViewButton = document.getElementById("toggleViewButton");
+    const tableView = document.getElementById("resultsTable");
+    const gridView = document.getElementById("gridView");
+    const filterInput = document.getElementById("filterInput");
+
+    toggleViewButton.addEventListener("click", () => {
+      const isTableView = tableView.style.display !== "none";
+      tableView.style.display = isTableView ? "none" : "table";
+      gridView.style.display = isTableView ? "grid" : "none";
+      toggleViewButton.textContent = isTableView ? "Table View" : "Grid View";
+    });
+
+    // Filter both table and grid views based on input
+    function filterResults() {
+      const input = filterInput.value.toLowerCase();
+
+      // Filter table rows
+      const tableRows = document.getElementById("resultsTable").getElementsByTagName("tr");
+      for (let i = 1; i < tableRows.length; i++) { // Skip header row
+        const cells = tableRows[i].getElementsByTagName("td");
+        let matchFound = false;
+        for (let j = 0; j < cells.length; j++) {
+          if (cells[j].textContent.toLowerCase().indexOf(input) > -1) {
+            matchFound = true;
+            break;
+          }
+        }
+        tableRows[i].style.display = matchFound ? "" : "none";
+      }
+
+      // Filter grid items
+      const gridItems = document.querySelectorAll("#gridView .grid-item");
+      gridItems.forEach(item => {
+        const textContent = item.textContent.toLowerCase();
+        item.style.display = textContent.indexOf(input) > -1 ? "block" : "none";
+      });
+    }
+  </script>
+</body>
+
+</html>

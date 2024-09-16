@@ -99,8 +99,8 @@ lines file.`)),
 func init() {
 	reportCmd.AddCommand(listCmd)
 
-	listCmd.Flags().StringVar(&listCmdFlags.DbURI, "db-uri", "sqlite://gowitness.sqlite3", "The location of an SQLite database containing gowitness results")
-	listCmd.Flags().StringVar(&listCmdFlags.JsonFile, "json-file", "", "The location of a JSON Lines file containing gowitness results (e.g., ./gowitness.jsonl). This flag takes precedence over --db-uri")
+	listCmd.Flags().StringVar(&listCmdFlags.DbURI, "db-uri", "sqlite://gowitness.sqlite3", "The location of a gowitness database")
+	listCmd.Flags().StringVar(&listCmdFlags.JsonFile, "json-file", "", "The location of a JSON Lines results file (e.g., ./gowitness.jsonl). This flag takes precedence over --db-uri")
 }
 
 func renderTable(results []*models.Result) {
