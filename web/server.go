@@ -16,14 +16,16 @@ import (
 
 // Server is a web server
 type Server struct {
+	Host           string
 	Port           int
 	DbUri          string
 	ScreenshotPath string
 }
 
 // NewServer returns a new server intance
-func NewServer(port int, dburi string, screenshotpath string) *Server {
+func NewServer(host string, port int, dburi string, screenshotpath string) *Server {
 	return &Server{
+		Host:           host,
 		Port:           port,
 		DbUri:          dburi,
 		ScreenshotPath: screenshotpath,
