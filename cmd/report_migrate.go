@@ -114,6 +114,8 @@ func mapV2ToV3(v2URL oldv2.URL) models.Result {
 		Filename:       v2URL.Filename,
 		IsPDF:          v2URL.IsPDF,
 		ProbedAt:       v2URL.CreatedAt,
+		HTML:           v2URL.DOM,
+		Screenshot:     v2URL.Screenshot,
 
 		TLS:          convertTLS(v2URL.TLS),
 		Technologies: convertTechnologies(v2URL.Technologies),

@@ -758,6 +758,9 @@ const docTemplate = `{
                 "response_reason": {
                     "type": "string"
                 },
+                "screenshot": {
+                    "type": "string"
+                },
                 "technologies": {
                     "type": "array",
                     "items": {

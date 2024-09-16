@@ -281,6 +281,8 @@ definitions:
         type: integer
       response_reason:
         type: string
+      screenshot:
+        type: string
       technologies:
         items:
           $ref: '#/definitions/models.Technology'

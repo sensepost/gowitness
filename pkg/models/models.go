@@ -26,6 +26,7 @@ type Result struct {
 	HTML           string    `json:"html" gorm:"index"`
 	Title          string    `json:"title" gorm:"index"`
 	PerceptionHash string    `json:"perception_hash" gorm:"index"`
+	Screenshot     string    `json:"screenshot"`
 
 	// Name of the screenshot file
 	Filename string `json:"file_name"`
