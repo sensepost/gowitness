@@ -2,6 +2,7 @@ package islazy
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -78,4 +79,35 @@ func FileExists(path string) bool {
 	_, err := os.Stat(path)
 
 	return !os.IsNotExist(err)
+}
+
+// MoveFile moves a file from a to b
+func MoveFile(sourcePath, destPath string) error {
+	if err := os.Rename(sourcePath, destPath); err == nil {
+		return nil
+	}
+
+	sourceFile, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(sourcePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
