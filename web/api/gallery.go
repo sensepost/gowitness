@@ -103,7 +103,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		Offset(offset).Preload("Technologies")
 
 	if perceptionSort {
-		query.Order("perception_hash DESC")
+		query.Order("perception_hash_group_id DESC")
 	}
 
 	if len(statusCodes) > 0 {

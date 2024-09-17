@@ -88,7 +88,8 @@
           <th onclick="sortTable(1)">URL</th>
           <th onclick="sortTable(2)">Title</th>
           <th onclick="sortTable(3)">Code</th>
-          <th onclick="sortTable(4)">Failed</th>
+          <th onclick="sortTable(4)">Group</th>
+          <th onclick="sortTable(5)">Failed</th>
         </tr>
       </thead>
       <tbody>
@@ -102,6 +103,7 @@
           <td><a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.URL}}</a></td>
           <td>{{.Title}}</td>
           <td class="{{statusClass .ResponseCode}}">{{.ResponseCode}}</td>
+          <td>{{.PerceptionHashGroupId}}</td>
           <td>{{if .Failed}}Yes{{else}}{{end}}</td>
         </tr>
         {{end}}

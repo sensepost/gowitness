@@ -94,7 +94,26 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			searchResults = appendResults(searchResults, resultIDs, headerResults, key)
+		case "p":
+			var perceptionHashResults []models.Result
+			if err := h.DB.Model(&models.Result{}).
+				Where("perception_hash_group_id in (?)", h.DB.Model(&models.Result{}).
+					Select("perception_hash_group_id").Distinct("perception_hash_group_id").
+					Where(
+						"perception_hash = ?",
+						// p: was used as the operatator trigger, but we need it
+						// back to resolve the group_id.
+						fmt.Sprintf("p:%s", value),
+					)).
+				Find(&perceptionHashResults).Error; err != nil {
+
+				log.Error("failed to get perception hash results", "err", err)
+				return
+			}
+
+			searchResults = appendResults(searchResults, resultIDs, perceptionHashResults, key)
 		}
+
 	}
 
 	// process any freetext if there is
@@ -128,7 +147,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 // and captures any remaining free-form text.
 func parseSearchQuery(query string) (map[string]string, string) {
 	// Operators that we know of and that will be parsed
-	operators := []string{"title", "tech", "header"}
+	operators := []string{"title", "tech", "header", "p"}
 	result := make(map[string]string)
 
 	var freeText string

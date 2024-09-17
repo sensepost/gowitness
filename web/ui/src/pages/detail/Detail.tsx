@@ -4,10 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, XIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
-import { Form, Link, useParams } from 'react-router-dom';
+import { Form, Link, useNavigate, useParams } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,11 +20,13 @@ import { getData } from './data';
 const ScreenshotDetailPage = () => {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('network');
   const [detail, setDetail] = useState<apitypes.detail>();
   const [duration, setDuration] = useState<string>('');
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   const { id } = useParams<{ id: string; }>();
   if (!id) throw new Error("Somehow, detail id is not defined");
@@ -61,6 +63,12 @@ const ScreenshotDetailPage = () => {
     window.URL.revokeObjectURL(link.href);
   };
 
+  const handleSearchRedirect = () => {
+    if (detail && detail.perception_hash) {
+      navigate(`/search?query=${detail.perception_hash}`);
+    }
+  };
+
   if (loading) return <WideSkeleton />;
   if (!detail) return;
 
@@ -85,31 +93,59 @@ const ScreenshotDetailPage = () => {
             </Button>
           </Link>
         </div>
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2Icon className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure you want to delete this result?</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete the screenshot and all associated data.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Form method="post">
-                <Button type="submit" variant="destructive" onClick={() => setIsDeleteDialogOpen(false)}>
-                  Delete
+        <div className="flex space-x-2">
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSearchRedirect}
+                >
+                  <ImagesIcon className="mr-2 h-4 w-4" />
+                  Visually Similar
                 </Button>
-              </Form>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Find visually similar screenshots</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      <Trash2Icon className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to delete this result?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. This will permanently delete the screenshot and all associated data.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Form method="post">
+                        <Button type="submit" variant="destructive" onClick={() => setIsDeleteDialogOpen(false)}>
+                          Delete
+                        </Button>
+                      </Form>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Delete this screenshot</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     );
   };
@@ -118,11 +154,35 @@ const ScreenshotDetailPage = () => {
     return (
       <Card>
         <CardContent className="p-0 relative group">
-          <img
-            src={api.endpoints.screenshot.path + "/" + detail.file_name}
-            alt={detail.title}
-            className="w-full h-auto object-cover transition-all duration-300 filter group-hover:scale-105 cursor-pointer rounded-lg"
-          />
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <button className="w-full relative">
+                <img
+                  src={api.endpoints.screenshot.path + "/" + detail.file_name}
+                  alt={detail.title}
+                  className="w-full h-auto object-cover transition-all duration-300 filter group-hover:brightness-75 rounded-lg"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <ZoomInIcon className="w-12 h-12 text-white" />
+                </div>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full p-0">
+              <div className="relative w-full h-full">
+                <img
+                  src={api.endpoints.screenshot.path + "/" + detail.file_name}
+                  alt={detail.title}
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-75 transition-all"
+                >
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
         <CardFooter className="flex justify-between items-center pt-4">
           <div>
