@@ -421,6 +421,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 
 		// write the screenshot to disk
 		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
+		result.Filename = islazy.LeftTrucate(result.Filename, 200)
 		if err := os.WriteFile(
 			filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
 			img, os.FileMode(0664),
