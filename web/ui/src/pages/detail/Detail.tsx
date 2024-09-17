@@ -254,22 +254,56 @@ const ScreenshotDetailPage = () => {
           <CardTitle>TLS Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <p><strong>Subject Name:</strong> {detail.tls.subject_name}</p>
-          <p><strong>Issuer:</strong> {detail.tls.issuer}</p>
-          <p><strong>Protocol:</strong> {detail.tls.protocol}</p>
-          <p><strong>Cipher:</strong> {detail.tls.cipher}</p>
-          <p><strong>Valid From:</strong> {format(new Date(detail.tls.valid_from), 'PPpp')}</p>
-          <p><strong>Valid To:</strong> {format(new Date(detail.tls.valid_to), 'PPpp')}</p>
-          <details className="mt-4">
-            <summary className="cursor-pointer font-semibold">
-              SAN List ({detail.tls.san_list.length})
-            </summary>
-            <ul className="list-disc pl-5">
-              {detail.tls.san_list.map((san, index) => (
-                <li key={index}>{san.value}</li>
-              ))}
-            </ul>
-          </details>
+          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {detail.tls.subject_name && (
+              <>
+                <dt className="font-semibold">Subject Name:</dt>
+                <dd>{detail.tls.subject_name}</dd>
+              </>
+            )}
+            {detail.tls.issuer && (
+              <>
+                <dt className="font-semibold">Issuer:</dt>
+                <dd>{detail.tls.issuer}</dd>
+              </>
+            )}
+            {detail.tls.protocol && (
+              <>
+                <dt className="font-semibold">Protocol:</dt>
+                <dd>{detail.tls.protocol}</dd>
+              </>
+            )}
+            {detail.tls.cipher && (
+              <>
+                <dt className="font-semibold">Cipher:</dt>
+                <dd>{detail.tls.cipher}</dd>
+              </>
+            )}
+            {detail.tls.subject_name && detail.tls.valid_from && (
+              <>
+                <dt className="font-semibold">Valid From:</dt>
+                <dd>{format(new Date(detail.tls.valid_from), 'PPpp')}</dd>
+              </>
+            )}
+            {detail.tls.subject_name && detail.tls.valid_to && (
+              <>
+                <dt className="font-semibold">Valid To:</dt>
+                <dd>{format(new Date(detail.tls.valid_to), 'PPpp')}</dd>
+              </>
+            )}
+          </dl>
+          {detail.tls.san_list && detail.tls.san_list.length > 0 && (
+            <details className="mt-4">
+              <summary className="cursor-pointer font-semibold">
+                SAN List ({detail.tls.san_list.length})
+              </summary>
+              <ul className="list-disc pl-5 mt-2">
+                {detail.tls.san_list.map((san, index) => (
+                  <li key={index}>{san.value}</li>
+                ))}
+              </ul>
+            </details>
+          )}
         </CardContent>
       </Card>
     );
