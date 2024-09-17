@@ -5,6 +5,7 @@ import (
 
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/database"
+	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"gorm.io/gorm"
 )
@@ -41,10 +42,13 @@ func (dw *DbWriter) Write(result *models.Result) error {
 
 	// Assign Group ID based on PerceptionHash
 	groupID, err := dw.AssignGroupID(result.PerceptionHash)
-	if err != nil {
-		return err
+	if err == nil {
+		result.PerceptionHashGroupId = groupID
+	} else {
+		// if we couldn't get a perception hash, thats okay. maybe the
+		// screenshot failed.
+		log.Debug("could not get group id for perception hash", "hash", result.PerceptionHash)
 	}
-	result.PerceptionHashGroupId = groupID
 
 	return dw.conn.Create(result).Error
 }
