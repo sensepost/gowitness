@@ -123,24 +123,24 @@ func (run *Runner) Run() {
 					if run.options.Logging.LogScanErrors {
 						run.log.Error("failed to witness target", "target", target, "err", err)
 					}
-				} else {
-
-					// assume that status code 0 means there was no information, so
-					// don't send anything to writers.
-					if result.ResponseCode == 0 {
-						if run.options.Logging.LogScanErrors {
-							run.log.Error("failed to witness target, status code was 0", "target", target)
-							continue
-						}
-					}
-
-					if err := run.runWriters(result); err != nil {
-						run.log.Error("failed to write result for target", "target", target, "err", err)
-					}
-
-					run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
-						"title", result.Title, "have-screenshot", !result.Failed)
+					continue
 				}
+
+				// assume that status code 0 means there was no information, so
+				// don't send anything to writers.
+				if result.ResponseCode == 0 {
+					if run.options.Logging.LogScanErrors {
+						run.log.Error("failed to witness target, status code was 0", "target", target)
+					}
+					continue
+				}
+
+				if err := run.runWriters(result); err != nil {
+					run.log.Error("failed to write result for target", "target", target, "err", err)
+				}
+
+				run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
+					"title", result.Title, "have-screenshot", !result.Failed)
 			}
 		}()
 	}
