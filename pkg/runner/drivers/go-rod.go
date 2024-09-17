@@ -56,12 +56,15 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 			Set("user-data-dir", userData).
 			Set("disable-features", "MediaRouter").
 			Set("disable-client-side-phishing-detection").
+			Set("explicitly-allowed-ports", restrictedPorts()).
 			Set("disable-default-apps").
 			Set("hide-scrollbars").
 			Set("mute-audio").
 			Set("no-default-browser-check").
 			Set("no-first-run").
 			Set("deny-permission-prompts")
+
+		log.Debug("go-rod chrome args", "args", chrmLauncher.FormatArgs())
 
 		// user specified Chrome
 		if opts.Chrome.Path != "" {
