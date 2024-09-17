@@ -283,7 +283,9 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 						body, err := proto.NetworkGetResponseBody{RequestID: e.RequestID}.Call(page)
 						if err != nil {
 							if run.options.Logging.LogScanErrors {
-								run.log.Error("could not get network request response body", "url", e.Response.URL, "err", err)
+								if run.options.Logging.LogScanErrors {
+									run.log.Error("could not get network request response body", "url", e.Response.URL, "err", err)
+								}
 								return
 							}
 						}
@@ -345,7 +347,9 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	// get cookies
 	cookies, err := page.Cookies([]string{})
 	if err != nil {
-		logger.Error("could not get cookies", "err", err)
+		if run.options.Logging.LogScanErrors {
+			logger.Error("could not get cookies", "err", err)
+		}
 	} else {
 		for _, cookie := range cookies {
 			result.Cookies = append(result.Cookies, models.Cookie{
@@ -368,7 +372,9 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	// get and set the last results info before triggering the
 	info, err := page.Info()
 	if err != nil {
-		logger.Error("could not get page info", "err", err)
+		if run.options.Logging.LogScanErrors {
+			logger.Error("could not get page info", "err", err)
+		}
 	} else {
 		result.Title = info.Title
 	}
@@ -376,7 +382,9 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	if !run.options.Scan.SkipHTML {
 		html, err := page.HTML()
 		if err != nil {
-			logger.Error("could not get page html", "err", err)
+			if run.options.Logging.LogScanErrors {
+				logger.Error("could not get page html", "err", err)
+			}
 		} else {
 			result.HTML = html
 		}

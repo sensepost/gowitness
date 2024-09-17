@@ -339,7 +339,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	// run any javascript we have
 	if run.options.Scan.JavaScript != "" {
 		if err := chromedp.Run(navigationCtx, chromedp.Evaluate(run.options.Scan.JavaScript, nil)); err != nil {
-			logger.Error("failed to evaluate user-provided javascript", "err", err)
+			return nil, fmt.Errorf("failed to evaluate user-provided javascript: %w", err)
 		}
 	}
 
@@ -350,7 +350,9 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 		cookies, err = storage.GetCookies().Do(ctx)
 		return err
 	})); err != nil {
-		logger.Error("could not get cookies", "err", err)
+		if run.options.Logging.LogScanErrors {
+			logger.Error("could not get cookies", "err", err)
+		}
 	} else {
 		for _, cookie := range cookies {
 			result.Cookies = append(result.Cookies, models.Cookie{
@@ -372,13 +374,17 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 
 	// grab the title
 	if err := chromedp.Run(navigationCtx, chromedp.Title(&result.Title)); err != nil {
-		logger.Error("could not get page title", "err", err)
+		if run.options.Logging.LogScanErrors {
+			logger.Error("could not get page title", "err", err)
+		}
 	}
 
 	// get html
 	if !run.options.Scan.SkipHTML {
 		if err := chromedp.Run(navigationCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
-			logger.Error("could not get page html", "err", err)
+			if run.options.Logging.LogScanErrors {
+				logger.Error("could not get page html", "err", err)
+			}
 		}
 	}
 
