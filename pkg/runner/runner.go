@@ -33,12 +33,16 @@ type Runner struct {
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the runner
 func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []writers.Writer) (*Runner, error) {
-	screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
-	if err != nil {
-		return nil, err
+	if !opts.Scan.ScreenshotSkipSave {
+		screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
+		if err != nil {
+			return nil, err
+		}
+		opts.Scan.ScreenshotPath = screenshotPath
+		logger.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
+	} else {
+		logger.Debug("not saving screenshots to disk")
 	}
-	opts.Scan.ScreenshotPath = screenshotPath
-	logger.Debug("final screenshot path", "screenshot-path", opts.Scan.ScreenshotPath)
 
 	// screenshot format check
 	if !islazy.SliceHasStr([]string{"jpeg", "png"}, opts.Scan.ScreenshotFormat) {

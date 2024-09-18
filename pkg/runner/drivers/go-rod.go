@@ -430,14 +430,16 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 			result.Screenshot = base64.StdEncoding.EncodeToString(img)
 		}
 
-		// write the screenshot to disk
-		result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
-		result.Filename = islazy.LeftTrucate(result.Filename, 200)
-		if err := os.WriteFile(
-			filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
-			img, os.FileMode(0664),
-		); err != nil {
-			return nil, fmt.Errorf("could not write screenshot to disk: %w", err)
+		// write the screenshot to disk if we have a path
+		if !run.options.Scan.ScreenshotSkipSave {
+			result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
+			result.Filename = islazy.LeftTrucate(result.Filename, 200)
+			if err := os.WriteFile(
+				filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
+				img, os.FileMode(0664),
+			); err != nil {
+				return nil, fmt.Errorf("could not write screenshot to disk: %w", err)
+			}
 		}
 
 		// calculate and set the perception hash

@@ -70,7 +70,9 @@ type Scan struct {
 	UriFilter []string
 	// Don't write HTML response content
 	SkipHTML bool
-	// ScreenshotPath is the path where screenshot images will be stored
+	// ScreenshotPath is the path where screenshot images will be stored.
+	// An empty value means drivers will not write screenshots to disk. In
+	// that case, you'd need to specify writer saves.
 	ScreenshotPath string
 	// ScreenshotFormat to save as
 	ScreenshotFormat string
@@ -78,6 +80,8 @@ type Scan struct {
 	ScreenshotFullPage bool
 	// ScreenshotToWriter passes screenshots as a model property to writers
 	ScreenshotToWriter bool
+	// ScreenshotSkipSave skips saving screenshots to disk
+	ScreenshotSkipSave bool
 	// JavaScript to evaluate on every page
 	JavaScript     string
 	JavaScriptFile string

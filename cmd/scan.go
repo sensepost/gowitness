@@ -106,7 +106,7 @@ flags.`)),
 		}
 
 		if len(scanWriters) == 0 {
-			log.Warn("no writers have been configured. only saving screenshots. add writers using --write-* flags")
+			log.Warn("no writers have been configured. to persist probe results, add writers using --write-* flags")
 		}
 
 		// Get the runner up. Basically, all of the subcommands will use this.
@@ -135,6 +135,7 @@ func init() {
 	scanCmd.PersistentFlags().StringVarP(&opts.Scan.ScreenshotPath, "screenshot-path", "s", "./screenshots", "Path to store screenshots")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.ScreenshotFormat, "screenshot-format", "jpeg", "Format to save screenshots as. Valid formats are: jpeg, png")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotFullPage, "screenshot-fullpage", false, "Do full-page screenshots, instead of just the viewport")
+	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotSkipSave, "screenshot-skip-save", false, "Do not save screenshots to the screenshot-path (useful together with --write-screenshots)")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScript, "javascript", "", "A JavaScript function to evaluate on every page, before a screenshot. Note: It must be a JavaScript function! e.g., () => console.log('gowitness');")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScriptFile, "javascript-file", "", "A file containing a JavaScript function to evaluate on every page, before a screenshot. See --javascript")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SaveContent, "save-content", false, "Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size")

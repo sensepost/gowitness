@@ -302,6 +302,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/submit/single": {
+            "post": {
+                "description": "Starts a new probing routine for a URL and options, returning the results when done.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Results"
+                ],
+                "summary": "Submit a single URL for probing",
+                "parameters": [
+                    {
+                        "description": "The URL scanning request object",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.submitSingleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Probing started",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/wappalyzer": {
             "get": {
                 "description": "Get all of the available wappalyzer data.",
@@ -549,6 +583,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.submitSingleRequest": {
+            "type": "object",
+            "properties": {
+                "options": {
+                    "$ref": "#/definitions/api.submitRequestOptions"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "api.technologyListResponse": {
             "type": "object",
             "properties": {
@@ -745,6 +790,9 @@ const docTemplate = `{
                 },
                 "perception_hash": {
                     "type": "string"
+                },
+                "perception_hash_group_id": {
+                    "type": "integer"
                 },
                 "probed_at": {
                     "type": "string"

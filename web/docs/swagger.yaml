@@ -142,6 +142,13 @@ definitions:
       window_y:
         type: integer
     type: object
+  api.submitSingleRequest:
+    properties:
+      options:
+        $ref: '#/definitions/api.submitRequestOptions'
+      url:
+        type: string
+    type: object
   api.technologyListResponse:
     properties:
       technologies:
@@ -273,6 +280,8 @@ definitions:
         type: array
       perception_hash:
         type: string
+      perception_hash_group_id:
+        type: integer
       probed_at:
         type: string
       protocol:
@@ -532,6 +541,29 @@ paths:
           schema:
             type: string
       summary: Submit URL's for scanning
+      tags:
+      - Results
+  /submit/single:
+    post:
+      consumes:
+      - application/json
+      description: Starts a new probing routine for a URL and options, returning the
+        results when done.
+      parameters:
+      - description: The URL scanning request object
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/api.submitSingleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Probing started
+          schema:
+            type: string
+      summary: Submit a single URL for probing
       tags:
       - Results
   /wappalyzer:

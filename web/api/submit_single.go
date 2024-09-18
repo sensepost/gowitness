@@ -11,44 +11,37 @@ import (
 	"github.com/sensepost/gowitness/pkg/writers"
 )
 
-type submitRequest struct {
-	URLs    []string              `json:"urls"`
+type submitSingleRequest struct {
+	URL     string                `json:"url"`
 	Options *submitRequestOptions `json:"options"`
 }
 
-type submitRequestOptions struct {
-	X         int    `json:"window_x"`
-	Y         int    `json:"window_y"`
-	UserAgent string `json:"user_agent"`
-	Timeout   int    `json:"timeout"`
-	Format    string `json:"format"`
-}
-
-// SubmitHandler submits URL's for scans, writing them to the database.
+// SubmitSingleHandler submits a URL to scan, returning the result.
 //
-//	@Summary		Submit URL's for scanning
-//	@Description	Starts a new scanning routine for a list of URL's and options, writing results to the database.
+//	@Summary		Submit a single URL for probing
+//	@Description	Starts a new probing routine for a URL and options, returning the results when done.
 //	@Tags			Results
 //	@Accept			json
 //	@Produce		json
-//	@Param			query	body		submitRequest	true	"The URL scanning request object"
-//	@Success		200		{string}	string			"Probing started"
-//	@Router			/submit [post]
-func (h *ApiHandler) SubmitHandler(w http.ResponseWriter, r *http.Request) {
-	var request submitRequest
+//	@Param			query	body		submitSingleRequest	true	"The URL scanning request object"
+//	@Success		200		{string}	string				"Probing started"
+//	@Router			/submit/single [post]
+func (h *ApiHandler) SubmitSingleHandler(w http.ResponseWriter, r *http.Request) {
+	var request submitSingleRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Error("failed to read json request", "err", err)
 		http.Error(w, "Error reading JSON request", http.StatusInternalServerError)
 		return
 	}
 
-	if len(request.URLs) == 0 {
-		http.Error(w, "No URLs provided", http.StatusBadRequest)
+	if request.URL == "" {
+		http.Error(w, "No URL provided", http.StatusBadRequest)
 		return
 	}
 
 	options := runner.NewDefaultOptions()
-	options.Scan.ScreenshotPath = h.ScreenshotPath
+	options.Scan.ScreenshotToWriter = true
+	options.Scan.ScreenshotSkipSave = true
 
 	// Override default values with request options
 	if request.Options != nil {
@@ -69,9 +62,9 @@ func (h *ApiHandler) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writer, err := writers.NewDbWriter(h.DbURI, false)
+	writer, err := writers.NewMemoryWriter(1)
 	if err != nil {
-		http.Error(w, "Error connecting to DB for writer", http.StatusInternalServerError)
+		http.Error(w, "Error getting a memory writer", http.StatusInternalServerError)
 		return
 	}
 
@@ -90,29 +83,19 @@ func (h *ApiHandler) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// have everything we need! start ther runner goroutine
-	go dispatchRunner(runner, request.URLs)
+	go func() {
+		runner.Targets <- request.URL
+		close(runner.Targets)
+	}()
 
-	response := `Probing started`
-	jsonData, err := json.Marshal(response)
+	runner.Run()
+	runner.Close()
+
+	jsonData, err := json.Marshal(writer.GetLatest())
 	if err != nil {
 		http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
 		return
 	}
 
 	w.Write(jsonData)
-}
-
-// dispatchRunner run's a runner in a separate goroutine
-func dispatchRunner(runner *runner.Runner, targets []string) {
-	// feed in targets
-	go func() {
-		for _, url := range targets {
-			runner.Targets <- url
-		}
-		close(runner.Targets)
-	}()
-
-	runner.Run()
-	runner.Close()
 }

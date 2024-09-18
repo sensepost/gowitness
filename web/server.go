@@ -74,6 +74,7 @@ func (s *Server) Run() {
 		r.Get("/wappalyzer", apih.WappalyzerHandler)
 		r.Post("/search", apih.SearchHandler)
 		r.Post("/submit", apih.SubmitHandler)
+		r.Post("/submit/single", apih.SubmitSingleHandler)
 
 		r.Get("/results/gallery", apih.GalleryHandler)
 		r.Get("/results/list", apih.ListHandler)
