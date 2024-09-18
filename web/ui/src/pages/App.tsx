@@ -15,6 +15,10 @@ const App = () => {
         </main>
         <footer className="flex justify-end p-4">
           <p className="text-sm text-muted-foreground">
+            <a href="/swagger/index.html" className="underline">
+              API Documentation
+            </a>
+            {" "}|
             Made with ♥ by <a href="https://github.com/leonjza" target="_blank" rel="noopener noreferrer" className="underline">@leonjza</a>
           </p>
         </footer>
