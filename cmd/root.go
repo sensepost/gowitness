@@ -47,6 +47,8 @@ func Execute() {
 
 		if cmd != "" {
 			v += fmt.Sprintf("An error occured running the `%s` command\n", cmd)
+		} else {
+			v += "An error has occured. "
 		}
 
 		v += "The error was:\n\n" + fmt.Sprintf("```%s```", err)
