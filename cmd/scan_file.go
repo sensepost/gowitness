@@ -47,7 +47,7 @@ flags.`)),
 			return errors.New("a source must be specified")
 		}
 
-		if !islazy.FileExists(fileCmdOptions.Source) {
+		if fileCmdOptions.Source != "-" && !islazy.FileExists(fileCmdOptions.Source) {
 			return errors.New("source is not readable")
 		}
 
