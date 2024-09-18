@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/sensepost/gowitness/internal/islazy"
+	"github.com/sensepost/gowitness/pkg/log"
 )
 
 // FileReader is a reader that expects a file with targets that
@@ -80,58 +83,86 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 
 	parsedURL, err := url.Parse(candidate)
 	if err != nil {
-		// invalid url, just bail
+		// invalid url, return empty slice
 		return urls
 	}
 
-	// if the candidate already has a protocol defined, and there are no ports
-	// to target, just return.
-	// http here covers both http and https
-	if parsedURL.Scheme != "" && parsedURL.Host != "" {
-		// simplest return. no scheme needed, no ports needed
-		if len(ports) == 0 {
-			urls = append(urls, candidate)
+	hasScheme := parsedURL.Scheme != ""
+	hasPort := parsedURL.Port() != ""
+	hostname := parsedURL.Hostname()
+
+	// if hostname is not set we may have rubbish input. try and "fix" it
+	if hostname == "" {
+		// is it hostname/path?
+		if idx := strings.Index(candidate, "/"); idx != -1 {
+			parsedURL.Host = candidate[:idx]
+			parsedURL.Path = candidate[idx:]
+			hostname = parsedURL.Hostname()
+		} else {
+			// its just a hostname then?
+			parsedURL.Host = candidate
+			parsedURL.Path = ""
+			hostname = candidate
+		}
+
+		// at this point if hostname is still "", then just skip it entirely
+		if hostname == "" {
+			log.Debug("could not parse candidate to something usable", "candidate", candidate)
 			return urls
-		} else {
-			for _, port := range ports {
-				parsedURL.Host = fmt.Sprintf("%s:%d", parsedURL.Hostname(), port)
-				urls = append(urls, parsedURL.String())
-			}
 		}
 	}
 
-	// add a protocol, but respect the option to not add
-	// either of http and https
-	if !fr.Options.NoHTTP {
-		if len(ports) > 0 {
-			for _, port := range ports {
-				rawURL := fmt.Sprintf("http://%s", candidate)
-				parsedURL, err := url.Parse(rawURL)
-				if err != nil {
-					continue
-				}
-				parsedURL.Host = fmt.Sprintf("%s:%d", parsedURL.Hostname(), port)
-				urls = append(urls, parsedURL.String())
-			}
-		} else {
-			// just add the basic http URL
-			urls = append(urls, "http://"+candidate)
+	if hasScheme && hasPort {
+		// return the candidate as is
+		urls = append(urls, parsedURL.String())
+		return urls
+	}
+
+	// determine schemes to apply
+	var schemes []string
+	if hasScheme {
+		schemes = append(schemes, parsedURL.Scheme)
+	} else {
+		if !fr.Options.NoHTTP {
+			schemes = append(schemes, "http")
+		}
+		if !fr.Options.NoHTTPS {
+			schemes = append(schemes, "https")
 		}
 	}
 
-	if !fr.Options.NoHTTPS {
-		if len(ports) > 0 {
-			for _, port := range ports {
-				rawURL := fmt.Sprintf("https://%s", candidate)
-				parsedURL, err := url.Parse(rawURL)
-				if err != nil {
-					continue
+	// determine ports to use
+	var targetPorts []int
+	if hasPort {
+		port, err := strconv.Atoi(parsedURL.Port())
+		if err == nil { // just ignore it
+			targetPorts = append(targetPorts, port)
+		}
+	} else {
+		// If no port is specified, use the provided ports
+		targetPorts = ports
+	}
+
+	// generate the urls
+	for _, scheme := range schemes {
+		for _, port := range targetPorts {
+			host := hostname
+
+			if port != 0 {
+				if isIPv6(hostname) {
+					host = fmt.Sprintf("[%s]:%d", hostname, port)
+				} else {
+					host = fmt.Sprintf("%s:%d", hostname, port)
 				}
-				parsedURL.Host = fmt.Sprintf("%s:%d", parsedURL.Hostname(), port)
-				urls = append(urls, parsedURL.String())
 			}
-		} else {
-			urls = append(urls, "https://"+candidate)
+
+			fullURL := url.URL{
+				Scheme: scheme,
+				Host:   host,
+				Path:   parsedURL.Path,
+			}
+
+			urls = append(urls, fullURL.String())
 		}
 	}
 
@@ -155,4 +186,8 @@ func (fr *FileReader) ports() []int {
 	}
 
 	return islazy.UniqueIntSlice(ports)
+}
+
+func isIPv6(hostname string) bool {
+	return len(hostname) > 0 && hostname[0] == '[' && hostname[len(hostname)-1] == ']'
 }
