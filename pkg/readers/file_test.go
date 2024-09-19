@@ -39,6 +39,15 @@ func TestUrlsFor(t *testing.T) {
 			},
 		},
 		{
+			name:      "Test with IP and port with spaces",
+			candidate: "   192.168.1.1:8080   ",
+			ports:     []int{80, 443, 8443},
+			want: []string{
+				"http://192.168.1.1:8080",
+				"https://192.168.1.1:8080",
+			},
+		},
+		{
 			name:      "Test with scheme, IP and port",
 			candidate: "http://192.168.1.1:8080",
 			ports:     []int{80, 443, 8443},

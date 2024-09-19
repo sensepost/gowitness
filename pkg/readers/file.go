@@ -79,6 +79,10 @@ func (fr *FileReader) Read(ch chan<- string) error {
 // If any ports configuration exists, those will also be added as candidates.
 func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 	var urls []string
+
+	// trim any spaces
+	candidate = strings.TrimSpace(candidate)
+
 	// check if we got a scheme, add
 	hasScheme := strings.Contains(candidate, "://")
 	if !hasScheme {
