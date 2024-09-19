@@ -13,7 +13,7 @@ PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 linux/arm windows
 CGO := CGO_ENABLED=0
 
 # Default target
-default: clean frontend build integrity
+default: clean test frontend build integrity
 
 # Clean up build artifacts
 clean:
@@ -29,6 +29,10 @@ frontend: check-npm
 check-npm:
 	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is not installed. Please install npm first."; exit 1; }
 
+# Run any tests
+test:
+	@echo "Running tests..."
+	go test ./...
 
 # Build for all platforms
 build: $(PLATFORMS)

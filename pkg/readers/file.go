@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/sensepost/gowitness/internal/islazy"
-	"github.com/sensepost/gowitness/pkg/log"
 )
 
 // FileReader is a reader that expects a file with targets that
@@ -80,6 +79,11 @@ func (fr *FileReader) Read(ch chan<- string) error {
 // If any ports configuration exists, those will also be added as candidates.
 func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 	var urls []string
+	// check if we got a scheme, add
+	hasScheme := strings.Contains(candidate, "://")
+	if !hasScheme {
+		candidate = "http://" + candidate
+	}
 
 	parsedURL, err := url.Parse(candidate)
 	if err != nil {
@@ -87,7 +91,6 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 		return urls
 	}
 
-	hasScheme := parsedURL.Scheme != ""
 	hasPort := parsedURL.Port() != ""
 	hostname := parsedURL.Hostname()
 
@@ -107,7 +110,6 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 
 		// at this point if hostname is still "", then just skip it entirely
 		if hostname == "" {
-			log.Debug("could not parse candidate to something usable", "candidate", candidate)
 			return urls
 		}
 	}
