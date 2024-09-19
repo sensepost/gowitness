@@ -30,7 +30,13 @@ The main goal of `gowitness` is to take website screenshots (**and do that well!
 
 ## quick start
 
-Grab a platform specific release binary, or compile from source. Then, scan your first target writing the results to a SQLite database and the screenshot to `./screenshots` with:
+There are a few ways to get gowitness, the simplest (assuming your `$GOBIN` path is in your shell `$PATH`) will be to use `go install`:
+
+```text
+go install github.com/sensepost/gowitness@latest
+```
+
+Otherwise, grab a platform specific release binary or compile from source. Then, scan your first target writing the results to a SQLite database and the screenshot to `./screenshots` with:
 
 ```text
 gowitness scan single --url "https://sensepost.com" --write-db
