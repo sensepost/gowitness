@@ -160,6 +160,7 @@ interface detail {
   is_pdf: boolean;
   failed: boolean;
   failed_reason: string;
+  screenshot: string;
   tls: tls;
   technologies: technology[];
   headers: header[];

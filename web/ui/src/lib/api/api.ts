@@ -54,6 +54,10 @@ const endpoints = {
   submit: {
     path: `/submit`,
     returnas: "" as string
+  },
+  submitsingle: {
+    path: `/submit/single`,
+    returnas: {} as detail
   }
 };
 

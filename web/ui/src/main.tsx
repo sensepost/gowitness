@@ -16,7 +16,7 @@ import JobSubmissionPage from '@/pages/submit/Submit';
 import { searchAction } from '@/pages/search/action';
 import { searchLoader } from '@/pages/search/loader';
 import { deleteAction } from '@/pages/detail/actions';
-import { submitAction } from '@/pages/submit/action';
+import { submitImmediateAction, submitJobAction } from '@/pages/submit/action';
 
 const router = createBrowserRouter([
   {
@@ -50,7 +50,20 @@ const router = createBrowserRouter([
       {
         path: 'submit',
         element: <JobSubmissionPage />,
-        action: submitAction,
+        action: async ({ request }) => {
+          const formData = await request.formData();
+          const action = formData.get('action');
+
+          switch (action) {
+            case 'job':
+              return submitJobAction({ formData });
+            case 'immediate':
+              return submitImmediateAction({ formData });
+
+            default:
+              throw new Error('unknown action for job submit route');
+          }
+        },
       },
     ]
   }
