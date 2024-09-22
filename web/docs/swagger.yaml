@@ -131,6 +131,8 @@ definitions:
     type: object
   api.submitRequestOptions:
     properties:
+      delay:
+        type: integer
       format:
         type: string
       timeout:
@@ -560,9 +562,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: Probing started
+          description: The URL Result object
           schema:
-            type: string
+            $ref: '#/definitions/models.Result'
       summary: Submit a single URL for probing
       tags:
       - Results

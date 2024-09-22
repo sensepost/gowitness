@@ -21,6 +21,7 @@ type submitRequestOptions struct {
 	Y         int    `json:"window_y"`
 	UserAgent string `json:"user_agent"`
 	Timeout   int    `json:"timeout"`
+	Delay     int    `json:"delay"`
 	Format    string `json:"format"`
 }
 
@@ -63,6 +64,9 @@ func (h *ApiHandler) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if request.Options.Timeout != 0 {
 			options.Scan.Timeout = request.Options.Timeout
+		}
+		if request.Options.Delay != 0 {
+			options.Scan.Delay = request.Options.Delay
 		}
 		if request.Options.Format != "" {
 			options.Scan.ScreenshotFormat = request.Options.Format

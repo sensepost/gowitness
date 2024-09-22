@@ -328,9 +328,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Probing started",
+                        "description": "The URL Result object",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.Result"
                         }
                     }
                 }
@@ -566,6 +566,9 @@ const docTemplate = `{
         "api.submitRequestOptions": {
             "type": "object",
             "properties": {
+                "delay": {
+                    "type": "integer"
+                },
                 "format": {
                     "type": "string"
                 },
