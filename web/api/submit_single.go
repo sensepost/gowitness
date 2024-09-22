@@ -24,7 +24,7 @@ type submitSingleRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			query	body		submitSingleRequest	true	"The URL scanning request object"
-//	@Success		200		{string}	string				"Probing started"
+//	@Success		200		{object}	models.Result		"The URL Result object"
 //	@Router			/submit/single [post]
 func (h *ApiHandler) SubmitSingleHandler(w http.ResponseWriter, r *http.Request) {
 	var request submitSingleRequest
@@ -56,6 +56,9 @@ func (h *ApiHandler) SubmitSingleHandler(w http.ResponseWriter, r *http.Request)
 		}
 		if request.Options.Timeout != 0 {
 			options.Scan.Timeout = request.Options.Timeout
+		}
+		if request.Options.Delay != 0 {
+			options.Scan.Delay = request.Options.Delay
 		}
 		if request.Options.Format != "" {
 			options.Scan.ScreenshotFormat = request.Options.Format
