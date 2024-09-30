@@ -2,9 +2,9 @@ name: Docker build & Push
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   release:
-    types: [ published ]
+    types: [published]
   workflow_dispatch:
 
 jobs:
