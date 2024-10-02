@@ -174,9 +174,24 @@ const ScreenshotDetailPage = () => {
                   alt={detail.title}
                   className="w-full h-full object-contain"
                 />
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/100 to-transparent p-4 text-white">
+                  <a
+                    href={detail.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-semibold hover:underline flex items-center mb-2"
+                  >
+                    {detail.url}
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                  <div className="flex items-center text-sm opacity-80">
+                    <ClockIcon className="mr-2 h-4 w-4" />
+                    Captured on {format(new Date(detail.probed_at), "PPpp")}
+                  </div>
+                </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-75 transition-all"
+                  className="absolute top-4 right-4 p-2 bg-black/50 rounded-full text-white hover:bg-black/75 transition-all"
                 >
                 </button>
               </div>
