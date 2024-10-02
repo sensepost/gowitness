@@ -66,8 +66,9 @@ func SafeFileName(s string) string {
 
 	for _, r := range s {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' {
-
 			builder.WriteRune(r)
+		} else {
+			builder.WriteRune('-')
 		}
 	}
 
