@@ -31,6 +31,10 @@ type searchResult struct {
 	MatchedFields  []string `json:"matched_fields"`
 }
 
+// searchOperators are the operators we support. everything else is
+// "free text"
+var searchOperators = []string{"title", "body", "tech", "header", "p"}
+
 // SearchHandler handles search
 //
 //	@Summary		Search for results
@@ -38,7 +42,7 @@ type searchResult struct {
 //	@Tags			Results
 //	@Accept			json
 //	@Produce		json
-//	@Param			query	body		searchRequest	true	"The search term to search for. Supports search operators: `title:`, `tech:`, `header:`"
+//	@Param			query	body		searchRequest	true	"The search term to search for. Supports search operators: `title:`, `tech:`, `header:`, `body:`, `p:`"
 //	@Success		200		{object}	searchResult
 //	@Router			/search [post]
 func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +85,16 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			searchResults = appendResults(searchResults, resultIDs, techResults, key)
+
+		case "body":
+			var bodyResults []models.Result
+			if err := h.DB.Model(&models.Result{}).
+				Where("LOWER(html) LIKE ?", lowerValue).Find(&bodyResults).Error; err != nil {
+				log.Error("failed to get html results", "err", err)
+				return
+			}
+			searchResults = appendResults(searchResults, resultIDs, bodyResults, key)
+
 		case "header":
 			var headerResults []models.Result
 			if err := h.DB.Model(&models.Result{}).
@@ -147,7 +161,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 // and captures any remaining free-form text.
 func parseSearchQuery(query string) (map[string]string, string) {
 	// Operators that we know of and that will be parsed
-	operators := []string{"title", "tech", "header", "p"}
+
 	result := make(map[string]string)
 
 	var freeText string
@@ -162,7 +176,7 @@ func parseSearchQuery(query string) (map[string]string, string) {
 		// Check if the part contains an operator (e.g., title: or tech:)
 		if index := strings.Index(part, ":"); index != -1 {
 			operator := part[:index]
-			if slices.Contains(operators, operator) {
+			if slices.Contains(searchOperators, operator) {
 				// If we are processing an operator, finalize the previous key-value pair
 				if currentKey != "" {
 					result[currentKey] = strings.Join(currentValue, " ")

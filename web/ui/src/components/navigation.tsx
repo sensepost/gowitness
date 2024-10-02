@@ -16,6 +16,7 @@ const navs = [
 
 const searchOperators = [
   { key: 'title', description: 'search by title' },
+  { key: 'body', description: 'search by html body' },
   { key: 'tech', description: 'search by technology' },
   { key: 'header', description: 'search by header' },
   { key: 'p', description: 'search by perception hash' },
