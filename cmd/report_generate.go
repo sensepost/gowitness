@@ -61,8 +61,8 @@ The output file is a zip archive with an index.html file containing the report.
 		var results = []models.Result{}
 
 		// if we have a json path, use that
-		if listCmdFlags.JsonFile != "" {
-			file, err := os.Open(listCmdFlags.JsonFile)
+		if generateCmdFlags.JsonFile != "" {
+			file, err := os.Open(generateCmdFlags.JsonFile)
 			if err != nil {
 				log.Fatal("could not open JSON Lines file", "err", err)
 			}
@@ -102,7 +102,7 @@ The output file is a zip archive with an index.html file containing the report.
 		}
 
 		// but, db-uri is the default
-		conn, err := database.Connection(listCmdFlags.DbURI, false)
+		conn, err := database.Connection(generateCmdFlags.DbURI, false)
 		if err != nil {
 			log.Fatal("could not connect to database", "err", err)
 		}

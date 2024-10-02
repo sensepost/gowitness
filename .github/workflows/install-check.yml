@@ -30,4 +30,8 @@ jobs:
 
       - name: Verify Installation
         run: |
-          gowitness scan single -u https://sensepost.com --write-stdout
+          gowitness scan single -u https://sensepost.com --write-jsonl
+
+      - name: Generate a static report
+        run: |
+          gowitness report generate --json-file gowitness.jsonl
