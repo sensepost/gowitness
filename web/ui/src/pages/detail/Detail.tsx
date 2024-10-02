@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, XIcon } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, XIcon, CopyIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
 import { Form, Link, useNavigate, useParams } from 'react-router-dom';
@@ -210,19 +210,25 @@ const ScreenshotDetailPage = () => {
                 View HTML
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
+            <DialogContent className="max-w-[90vw] w-full max-h-[90vh]">
               <DialogHeader>
-                <DialogTitle>HTML Content</DialogTitle>
-                <DialogDescription>
-                  The HTML content of the page is shown below.
-                </DialogDescription>
+                <DialogTitle>
+                  HTML Content
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-4"
+                    onClick={() => copyToClipboard(detail.html, 'HTML Source')}
+                  >
+                    <CopyIcon className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
+                </DialogTitle>
               </DialogHeader>
-              <ScrollArea className="h-[350px] w-full rounded-md border p-4">
+              <ScrollArea className="h-[400px] w-full rounded-md border p-4">
                 <pre className="text-sm">{detail.html}</pre>
               </ScrollArea>
-              <Button onClick={() => copyToClipboard(detail.html, 'HTML Source')}>
-                Copy HTML Content
-              </Button>
+
             </DialogContent>
           </Dialog>
         </CardHeader>
