@@ -31,9 +31,33 @@ const ScreenshotDetailPage = () => {
   const { id } = useParams<{ id: string; }>();
   if (!id) throw new Error("Somehow, detail id is not defined");
 
+  const currentId: number = parseInt(id, 10);
+
   useEffect(() => {
     getData(setLoading, setDetail, setWappalyzer, setDuration, id);
   }, [id]);
+
+  // handle arrowleft and arrowright events
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        if (currentId > 1) {
+          navigate(`/screenshot/${currentId - 1}`);
+        }
+      }
+
+      if (event.key === 'ArrowRight') {
+        navigate(`/screenshot/${currentId + 1}`);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // cleanup when this component is no longer mounted
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentId, navigate]);
 
   const getLogTypeColor = (type: string) => {
     if (type === 'console.warning' || type === 'console.warn') return "bg-yellow-500 text-black";
@@ -76,17 +100,17 @@ const ScreenshotDetailPage = () => {
   const timeAgo = formatDistanceToNow(probedDate, { addSuffix: true });
   const rawDate = format(probedDate, "PPpp");
 
-  const getNavigation = (id: string) => {
+  const getNavigation = () => {
     return (
       <div className="flex justify-between items-center">
         <div className="flex space-x-2">
-          <Link to={"/screenshot/" + (parseInt(id) - 1).toString()}>
-            <Button variant="outline" size="sm" disabled={parseInt(id) <= 1}>
+          <Link to={"/screenshot/" + (currentId - 1)} >
+            <Button variant="outline" size="sm" disabled={currentId <= 1}>
               <ChevronLeft className="mr-2 h-4 w-4" />
               Previous
             </Button>
           </Link>
-          <Link to={"/screenshot/" + (parseInt(id) + 1).toString()}>
+          <Link to={"/screenshot/" + (currentId + 1)}>
             <Button variant="outline" size="sm">
               Next
               <ChevronRight className="ml-2 h-4 w-4" />
@@ -660,7 +684,7 @@ const ScreenshotDetailPage = () => {
 
   return (
     <div className="space-y-6">
-      {getNavigation(id)}
+      {getNavigation()}
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Left Column */}
         <div className="w-full lg:w-2/5 space-y-4">
