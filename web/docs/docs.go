@@ -226,7 +226,7 @@ const docTemplate = `{
                 "summary": "Search for results",
                 "parameters": [
                     {
-                        "description": "The search term to search for. Supports search operators: ` + "`" + `title:` + "`" + `, ` + "`" + `tech:` + "`" + `, ` + "`" + `header:` + "`" + `",
+                        "description": "The search term to search for. Supports search operators: ` + "`" + `title:` + "`" + `, ` + "`" + `tech:` + "`" + `, ` + "`" + `header:` + "`" + `, ` + "`" + `body:` + "`" + `, ` + "`" + `p:` + "`" + `",
                         "name": "query",
                         "in": "body",
                         "required": true,
@@ -390,6 +390,9 @@ const docTemplate = `{
                 "response_code": {
                     "type": "integer"
                 },
+                "screenshot": {
+                    "type": "string"
+                },
                 "technologies": {
                     "type": "array",
                     "items": {
@@ -502,6 +505,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "response_reason": {
+                    "type": "string"
+                },
+                "screenshot": {
                     "type": "string"
                 },
                 "title": {

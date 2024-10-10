@@ -16,6 +16,8 @@ definitions:
         type: string
       response_code:
         type: integer
+      screenshot:
+        type: string
       technologies:
         items:
           type: string
@@ -90,6 +92,8 @@ definitions:
       response_code:
         type: integer
       response_reason:
+        type: string
+      screenshot:
         type: string
       title:
         type: string
@@ -491,7 +495,7 @@ paths:
       description: Searches for results based on free form text, or operators.
       parameters:
       - description: 'The search term to search for. Supports search operators: `title:`,
-          `tech:`, `header:`'
+          `tech:`, `header:`, `body:`, `p:`'
         in: body
         name: query
         required: true
