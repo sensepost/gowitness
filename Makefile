@@ -13,7 +13,7 @@ PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 linux/arm windows
 CGO := CGO_ENABLED=0
 
 # Default target
-default: clean test frontend build integrity
+default: clean test frontend api-doc build integrity
 
 # Clean up build artifacts
 clean:
@@ -28,6 +28,11 @@ frontend: check-npm
 # Check if npm is installed
 check-npm:
 	@command -v npm >/dev/null 2>&1 || { echo >&2 "npm is not installed. Please install npm first."; exit 1; }
+
+# Generate a swagger.json used for the api documentation
+api-doc:
+	~/go/bin/swag i --exclude ./web/ui --output web/docs
+	~/go/bin/swag f
 
 # Run any tests
 test:
