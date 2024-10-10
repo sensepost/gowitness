@@ -18,7 +18,7 @@ type ApiHandler struct {
 func NewApiHandler(uri string, screenshotPath string) (*ApiHandler, error) {
 
 	// get a db handle
-	conn, err := database.Connection(uri, false)
+	conn, err := database.Connection(uri, true, false)
 	if err != nil {
 		return nil, err
 	}

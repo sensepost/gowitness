@@ -22,7 +22,7 @@ type DbWriter struct {
 
 // NewDbWriter initialises a database writer
 func NewDbWriter(uri string, debug bool) (*DbWriter, error) {
-	c, err := database.Connection(uri, debug)
+	c, err := database.Connection(uri, false, debug)
 	if err != nil {
 		return nil, err
 	}

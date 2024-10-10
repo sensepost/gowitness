@@ -115,7 +115,7 @@ func init() {
 
 func convertFromDbTo(from string, writer writers.Writer) error {
 	var results = []*models.Result{}
-	conn, err := database.Connection(fmt.Sprintf("sqlite://%s", from), false)
+	conn, err := database.Connection(fmt.Sprintf("sqlite://%s", from), true, false)
 	if err != nil {
 		return err
 	}

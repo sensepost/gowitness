@@ -102,7 +102,7 @@ The output file is a zip archive with an index.html file containing the report.
 		}
 
 		// but, db-uri is the default
-		conn, err := database.Connection(generateCmdFlags.DbURI, false)
+		conn, err := database.Connection(generateCmdFlags.DbURI, true, false)
 		if err != nil {
 			log.Fatal("could not connect to database", "err", err)
 		}

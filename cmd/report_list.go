@@ -81,7 +81,7 @@ lines file.`)),
 		}
 
 		// db-uri is the default
-		conn, err := database.Connection(listCmdFlags.DbURI, false)
+		conn, err := database.Connection(listCmdFlags.DbURI, true, false)
 		if err != nil {
 			log.Error("could not connect to database", "err", err)
 			return
