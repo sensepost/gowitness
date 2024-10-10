@@ -28,7 +28,10 @@ export default function SearchResultsPage() {
             <Card className="flex flex-col h-full transition-shadow hover:shadow-lg">
               <CardHeader className="relative p-0">
                 <img
-                  src={api.endpoints.screenshot.path + "/" + result.file_name}
+                  src={
+                    result.screenshot
+                      ? `data:image/png;base64,${result.screenshot}`
+                      : api.endpoints.screenshot.path + "/" + result.file_name}
                   alt={result.url}
                   loading="lazy"
                   className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"

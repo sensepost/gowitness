@@ -182,7 +182,11 @@ const ScreenshotDetailPage = () => {
             <DialogTrigger asChild>
               <button className="w-full relative">
                 <img
-                  src={api.endpoints.screenshot.path + "/" + detail.file_name}
+                  src={
+                    detail.screenshot
+                      ? `data:image/png;base64,${detail.screenshot}`
+                      : api.endpoints.screenshot.path + "/" + detail.file_name
+                  }
                   alt={detail.title}
                   className="w-full h-auto object-cover transition-all duration-300 filter group-hover:brightness-75 rounded-lg"
                 />

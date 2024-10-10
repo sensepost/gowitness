@@ -25,6 +25,7 @@ type galleryContent struct {
 	ResponseCode int       `json:"response_code"`
 	Title        string    `json:"title"`
 	Filename     string    `json:"file_name"`
+	Screenshot   string    `json:"screenshot"`
 	Failed       bool      `json:"failed"`
 	Technologies []string  `json:"technologies"`
 }
@@ -141,6 +142,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			ResponseCode: result.ResponseCode,
 			Title:        result.Title,
 			Filename:     result.Filename,
+			Screenshot:   result.Screenshot,
 			Failed:       result.Failed,
 			Technologies: technologies,
 		})

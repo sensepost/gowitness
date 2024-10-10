@@ -28,6 +28,7 @@ type searchResult struct {
 	Failed         bool     `json:"failed"`
 	FailedReason   string   `json:"failed_reason"`
 	Filename       string   `json:"file_name"`
+	Screenshot     string   `json:"screenshot"`
 	MatchedFields  []string `json:"matched_fields"`
 }
 
@@ -254,6 +255,7 @@ func appendResults(searchResults []searchResult, resultIDs map[uint]bool, newRes
 				Failed:         res.Failed,
 				FailedReason:   res.FailedReason,
 				Filename:       res.Filename,
+				Screenshot:     res.Screenshot,
 				MatchedFields:  []string{matchedField},
 			})
 

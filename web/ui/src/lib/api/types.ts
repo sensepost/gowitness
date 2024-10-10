@@ -33,6 +33,7 @@ type galleryResult = {
   title: string;
   response_code: number;
   file_name: string;
+  screenshot: string;
   failed: boolean;
   technologies: string[];
 };
@@ -106,27 +107,6 @@ interface consolelog {
   value: string;
 }
 
-/*
-type Cookie struct {
-  ID       uint `json:"id" gorm:"primarykey"`
-  ResultID uint `json:"result_id"`
-
-  Name         string  `json:"name"`
-  Value        string  `json:"value"`
-  Domain       string  `json:"domain"`
-  Path         string  `json:"path"`
-  Expires      float64 `json:"expires"`
-  Size         int64   `json:"size"`
-  HTTPOnly     bool    `json:"http_only"`
-  Secure       bool    `json:"secure"`
-  Session      bool    `json:"session"`
-  Priority     string  `json:"priority"`
-  SourceScheme string  `json:"source_scheme"`
-  SourcePort   int64   `json:"source_port"`
-}
-
-*/
-
 interface cookie {
   id: number;
   result_id: number;
@@ -178,12 +158,12 @@ interface searchresult {
   title: string;
   matched_fields: string[];
   file_name: string;
+  screenshot: string;
 }
 
 interface technologylist {
   technologies: string[];
 }
-
 
 export type {
   statistics,

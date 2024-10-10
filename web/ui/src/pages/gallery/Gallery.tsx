@@ -159,7 +159,9 @@ const GalleryPage = () => {
               </div>
             ) : (
               <img
-                src={api.endpoints.screenshot.path + "/" + screenshot.file_name}
+                src={screenshot.screenshot
+                  ? `data:image/png;base64,${screenshot.screenshot}`
+                  : api.endpoints.screenshot.path + "/" + screenshot.file_name}
                 alt={screenshot.url}
                 loading="lazy"
                 className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
