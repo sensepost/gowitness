@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"image"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -117,7 +119,7 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 
 // witness does the work of probing a url.
 // This is where everything comes together as far as the runner is concerned.
-func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Result, error) {
+func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.Result, error) {
 	logger := run.log.With("target", target)
 	logger.Debug("witnessing 👀")
 
@@ -143,6 +145,17 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	defer navigationCancel()
 
 	if err := chromedp.Run(navigationCtx, network.Enable()); err != nil {
+		// check if the error is chrome not found related, in which case
+		// well return a special error type.
+		//
+		// this may seem like a strange place to do that, but keep in mind
+		// this is only really where we'll actually *run* chrome for the
+		// first time.
+		var execErr *exec.Error
+		if errors.As(err, &execErr) && execErr.Err == exec.ErrNotFound {
+			return nil, &runner.ChromeNotFoundError{Err: err}
+		}
+
 		return nil, fmt.Errorf("error enabling network tracking: %w", err)
 	}
 
@@ -389,7 +402,7 @@ func (run *Chromedp) Witness(target string, runner *runner.Runner) (*models.Resu
 	}
 
 	// fingerprint technologies in the first response
-	if fingerprints := runner.Wappalyzer.Fingerprint(result.HeaderMap(), []byte(result.HTML)); fingerprints != nil {
+	if fingerprints := thisRunner.Wappalyzer.Fingerprint(result.HeaderMap(), []byte(result.HTML)); fingerprints != nil {
 		for tech := range fingerprints {
 			result.Technologies = append(result.Technologies, models.Technology{
 				Value: tech,

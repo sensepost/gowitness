@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/url"
@@ -28,6 +29,10 @@ type Runner struct {
 	// Targets to scan.
 	// This would typically be fed from a gowitness/pkg/reader.
 	Targets chan string
+
+	// in case we need to bail
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // New gets a new Runner ready for probing.
@@ -66,6 +71,8 @@ func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []write
 		return nil, err
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &Runner{
 		Driver:     driver,
 		Wappalyzer: wap,
@@ -73,6 +80,8 @@ func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []write
 		writers:    writers,
 		Targets:    make(chan string),
 		log:        logger,
+		ctx:        ctx,
+		cancel:     cancel,
 	}, nil
 }
 
@@ -113,39 +122,58 @@ func (run *Runner) Run() {
 		// start a worker
 		go func() {
 			defer wg.Done()
-			for target := range run.Targets {
-				// validate the target
-				if err := run.checkUrl(target); err != nil {
-					if run.options.Logging.LogScanErrors {
-						run.log.Error("invalid target to scan", "target", target, "err", err)
+			for {
+				select {
+				case <-run.ctx.Done():
+					return
+				case target, ok := <-run.Targets:
+					if !ok {
+						return
 					}
-					continue
-				}
 
-				result, err := run.Driver.Witness(target, run)
-				if err != nil {
-					if run.options.Logging.LogScanErrors {
-						run.log.Error("failed to witness target", "target", target, "err", err)
+					// validate the target
+					if err := run.checkUrl(target); err != nil {
+						if run.options.Logging.LogScanErrors {
+							run.log.Error("invalid target to scan", "target", target, "err", err)
+						}
+						continue
 					}
-					continue
-				}
 
-				// assume that status code 0 means there was no information, so
-				// don't send anything to writers.
-				if result.ResponseCode == 0 {
-					if run.options.Logging.LogScanErrors {
-						run.log.Error("failed to witness target, status code was 0", "target", target)
+					result, err := run.Driver.Witness(target, run)
+					if err != nil {
+						// is this a chrome not found error?
+						var chromeErr *ChromeNotFoundError
+						if errors.As(err, &chromeErr) {
+							run.log.Error("no valid chrome intallation found", "err", err)
+							run.cancel()
+							return
+						}
+
+						if run.options.Logging.LogScanErrors {
+							run.log.Error("failed to witness target", "target", target, "err", err)
+						}
+						continue
 					}
-					continue
-				}
 
-				if err := run.runWriters(result); err != nil {
-					run.log.Error("failed to write result for target", "target", target, "err", err)
-				}
+					// assume that status code 0 means there was no information, so
+					// don't send anything to writers.
+					if result.ResponseCode == 0 {
+						if run.options.Logging.LogScanErrors {
+							run.log.Error("failed to witness target, status code was 0", "target", target)
+						}
+						continue
+					}
 
-				run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
-					"title", result.Title, "have-screenshot", !result.Failed)
+					if err := run.runWriters(result); err != nil {
+						run.log.Error("failed to write result for target", "target", target, "err", err)
+					}
+
+					run.log.Info("result 🤖", "target", target, "status-code", result.ResponseCode,
+						"title", result.Title, "have-screenshot", !result.Failed)
+
+				}
 			}
+
 		}()
 	}
 
