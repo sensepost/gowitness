@@ -76,7 +76,7 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 			chrmLauncher.Proxy(opts.Chrome.Proxy)
 		}
 
-		url, err := chrmLauncher.Launch()
+		url, err = chrmLauncher.Launch()
 		if err != nil {
 			return nil, err
 		}
