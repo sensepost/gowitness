@@ -157,7 +157,7 @@ export default function JobSubmissionPage() {
             </TabsList>
             <TabsContent value="job">
               <Form method="post" className="space-y-6">
-                <input type="hidden" name="action" value="submitJob" />
+                <input type="hidden" name="action" value="job" />
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">URLs</h3>
                   {urls.map((url, index) => (
