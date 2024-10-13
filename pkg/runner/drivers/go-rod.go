@@ -470,6 +470,9 @@ func (run *Gorod) Close() {
 
 	// cleaning user data
 	if run.userData != "" {
+		// wait a sec for the browser process to go away
+		time.Sleep(time.Second * 1)
+
 		run.log.Debug("cleaning user data directory", "directory", run.userData)
 		if err := os.RemoveAll(run.userData); err != nil {
 			run.log.Error("could not cleanup temporary user data dir", "dir", run.userData, "err", err)
