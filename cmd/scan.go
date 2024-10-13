@@ -105,6 +105,14 @@ flags.`)),
 			scanWriters = append(scanWriters, w)
 		}
 
+		if opts.Writer.None {
+			w, err := writers.NewNoneWriter()
+			if err != nil {
+				return err
+			}
+			scanWriters = append(scanWriters, w)
+		}
+
 		if len(scanWriters) == 0 {
 			log.Warn("no writers have been configured. to persist probe results, add writers using --write-* flags")
 		}
@@ -160,4 +168,5 @@ func init() {
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Jsonl, "write-jsonl", false, "Write results as JSON lines")
 	scanCmd.PersistentFlags().StringVar(&opts.Writer.JsonlFile, "write-jsonl-file", "gowitness.jsonl", "The file to write JSON lines to")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Stdout, "write-stdout", false, "Write successful results to stdout (usefull in a shell pipeline)")
+	scanCmd.PersistentFlags().BoolVar(&opts.Writer.None, "write-none", false, "Use an empty writer to silence warnings")
 }

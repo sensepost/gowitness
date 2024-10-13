@@ -52,6 +52,7 @@ type Writer struct {
 	Jsonl     bool
 	JsonlFile string
 	Stdout    bool
+	None      bool
 }
 
 // Scan is scanning related options
