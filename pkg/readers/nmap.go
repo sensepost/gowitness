@@ -134,7 +134,7 @@ func (nr *NmapReader) urlsFor(target string, port int) []string {
 	}
 
 	if !nr.Options.NoHTTPS {
-		urls = append(urls, fmt.Sprintf("http://%s:%d", target, port))
+		urls = append(urls, fmt.Sprintf("https://%s:%d", target, port))
 	}
 
 	return urls
