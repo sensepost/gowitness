@@ -8,7 +8,7 @@ import (
 type NoneWriter struct {
 }
 
-// NewStdoutWriter initialises a none writer
+// NewNoneWriter initialises a none writer
 func NewNoneWriter() (*NoneWriter, error) {
 	return &NoneWriter{}, nil
 }
