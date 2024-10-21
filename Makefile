@@ -2,6 +2,7 @@ G := $(shell go version | cut -d' ' -f 3,4 | sed 's/ /_/g')
 V := $(shell git rev-parse --short HEAD)
 APPVER := $(shell grep 'Version =' internal/version/version.go | cut -d \" -f2)
 PWD := $(shell pwd)
+GOPATH := $(shell go env GOPATH)
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LD_FLAGS := -trimpath \
 	-ldflags="-s -w \
@@ -31,8 +32,9 @@ check-npm:
 
 # Generate a swagger.json used for the api documentation
 api-doc:
-	~/go/bin/swag i --exclude ./web/ui --output web/docs
-	~/go/bin/swag f
+	go install github.com/swaggo/swag/cmd/swag@latest
+	$(GOPATH)/bin/swag i --exclude ./web/ui --output web/docs
+	$(GOPATH)/bin/swag f
 
 # Run any tests
 test:
