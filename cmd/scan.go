@@ -149,6 +149,7 @@ func init() {
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SaveContent, "save-content", false, "Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SkipHTML, "skip-html", false, "Don't include the first request's HTML response when writing results")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotToWriter, "write-screenshots", false, "Store screenshots with writers in addition to filesystem storage")
+	scanCmd.PersistentFlags().IntSliceVar(&opts.Scan.ScreenshotCodes, "screenshot-filter", []int{}, "Http response codes to screenshot. this is a filter (by default all codes are screenshotted)")
 
 	// Chrome options
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Path, "chrome-path", "", "The path to a Google Chrome binary to use (downloads a platform-appropriate binary by default)")
