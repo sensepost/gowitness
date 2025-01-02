@@ -399,10 +399,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 	// an empty slice implies no filtering
 	if (len(run.options.Scan.ScreenshotCodes) > 0) &&
 		!SliceContainsInt(run.options.Scan.ScreenshotCodes, result.ResponseCode) {
-			if run.options.Logging.LogScanErrors {
-				logger.Error("response code not in allowed screenshot http response codes.", "target", target)
-			}
-		continue
+		return nil, fmt.Errorf("response code (%w) not in allowed screenshot http response codes.", result.ResponseCode)
 	}
 
 	// grab the title
