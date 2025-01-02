@@ -35,16 +35,6 @@ type Runner struct {
 	cancel context.CancelFunc
 }
 
-// SliceContainsInt ... returns true/false
-func SliceContainsInt(slice []int, num int) bool {
-    for _, v := range slice {
-        if v == num {
-            return true
-        }
-    }
-    return false
-}
-
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the runner
 func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []writers.Writer) (*Runner, error) {
@@ -171,16 +161,6 @@ func (run *Runner) Run() {
 						if run.options.Logging.LogScanErrors {
 							run.log.Error("failed to witness target, status code was 0", "target", target)
 						}
-						continue
-					}
-
-					// check if the preflight returned a code to process.
-					// an empty slice implies no filtering
-					if (len(run.options.Scan.ScreenshotCodes) > 0) &&
-						!SliceContainsInt(run.options.Scan.ScreenshotCodes, result.ResponseCode) {
-							if run.options.Logging.LogScanErrors {
-								run.log.Error("response code not in allowed screenshot http response codes.", "target", target)
-							}
 						continue
 					}
 

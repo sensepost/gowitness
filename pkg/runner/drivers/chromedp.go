@@ -52,6 +52,16 @@ func (b *browserInstance) Close() {
 	os.RemoveAll(b.userData)
 }
 
+// SliceContainsInt ... returns true/false
+func SliceContainsInt(slice []int, num int) bool {
+    for _, v := range slice {
+        if v == num {
+            return true
+        }
+    }
+    return false
+}
+
 // getChromedpAllocator is a helper function to get a chrome allocation context.
 //
 // see Witness for more information on why we're explicitly not using tabs
@@ -383,6 +393,16 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 				SourcePort:   cookie.SourcePort,
 			})
 		}
+	}
+
+	// check if the preflight returned a code to process.
+	// an empty slice implies no filtering
+	if (len(run.options.Scan.ScreenshotCodes) > 0) &&
+		!SliceContainsInt(run.options.Scan.ScreenshotCodes, result.ResponseCode) {
+			if run.options.Logging.LogScanErrors {
+				logger.Error("response code not in allowed screenshot http response codes.", "target", target)
+			}
+		continue
 	}
 
 	// grab the title
