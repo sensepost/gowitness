@@ -54,20 +54,6 @@ flags.`)),
 		logger := slog.New(log.Logger)
 
 		// Configure the driver
-		switch opts.Scan.Driver {
-		case "gorod":
-			scanDriver, err = driver.NewGorod(logger, *opts)
-			if err != nil {
-				return err
-			}
-		case "chromedp":
-			scanDriver, err = driver.NewChromedp(logger, *opts)
-			if err != nil {
-				return err
-			}
-		default:
-			return errors.New("invalid scan driver chosen")
-		}
 
 		log.Debug("scanning driver started", "driver", opts.Scan.Driver)
 
@@ -118,10 +104,27 @@ flags.`)),
 		}
 
 		// Get the runner up. Basically, all of the subcommands will use this.
-		scanRunner, err = runner.NewRunner(logger, scanDriver, *opts, scanWriters)
+		scanRunner, err = runner.NewRunner(logger, opts, scanWriters)
 		if err != nil {
 			return err
 		}
+
+		switch opts.Scan.Driver {
+		case "gorod":
+			scanDriver, err = driver.NewGorod(logger, *opts)
+			if err != nil {
+				return err
+			}
+		case "chromedp":
+			scanDriver, err = driver.NewChromedp(logger, *opts)
+			if err != nil {
+				return err
+			}
+		default:
+			return errors.New("invalid scan driver chosen")
+		}
+
+		scanRunner.Driver = scanDriver
 
 		return nil
 		// TODO: maybe add https://github.com/projectdiscovery/networkpolicy support?

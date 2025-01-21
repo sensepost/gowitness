@@ -73,18 +73,20 @@ func (h *ApiHandler) SubmitSingleHandler(w http.ResponseWriter, r *http.Request)
 
 	logger := slog.New(log.Logger)
 
+	runner, err := runner.NewRunner(logger, options, []writers.Writer{writer})
+	if err != nil {
+		log.Error("error starting runner", "err", err)
+		http.Error(w, "Error starting runner", http.StatusInternalServerError)
+		return
+	}
+
 	driver, err := driver.NewChromedp(logger, *options)
 	if err != nil {
 		http.Error(w, "Error sarting driver", http.StatusInternalServerError)
 		return
 	}
 
-	runner, err := runner.NewRunner(logger, driver, *options, []writers.Writer{writer})
-	if err != nil {
-		log.Error("error starting runner", "err", err)
-		http.Error(w, "Error starting runner", http.StatusInternalServerError)
-		return
-	}
+	runner.Driver = driver
 
 	go func() {
 		runner.Targets <- request.URL

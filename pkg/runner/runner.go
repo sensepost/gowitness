@@ -20,7 +20,7 @@ type Runner struct {
 	Wappalyzer *wappalyzer.Wappalyze
 
 	// options for the Runner to consider
-	options Options
+	options *Options
 	// writers are the result writers to use
 	writers []writers.Writer
 	// log handler
@@ -37,7 +37,7 @@ type Runner struct {
 
 // New gets a new Runner ready for probing.
 // It's up to the caller to call Close() on the runner
-func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []writers.Writer) (*Runner, error) {
+func NewRunner(logger *slog.Logger, opts *Options, writers []writers.Writer) (*Runner, error) {
 	if !opts.Scan.ScreenshotSkipSave {
 		screenshotPath, err := islazy.CreateDir(opts.Scan.ScreenshotPath)
 		if err != nil {
@@ -74,7 +74,6 @@ func NewRunner(logger *slog.Logger, driver Driver, opts Options, writers []write
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Runner{
-		Driver:     driver,
 		Wappalyzer: wap,
 		options:    opts,
 		writers:    writers,
