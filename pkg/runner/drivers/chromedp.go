@@ -351,7 +351,6 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 	// check if the preflight returned a code to process.
 	// an empty slice implies no filtering
-	logger.Error("tst", "len", len(run.options.Scan.HttpCodeFilter), "ret", result.ResponseCode)
 	if (len(run.options.Scan.HttpCodeFilter) > 0) &&
 		islazy.SliceHasInt(run.options.Scan.HttpCodeFilter, result.ResponseCode) {
 		return nil, fmt.Errorf("response code (%w) not in allowed screenshot http response codes.", result.ResponseCode)
