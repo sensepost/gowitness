@@ -353,7 +353,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 	// an empty slice implies no filtering
 	if (len(run.options.Scan.HttpCodeFilter) > 0) &&
 		islazy.SliceHasInt(run.options.Scan.HttpCodeFilter, result.ResponseCode) {
-		return nil, fmt.Errorf("response code (%w) not in allowed screenshot http response codes.", result.ResponseCode)
+		return nil, fmt.Errorf("received HTTP status code (%d), which is not among the allowed screenshot response codes.", result.ResponseCode)
 	}
 
 	// run any javascript we have
