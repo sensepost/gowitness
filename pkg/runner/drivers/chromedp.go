@@ -52,16 +52,6 @@ func (b *browserInstance) Close() {
 	os.RemoveAll(b.userData)
 }
 
-// SliceContainsInt ... returns true/false
-func SliceContainsInt(slice []int, num int) bool {
-    for _, v := range slice {
-        if v == num {
-            return true
-        }
-    }
-    return false
-}
-
 // getChromedpAllocator is a helper function to get a chrome allocation context.
 //
 // see Witness for more information on why we're explicitly not using tabs
@@ -359,6 +349,14 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
 	}
 
+	// check if the preflight returned a code to process.
+	// an empty slice implies no filtering
+	logger.Error("tst", "len", len(run.options.Scan.HttpCodeFilter), "ret", result.ResponseCode)
+	if (len(run.options.Scan.HttpCodeFilter) > 0) &&
+		islazy.SliceHasInt(run.options.Scan.HttpCodeFilter, result.ResponseCode) {
+		return nil, fmt.Errorf("response code (%w) not in allowed screenshot http response codes.", result.ResponseCode)
+	}
+
 	// run any javascript we have
 	if run.options.Scan.JavaScript != "" {
 		if err := chromedp.Run(navigationCtx, chromedp.Evaluate(run.options.Scan.JavaScript, nil)); err != nil {
@@ -393,13 +391,6 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 				SourcePort:   cookie.SourcePort,
 			})
 		}
-	}
-
-	// check if the preflight returned a code to process.
-	// an empty slice implies no filtering
-	if (len(run.options.Scan.ScreenshotCodes) > 0) &&
-		!SliceContainsInt(run.options.Scan.ScreenshotCodes, result.ResponseCode) {
-		return nil, fmt.Errorf("response code (%w) not in allowed screenshot http response codes.", result.ResponseCode)
 	}
 
 	// grab the title
