@@ -18,7 +18,7 @@ default: clean test frontend api-doc build integrity
 
 # Clean up build artifacts
 clean:
-	find $(BIN_DIR) -type f -name 'gowitness-*' -delete
+	find $(BIN_DIR) -type f -name 'gowitness-*' -delete || true
 	go clean -x
 
 # Build frontend
