@@ -166,6 +166,7 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 				Scheme: scheme,
 				Host:   host,
 				Path:   parsedURL.Path,
+				RawQuery: parsedURL.RawQuery,
 			}
 
 			urls = append(urls, fullURL.String())
