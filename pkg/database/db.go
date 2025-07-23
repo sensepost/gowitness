@@ -51,12 +51,20 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		}
 		c.Exec("PRAGMA foreign_keys = ON")
 	case "postgres":
-		c, err = gorm.Open(postgres.Open(uri), config)
+		dsn, err := convertPostgresURItoDSN(uri)
+		if err != nil {
+			return nil, err
+		}
+		c, err = gorm.Open(postgres.Open(dsn), config)
 		if err != nil {
 			return nil, err
 		}
 	case "mysql":
-		c, err = gorm.Open(mysql.Open(uri), config)
+		dsn, err := convertMySQLURItoDSN(uri)
+		if err != nil {
+			return nil, err
+		}
+		c, err = gorm.Open(mysql.Open(dsn), config)
 		if err != nil {
 			return nil, err
 		}
@@ -80,3 +88,68 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 
 	return c, nil
 }
+
+
+func convertMySQLURItoDSN(uri string) (string, error) {
+    parsed, err := url.Parse(uri)
+    if err != nil {
+        return "", err
+    }
+
+    user := parsed.User.Username()
+    pass, _ := parsed.User.Password()
+    host := parsed.Host
+    dbname := strings.TrimPrefix(parsed.Path, "/")
+
+    // Handle "tcp(...)"
+    if strings.HasPrefix(host, "tcp(") && strings.HasSuffix(host, ")") {
+        host = strings.TrimPrefix(host, "tcp(")
+        host = strings.TrimSuffix(host, ")")
+    }
+
+    // Default port
+    if !strings.Contains(host, ":") {
+        host = host + ":3306"
+    }
+
+    dsn := fmt.Sprintf(
+        "%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+        user, pass, host, dbname,
+    )
+
+    return dsn, nil
+}
+
+func convertPostgresURItoDSN(uri string) (string, error) {
+    parsed, err := url.Parse(uri)
+    if err != nil {
+        return "", err
+    }
+
+    user := parsed.User.Username()
+    pass, _ := parsed.User.Password()
+    host := parsed.Hostname()
+    port := parsed.Port()
+    if port == "" {
+        port = "5432"
+    }
+
+    dbname := strings.TrimPrefix(parsed.Path, "/")
+
+    // Start building the DSN
+    dsn := fmt.Sprintf(
+        "host=%s user=%s password=%s dbname=%s port=%s",
+        host, user, pass, dbname, port,
+    )
+
+    // Add query params from URI
+    query := parsed.Query()
+    for key, values := range query {
+        // Only take the first value per key
+        dsn += fmt.Sprintf(" %s=%s", key, values[0])
+    }
+
+    return dsn, nil
+}
+
+// EOF
