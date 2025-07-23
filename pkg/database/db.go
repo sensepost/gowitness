@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/glebarez/sqlite"
 	"github.com/sensepost/gowitness/pkg/models"
