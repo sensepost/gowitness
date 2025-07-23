@@ -121,7 +121,7 @@ func init() {
 	reportCmd.AddCommand(generateCmd)
 
 	generateCmd.Flags().StringVar(&generateCmdFlags.ScreenshotPath, "screenshot-path", "./screenshots", "The path where screenshots are stored")
-	generateCmd.Flags().StringVar(&generateCmdFlags.DbURI, "db-uri", "sqlite://gowitness.sqlite3", "The location of a gowitness database")
+	generateCmd.Flags().StringVar(&generateCmdFlags.DbURI, "db-uri", "", "The location of a gowitness database. Supports SQLite, MySQL, and Postgres. Examples: sqlite://gowitness.sqlite3, mysql://user:pass@localhost:3306/gowitness, postgres://user:pass@localhost:5432/gowitness")
 	generateCmd.Flags().StringVar(&generateCmdFlags.JsonFile, "json-file", "", "The location of a JSON Lines results file (e.g., ./gowitness.jsonl). This flag takes precedence over --db-uri")
 	generateCmd.Flags().StringVar(&generateCmdFlags.ReportFile, "zip-name", "gowitness-report.zip", "The name and location of the final report ZIP file that will be generated")
 }
