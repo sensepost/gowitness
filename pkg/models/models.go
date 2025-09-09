@@ -23,7 +23,7 @@ type Result struct {
 	ResponseReason        string    `json:"response_reason"`
 	Protocol              string    `json:"protocol"`
 	ContentLength         int64     `json:"content_length"`
-	HTML                  string    `json:"html" gorm:"index"`
+	HTML                  string    `json:"html"`
 	Title                 string    `json:"title" gorm:"index"`
 	PerceptionHash        string    `json:"perception_hash" gorm:"index"`
 	PerceptionHashGroupId uint      `json:"perception_hash_group_id" gorm:"index"`

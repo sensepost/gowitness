@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
@@ -34,10 +35,15 @@ type statisticsResponseCode struct {
 func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
 	response := &statisticsResponse{}
 
-	if err := h.DB.Raw("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()").
-		Take(&response.DbSize).Error; err != nil {
+	var query string
+	if strings.HasPrefix(h.DbURI, "postgres://") {
+		query = "SELECT pg_database_size(current_database()) as size"
+	} else {
+		query = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()"
+	}
 
-		log.Error("an error occured getting database size", "err", err)
+	if err := h.DB.Raw(query).Take(&response.DbSize).Error; err != nil {
+		log.Error("an error occurred getting database size", "err", err)
 		return
 	}
 

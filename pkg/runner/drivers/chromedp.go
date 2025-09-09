@@ -357,6 +357,9 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 			return nil, fmt.Errorf("failed to evaluate user-provided javascript: %w", err)
 		}
 		logger.Debug("ran user-provided javascript", "result", string(jsResult))
+		if run.options.Scan.Delay > 0 {
+			time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
+		}
 	}
 
 	// get cookies
