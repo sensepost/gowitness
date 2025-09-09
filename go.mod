@@ -14,6 +14,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-rod/rod v0.116.2
+	github.com/joeguo/tldextract v0.0.0-20220507100122-d83daa6adef8
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/projectdiscovery/wappalyzergo v0.2.7
 	github.com/spf13/cobra v1.8.1
