@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
+	"net"
 
 	"github.com/sensepost/gowitness/internal/islazy"
 )
@@ -134,15 +135,21 @@ func (nr *NessusReader) Read(ch chan<- string) error {
 func (nr *NessusReader) urlsFor(target string, ports []int) []string {
 	var urls []string
 
+	ip := net.ParseIP(target)
+	
+	host := target
+	if ip != nil && ip.To4() == nil {
+		host = fmt.Sprintf("[%s]", target)
+	}
+	
 	for _, port := range ports {
 		if !nr.Options.NoHTTP {
-			urls = append(urls, fmt.Sprintf("http://%s:%d", target, port))
+			urls = append(urls, fmt.Sprintf("http://%s:%d", host, port))
 		}
-
 		if !nr.Options.NoHTTPS {
-			urls = append(urls, fmt.Sprintf("https://%s:%d", target, port))
+			urls = append(urls, fmt.Sprintf("https://%s:%d", host, port))
 		}
 	}
-
+	
 	return urls
 }
