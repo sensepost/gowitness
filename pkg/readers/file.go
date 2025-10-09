@@ -164,9 +164,10 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 			}
 
 			fullURL := url.URL{
-				Scheme: scheme,
-				Host:   host,
-				Path:   parsedURL.Path,
+				Scheme:   scheme,
+				Host:     host,
+				Path:     parsedURL.Path,
+				Fragment: parsedURL.Fragment,
 			}
 
 			urls = append(urls, decodeLastHashtag(fullURL.String()))
