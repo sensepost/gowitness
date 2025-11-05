@@ -144,7 +144,7 @@ func (run *Runner) Run() {
 						// is this a chrome not found error?
 						var chromeErr *ChromeNotFoundError
 						if errors.As(err, &chromeErr) {
-							run.log.Error("no valid chrome intallation found", "err", err)
+							run.log.Error("no valid chrome installation found", "err", err)
 							run.cancel()
 							return
 						}
