@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"image"
 	"log/slog"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -57,7 +59,7 @@ func (b *browserInstance) Close() {
 // see Witness for more information on why we're explicitly not using tabs
 // (to do that we would alloc in the NewChromedp function and make sure that
 // we have the browser started with chromedp.Run(browserCtx)).
-func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
+func getChromedpAllocator(opts runner.Options, target string) (*browserInstance, error) {
 	var (
 		allocCtx    context.Context
 		allocCancel context.CancelFunc
@@ -98,6 +100,22 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			allocOpts = append(allocOpts, chromedp.ExecPath(opts.Chrome.Path))
 		}
 
+		// Use specific ip address for domain if it's included and addres is hostname
+		if strings.Contains(target, "##") {
+			targetUri, _ := url.ParseRequestURI(target)
+
+			ipaddrIndex := strings.LastIndex(target, "##") + 2
+			ipaddr := net.ParseIP(target[ipaddrIndex:])
+
+			// ignore ipaddr from hashtag if hostname is already an ip address
+			if ipaddr != nil && net.ParseIP(targetUri.Host) == nil {
+				allocOpts = append(allocOpts,
+					chromedp.Flag("host-resolver-rules", fmt.Sprintf("MAP %s %s", targetUri.Hostname(), ipaddr)),
+					chromedp.Flag("host-rules", fmt.Sprintf("MAP %s %s", targetUri.Hostname(), ipaddr)),
+				)
+			}
+		}
+
 		allocCtx, allocCancel = chromedp.NewExecAllocator(context.Background(), allocOpts...)
 
 	} else {
@@ -130,7 +148,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 	// a resources thing I guess with a parent browser process? so, using this
 	// driver now means the resource usage will be higher, but, your accuracy
 	// will also be amazing.
-	allocator, err := getChromedpAllocator(run.options)
+	allocator, err := getChromedpAllocator(run.options, target)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +359,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 	// navigate to the target
 	if err := chromedp.Run(
-		navigationCtx, chromedp.Navigate(target),
+		navigationCtx, chromedp.Navigate(stripHashtagIp(target)),
 	); err != nil && err != context.DeadlineExceeded {
 		return nil, fmt.Errorf("could not navigate to target: %w", err)
 	}
@@ -475,4 +493,18 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 func (run *Chromedp) Close() {
 	run.log.Debug("closing browser allocation context")
+}
+
+// removes last ## with ipaddress
+func stripHashtagIp(target string) string {
+	if strings.Contains(target, "##") {
+		i := strings.LastIndex(target, "##")
+		ipaddr := net.ParseIP(target[i+2:])
+
+		// ignore ipaddr from hashtag if hostname is already an ip address
+		if ipaddr != nil {
+			return target[:i]
+		}
+	}
+	return target
 }

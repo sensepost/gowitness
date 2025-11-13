@@ -3,6 +3,7 @@ package readers
 import (
 	"bufio"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -120,7 +121,7 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 
 	if hasScheme && hasPort {
 		// return the candidate as is
-		urls = append(urls, parsedURL.String())
+		urls = append(urls, decodeLastHashtag(parsedURL.String()))
 		return urls
 	}
 
@@ -163,12 +164,13 @@ func (fr *FileReader) urlsFor(candidate string, ports []int) []string {
 			}
 
 			fullURL := url.URL{
-				Scheme: scheme,
-				Host:   host,
-				Path:   parsedURL.Path,
+				Scheme:   scheme,
+				Host:     host,
+				Path:     parsedURL.Path,
+				Fragment: parsedURL.Fragment,
 			}
 
-			urls = append(urls, fullURL.String())
+			urls = append(urls, decodeLastHashtag(fullURL.String()))
 		}
 	}
 
@@ -196,4 +198,26 @@ func (fr *FileReader) ports() []int {
 
 func isIPv6(hostname string) bool {
 	return len(hostname) > 0 && hostname[0] == '[' && hostname[len(hostname)-1] == ']'
+}
+
+// it's for vhosts screenshooting. ## may be encoded
+func decodeLastHashtag(url string) string {
+	i := strings.LastIndex(url, "%23%23")
+	pad := 0
+	if i == -1 {
+		i = strings.LastIndex(url, "#%23")
+		pad = 4
+	} else {
+		pad = 6
+	}
+	if i != -1 {
+		_url := url[:i] + "##" + url[i+pad:]
+		ipaddrIndex := strings.LastIndex(_url, "##") + 2
+		ipaddr := net.ParseIP(_url[ipaddrIndex:])
+		if ipaddr != nil {
+			return _url
+		}
+	}
+
+	return url
 }
