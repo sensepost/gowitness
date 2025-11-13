@@ -55,6 +55,8 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 			// https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
 			Set("user-data-dir", userData).
 			Set("disable-features", "MediaRouter").
+			Set("disable-features", "HttpsUpgrades").
+			Set("https-upgrades-enabled", "false").
 			Set("disable-client-side-phishing-detection").
 			Set("explicitly-allowed-ports", restrictedPorts()).
 			Set("disable-default-apps").
