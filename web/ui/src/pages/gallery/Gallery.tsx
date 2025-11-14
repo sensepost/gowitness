@@ -51,6 +51,24 @@ const GalleryPage = () => {
     );
   }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle arrow keys when not typing in input fields
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft' && page > 1) {
+        handlePageChange(page - 1);
+      } else if (event.key === 'ArrowRight' && page < totalPages) {
+        handlePageChange(page + 1);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [page, totalPages]);
+
   const handlePageChange = (newPage: number) => {
     setSearchParams(prev => {
       prev.set("page", newPage.toString());
@@ -331,6 +349,7 @@ const GalleryPage = () => {
             size="icon"
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
+            title="Previous page"
           >
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
@@ -339,6 +358,7 @@ const GalleryPage = () => {
             size="icon"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= totalPages}
+            title="Next page"
           >
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
@@ -355,6 +375,7 @@ const GalleryPage = () => {
             <SelectValue placeholder="Limit" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="8">8</SelectItem>
             <SelectItem value="12">12</SelectItem>
             <SelectItem value="24">24</SelectItem>
             <SelectItem value="48">48</SelectItem>
