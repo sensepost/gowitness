@@ -84,6 +84,8 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			chromedp.Flag("https-upgrades-enabled", false),
 			chromedp.Flag("disable-features", "HttpsUpgrades"),
 			chromedp.Flag("explicitly-allowed-ports", restrictedPorts()),
+			chromedp.Flag("no-sandbox", true),
+			chromedp.Flag("disable-gpu", true),
 			chromedp.WindowSize(opts.Chrome.WindowX, opts.Chrome.WindowY),
 			chromedp.UserDataDir(userData),
 		)
