@@ -59,6 +59,8 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 			Set("https-upgrades-enabled", "false").
 			Set("disable-client-side-phishing-detection").
 			Set("explicitly-allowed-ports", restrictedPorts()).
+			Set("no-sandbox").
+			Set("disable-gpu").
 			Set("disable-default-apps").
 			Set("hide-scrollbars").
 			Set("mute-audio").
