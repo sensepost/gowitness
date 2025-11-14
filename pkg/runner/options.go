@@ -89,7 +89,7 @@ type Scan struct {
 	// Save content stores content from network requests (warning) this
 	// could make written artefacts huge
 	SaveContent bool
-	// HttpCodeFilter are http response codes to screenshot. this is a filter. 
+	// HttpCodeFilter are http response codes to screenshot. this is a filter.
 	// by default all codes are screenshotted
 	HttpCodeFilter []int
 }
@@ -108,7 +108,7 @@ func NewDefaultOptions() *Options {
 			Timeout:          60,
 			UriFilter:        []string{"http", "https"},
 			ScreenshotFormat: "jpeg",
-			HttpCodeFilter:  []int{},
+			HttpCodeFilter:   []int{},
 		},
 		Logging: Logging{
 			Debug:         true,

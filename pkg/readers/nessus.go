@@ -3,8 +3,8 @@ package readers
 import (
 	"encoding/xml"
 	"fmt"
-	"os"
 	"net"
+	"os"
 
 	"github.com/sensepost/gowitness/internal/islazy"
 )
@@ -136,12 +136,12 @@ func (nr *NessusReader) urlsFor(target string, ports []int) []string {
 	var urls []string
 
 	ip := net.ParseIP(target)
-	
+
 	host := target
 	if ip != nil && ip.To4() == nil {
 		host = fmt.Sprintf("[%s]", target)
 	}
-	
+
 	for _, port := range ports {
 		if !nr.Options.NoHTTP {
 			urls = append(urls, fmt.Sprintf("http://%s:%d", host, port))
@@ -150,6 +150,6 @@ func (nr *NessusReader) urlsFor(target string, ports []int) []string {
 			urls = append(urls, fmt.Sprintf("https://%s:%d", host, port))
 		}
 	}
-	
+
 	return urls
 }
