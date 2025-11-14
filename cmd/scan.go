@@ -162,7 +162,7 @@ func init() {
 
 	// Write options for scan subcommands
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Db, "write-db", false, "Write results to a SQLite database")
-	scanCmd.PersistentFlags().StringVar(&opts.Writer.DbURI, "write-db-uri", "sqlite://gowitness.sqlite3", "The database URI to use. Supports SQLite, Postgres, and MySQL (e.g., postgres://user:pass@host:port/db)")
+	scanCmd.PersistentFlags().StringVar(&opts.Writer.DbURI, "write-db-uri", "", "The database URI to use. Supports SQLite, MySQL, and Postgres. Examples: sqlite://gowitness.sqlite3, mysql://user:pass@localhost:3306/gowitness, postgres://user:pass@localhost:5432/gowitness")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.DbDebug, "write-db-enable-debug", false, "Enable database query debug logging (warning: verbose!)")
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Csv, "write-csv", false, "Write results as CSV (has limited columns)")
 	scanCmd.PersistentFlags().StringVar(&opts.Writer.CsvFile, "write-csv-file", "gowitness.csv", "The file to write CSV rows to")

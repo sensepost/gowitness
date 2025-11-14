@@ -34,11 +34,26 @@ type statisticsResponseCode struct {
 func (h *ApiHandler) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
 	response := &statisticsResponse{}
 
-	if err := h.DB.Raw("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()").
-		Take(&response.DbSize).Error; err != nil {
+	var dbSizeQuery string
+	switch {
+	case len(h.DbURI) >= 9 && h.DbURI[:9] == "sqlite://":
+		dbSizeQuery = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()"
+	case len(h.DbURI) >= 8 && h.DbURI[:8] == "mysql://":
+		dbSizeQuery = "SELECT SUM(data_length + index_length) AS size FROM information_schema.tables WHERE table_schema = DATABASE()"
+	case len(h.DbURI) >= 11 && h.DbURI[:11] == "postgres://":
+		dbSizeQuery = "SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size FROM pg_tables WHERE schemaname = 'public'"
+	default:
+		dbSizeQuery = ""
+	}
 
-		log.Error("an error occured getting database size", "err", err)
-		return
+	if dbSizeQuery != "" {
+		if err := h.DB.Raw(dbSizeQuery).Take(&response.DbSize).Error; err != nil {
+			log.Error("an error occured getting database size", "err", err)
+			response.DbSize = -1
+		}
+	} else {
+		log.Error("unsupported database type for statistics", "dburi", h.DbURI)
+		response.DbSize = -1
 	}
 
 	if err := h.DB.Model(&models.Result{}).Count(&response.Results).Error; err != nil {
