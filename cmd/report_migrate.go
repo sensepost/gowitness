@@ -90,7 +90,7 @@ and as a result will remain empty.`)),
 func init() {
 	reportCmd.AddCommand(migrateCmd)
 
-	migrateCmd.Flags().StringVarP(&migrateCmdFlags.Source, "source", "s", "", "A gowitness v2 database file to migrate to v3. Supports SQLite, MySQL, and Postgres. Examples: sqlite://gowitness.sqlite3, mysql://user:pass@localhost:3306/gowitness, postgres://user:pass@localhost:5432/gowitness")
+	migrateCmd.Flags().StringVarP(&migrateCmdFlags.Source, "source", "s", "", "A gowitness v2 database file to migrate to v3. Supports SQLite, MySQL, and PostgreSQL. Examples: sqlite://gowitness.sqlite3, mysql://user:pass@localhost:3306/gowitness, postgres://user:pass@localhost:5432/gowitness")
 }
 
 // isV2Database checks if the 'urls' table exists in the source database to verify it's a v2 database
