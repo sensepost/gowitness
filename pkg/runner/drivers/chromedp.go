@@ -73,10 +73,14 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 
 		// set up chrome context and launch options
 		allocOpts := append(chromedp.DefaultExecAllocatorOptions[:],
+			chromedp.NoDefaultBrowserCheck,
+			chromedp.NoFirstRun,
+			chromedp.DisableGPU,
 			chromedp.IgnoreCertErrors,
 			chromedp.UserAgent(opts.Chrome.UserAgent),
 			chromedp.Flag("disable-features", "MediaRouter"),
 			chromedp.Flag("mute-audio", true),
+			chromedp.Flag("hide-scrollbars", true),
 			chromedp.Flag("disable-background-timer-throttling", true),
 			chromedp.Flag("disable-backgrounding-occluded-windows", true),
 			chromedp.Flag("disable-renderer-backgrounding", true),
@@ -85,8 +89,6 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			chromedp.Flag("disable-features", "HttpsUpgrades"),
 			chromedp.Flag("explicitly-allowed-ports", restrictedPorts()),
 			chromedp.Flag("no-sandbox", true),
-			chromedp.Flag("disable-gpu", true),
-			chromedp.Flag("enable-unsafe-swiftshader", true), // https://github.com/chromedp/chromedp/commit/422fa06290cda228e5712bdda55fbf7a0f6c8466
 			chromedp.WindowSize(opts.Chrome.WindowX, opts.Chrome.WindowY),
 			chromedp.UserDataDir(userData),
 		)
