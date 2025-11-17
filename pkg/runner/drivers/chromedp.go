@@ -206,11 +206,12 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		switch e := ev.(type) {
 		// dismiss any javascript dialogs
 		case *page.EventJavascriptDialogOpening:
-			if ctx := chromedp.FromContext(navigationCtx); ctx != nil && ctx.Target != nil {
-				if err := page.HandleJavaScriptDialog(true).Do(cdp.WithExecutor(navigationCtx, ctx.Target)); err != nil {
+			// run this as a goroutine so we don't block the main event loop
+			go func() {
+				if err := chromedp.Run(tabCtx, page.HandleJavaScriptDialog(true)); err != nil && run.options.Logging.LogScanErrors {
 					logger.Error("failed to handle a javascript dialog", "err", err)
 				}
-			}
+			}()
 		// log console.* calls
 		case *runtime.EventConsoleAPICalled:
 			v := ""
