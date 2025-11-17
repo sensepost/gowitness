@@ -160,7 +160,7 @@ func init() {
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.UserAgent, "chrome-user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36", "The user-agent string to use")
 	scanCmd.PersistentFlags().IntVar(&opts.Chrome.WindowX, "chrome-window-x", 1280, "The Chrome browser window width, in pixels")
 	scanCmd.PersistentFlags().IntVar(&opts.Chrome.WindowY, "chrome-window-y", 720, "The Chrome browser window height, in pixels")
-	scanCmd.PersistentFlags().StringSliceVar(&opts.Chrome.Headers, "chrome-header", []string{}, "Extra headers to add to requests. Supports multiple --header flags")
+	scanCmd.PersistentFlags().StringArrayVar(&opts.Chrome.Headers, "chrome-header", []string{}, "Extra headers to add to requests. Supports multiple --chrome-header flags")
 
 	// Write options for scan subcommands
 	scanCmd.PersistentFlags().BoolVar(&opts.Writer.Db, "write-db", false, "Write results to a SQLite database")
