@@ -61,6 +61,7 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 			Set("explicitly-allowed-ports", restrictedPorts()).
 			Set("no-sandbox").
 			Set("disable-gpu").
+			Set("enable-unsafe-swiftshader"). // https://github.com/chromedp/chromedp/commit/422fa06290cda228e5712bdda55fbf7a0f6c8466
 			Set("disable-default-apps").
 			Set("hide-scrollbars").
 			Set("mute-audio").

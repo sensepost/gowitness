@@ -86,6 +86,7 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			chromedp.Flag("explicitly-allowed-ports", restrictedPorts()),
 			chromedp.Flag("no-sandbox", true),
 			chromedp.Flag("disable-gpu", true),
+			chromedp.Flag("enable-unsafe-swiftshader", true), // https://github.com/chromedp/chromedp/commit/422fa06290cda228e5712bdda55fbf7a0f6c8466
 			chromedp.WindowSize(opts.Chrome.WindowX, opts.Chrome.WindowY),
 			chromedp.UserDataDir(userData),
 		)
