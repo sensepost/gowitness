@@ -21,8 +21,8 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/storage"
 	"github.com/chromedp/chromedp"
-	"github.com/corona10/goimagehash"
 	"github.com/sensepost/gowitness/internal/islazy"
+	"github.com/sensepost/gowitness/pkg/imagehash"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/runner"
 )
@@ -474,11 +474,11 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 			return nil, fmt.Errorf("failed to decode screenshot image: %w", err)
 		}
 
-		hash, err := goimagehash.PerceptionHash(decoded)
+		hash, err := imagehash.PerceptionHash(decoded)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate image perception hash: %w", err)
 		}
-		result.PerceptionHash = hash.ToString()
+		result.PerceptionHash = hash
 	}
 
 	return result, nil

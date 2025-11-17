@@ -12,11 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/corona10/goimagehash"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/sensepost/gowitness/internal/islazy"
+	"github.com/sensepost/gowitness/pkg/imagehash"
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/models"
 	"github.com/sensepost/gowitness/pkg/runner"
@@ -461,11 +461,11 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 			return nil, fmt.Errorf("failed to decode screenshot image: %w", err)
 		}
 
-		hash, err := goimagehash.PerceptionHash(decoded)
+		hash, err := imagehash.PerceptionHash(decoded)
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate image perception hash: %w", err)
 		}
-		result.PerceptionHash = hash.ToString()
+		result.PerceptionHash = hash
 	}
 
 	return result, nil
