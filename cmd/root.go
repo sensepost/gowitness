@@ -36,8 +36,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		if opts.Logging.Debug && !opts.Logging.Silence {
+			// also enable logging of scan errors. often this is _actually_ what
+			// people want when they enable debug logging.
+			opts.Logging.LogScanErrors = true
 			log.EnableDebug()
-			log.Debug("debug logging enabled")
+			log.Debug("debug logging enabled. this also enabled --log-scan-errors")
 		}
 
 		if enableProfiling {
