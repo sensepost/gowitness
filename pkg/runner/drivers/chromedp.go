@@ -429,7 +429,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			params := page.CaptureScreenshot().
-				WithQuality(80).
+				WithQuality(int64(run.options.Scan.ScreenshotJpegQuality)).
 				WithFormat(page.CaptureScreenshotFormat(run.options.Scan.ScreenshotFormat))
 
 			// if fullpage

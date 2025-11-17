@@ -77,6 +77,8 @@ type Scan struct {
 	ScreenshotPath string
 	// ScreenshotFormat to save as
 	ScreenshotFormat string
+	// ScreenshotJpegQuality is the quality of the JPEG screenshot (1-100)
+	ScreenshotJpegQuality int
 	// ScreenshotFullPage saves full, scrolled web pages
 	ScreenshotFullPage bool
 	// ScreenshotToWriter passes screenshots as a model property to writers

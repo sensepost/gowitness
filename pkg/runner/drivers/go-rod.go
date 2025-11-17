@@ -424,7 +424,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 	switch run.options.Scan.ScreenshotFormat {
 	case "jpeg":
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatJpeg
-		screenshotOptions.Quality = gson.Int(80)
+		screenshotOptions.Quality = gson.Int(run.options.Scan.ScreenshotJpegQuality)
 	case "png":
 		screenshotOptions.Format = proto.PageCaptureScreenshotFormatPng
 	}
