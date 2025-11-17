@@ -270,6 +270,10 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 					resultMutex.Unlock()
 				}
 
+				if run.options.Scan.SkipNetworkLogs {
+					return dismissEvents
+				}
+
 				entry.StatusCode = int64(e.Response.Status)
 				entry.URL = e.Response.URL
 				entry.RemoteIP = e.Response.RemoteIPAddress
@@ -315,7 +319,7 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 				if first != nil && first.RequestID == e.RequestID {
 					result.Failed = true
 					result.FailedReason = e.ErrorText
-				} else {
+				} else if !run.options.Scan.SkipNetworkLogs {
 					entry.Error = e.ErrorText
 
 					// write the network log

@@ -293,6 +293,10 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 					resultMutex.Unlock()
 				}
 
+				if run.options.Scan.SkipNetworkLogs {
+					return
+				}
+
 				entry.StatusCode = e.Response.Status
 				entry.URL = e.Response.URL
 				entry.RemoteIP = e.Response.RemoteIPAddress
@@ -339,6 +343,11 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 					result.Failed = true
 					result.FailedReason = e.ErrorText
 				} else {
+					if run.options.Scan.SkipNetworkLogs {
+						resultMutex.Unlock()
+						return
+					}
+
 					entry.Error = e.ErrorText
 
 					// write the network log

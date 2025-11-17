@@ -71,6 +71,8 @@ type Scan struct {
 	UriFilter []string
 	// Don't write HTML response content
 	SkipHTML bool
+	// SkipNetworkLogs stops recording individual request/response entries
+	SkipNetworkLogs bool
 	// ScreenshotPath is the path where screenshot images will be stored.
 	// An empty value means drivers will not write screenshots to disk. In
 	// that case, you'd need to specify writer saves.
