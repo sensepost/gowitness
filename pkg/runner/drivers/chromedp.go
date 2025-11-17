@@ -20,6 +20,7 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/storage"
+	targetproto "github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/imagehash"
@@ -32,8 +33,17 @@ import (
 type Chromedp struct {
 	// options for the Runner to consider
 	options runner.Options
+
 	// logger
 	log *slog.Logger
+
+	// allocator and browser context shared for tabs
+	allocator     *browserInstance
+	browserCtx    context.Context
+	browserCancel context.CancelFunc
+
+	// shared task template that will be cloned per witness
+	baseTasks chromedp.Tasks
 }
 
 // browserInstance is an instance used by one run of Witness
@@ -49,14 +59,12 @@ func (b *browserInstance) Close() {
 	<-b.allocCtx.Done()
 
 	// cleanup the user data directory
-	os.RemoveAll(b.userData)
+	if b.userData != "" {
+		os.RemoveAll(b.userData)
+	}
 }
 
 // getChromedpAllocator is a helper function to get a chrome allocation context.
-//
-// see Witness for more information on why we're explicitly not using tabs
-// (to do that we would alloc in the NewChromedp function and make sure that
-// we have the browser started with chromedp.Run(browserCtx)).
 func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 	var (
 		allocCtx    context.Context
@@ -118,10 +126,33 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 
 // NewChromedp returns a new Chromedp instance
 func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
-	return &Chromedp{
-		options: opts,
-		log:     logger,
-	}, nil
+	allocator, err := getChromedpAllocator(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	browserCtx, browserCancel := chromedp.NewContext(allocator.allocCtx)
+
+	// warm up chrome so that the singleton lock is held before worker goroutines start
+	if err := chromedp.Run(browserCtx, chromedp.ActionFunc(func(context.Context) error { return nil })); err != nil {
+		browserCancel()
+		allocator.Close()
+		return nil, fmt.Errorf("failed to initialize chrome context: %w", err)
+	}
+
+	driver := &Chromedp{
+		options:       opts,
+		log:           logger,
+		allocator:     allocator,
+		browserCtx:    browserCtx,
+		browserCancel: browserCancel,
+	}
+
+	driver.baseTasks = chromedp.Tasks{
+		network.Enable(),
+	}
+
+	return driver, nil
 }
 
 // witness does the work of probing a url.
@@ -130,59 +161,33 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 	logger := run.log.With("target", target)
 	logger.Debug("witnessing 👀")
 
-	// this might be weird to see, but when screenshotting a large list, using
-	// tabs means the chances of the screenshot failing is madly high. could be
-	// a resources thing I guess with a parent browser process? so, using this
-	// driver now means the resource usage will be higher, but, your accuracy
-	// will also be amazing.
-	allocator, err := getChromedpAllocator(run.options)
-	if err != nil {
-		return nil, err
-	}
-	defer allocator.Close()
-	browserCtx, cancel := chromedp.NewContext(allocator.allocCtx)
-	defer cancel()
-
 	// get a tab
-	tabCtx, tabCancel := chromedp.NewContext(browserCtx)
-	defer tabCancel()
+	tabCtx, tabCancel := chromedp.NewContext(run.browserCtx)
+	tabChromedpCtx := chromedp.FromContext(tabCtx)
+
+	// get the tab ID, so we can close it when we are done
+	var tabID targetproto.ID
+	if tabChromedpCtx != nil && tabChromedpCtx.Target != nil {
+		tabID = tabChromedpCtx.Target.TargetID
+	}
+
+	defer func() {
+		if tabID != "" {
+			closeCtx, cancel := context.WithTimeout(run.browserCtx, 5*time.Second)
+			defer cancel()
+			if err := chromedp.Run(closeCtx, chromedp.ActionFunc(func(ctx context.Context) error {
+				return targetproto.CloseTarget(tabID).Do(ctx)
+			})); err != nil && run.options.Logging.LogScanErrors {
+				logger.Error("failed to close tab", "err", err)
+			}
+		}
+
+		tabCancel()
+	}()
 
 	// get a timeout context for navigation
 	navigationCtx, navigationCancel := context.WithTimeout(tabCtx, time.Duration(run.options.Scan.Timeout)*time.Second)
 	defer navigationCancel()
-
-	if err := chromedp.Run(navigationCtx, network.Enable()); err != nil {
-		// check if the error is chrome not found related, in which case
-		// well return a special error type.
-		//
-		// this may seem like a strange place to do that, but keep in mind
-		// this is only really where we'll actually *run* chrome for the
-		// first time.
-		var execErr *exec.Error
-		if errors.As(err, &execErr) && execErr.Err == exec.ErrNotFound {
-			return nil, &runner.ChromeNotFoundError{Err: err}
-		}
-
-		return nil, fmt.Errorf("error enabling network tracking: %w", err)
-	}
-
-	// set extra headers, if any
-	if len(run.options.Chrome.Headers) > 0 {
-		headers := make(network.Headers)
-		for _, header := range run.options.Chrome.Headers {
-			kv := strings.SplitN(header, ":", 2)
-			if len(kv) != 2 {
-				logger.Warn("custom header did not parse correctly", "header", header)
-				continue
-			}
-
-			headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
-		}
-
-		if err := chromedp.Run(navigationCtx, network.SetExtraHTTPHeaders((headers))); err != nil {
-			return nil, fmt.Errorf("could not set extra http headers: %w", err)
-		}
-	}
 
 	// use page events to grab information about targets. It's how we
 	// know what the results of the first request is to save as an overall
@@ -201,8 +206,10 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		switch e := ev.(type) {
 		// dismiss any javascript dialogs
 		case *page.EventJavascriptDialogOpening:
-			if err := chromedp.Run(navigationCtx, page.HandleJavaScriptDialog(true)); err != nil {
-				logger.Error("failed to handle a javascript dialog", "err", err)
+			if ctx := chromedp.FromContext(navigationCtx); ctx != nil && ctx.Target != nil {
+				if err := page.HandleJavaScriptDialog(true).Do(cdp.WithExecutor(navigationCtx, ctx.Target)); err != nil {
+					logger.Error("failed to handle a javascript dialog", "err", err)
+				}
 			}
 		// log console.* calls
 		case *runtime.EventConsoleAPICalled:
@@ -344,45 +351,109 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		// TODO: wss
 	})
 
-	// navigate to the target
-	if err := chromedp.Run(
-		navigationCtx, chromedp.Navigate(target),
-	); err != nil && err != context.DeadlineExceeded {
-		return nil, fmt.Errorf("could not navigate to target: %w", err)
-	}
-
-	// just wait if there is a delay
-	if run.options.Scan.Delay > 0 {
-		time.Sleep(time.Duration(run.options.Scan.Delay) * time.Second)
-	}
-
-	// check if the preflight returned a code to process.
-	// an empty slice implies no filtering
-	if (len(run.options.Scan.HttpCodeFilter) > 0) &&
-		!islazy.SliceHasInt(run.options.Scan.HttpCodeFilter, result.ResponseCode) {
-		logger.Warn("http response code was filtered", "code", result.ResponseCode)
-
-		return nil, fmt.Errorf("http response code was %d which is filtered", result.ResponseCode)
-	}
-
-	// run any javascript we have
-	if run.options.Scan.JavaScript != "" {
-		if err := chromedp.Run(navigationCtx, chromedp.Evaluate(run.options.Scan.JavaScript, nil)); err != nil {
-			return nil, fmt.Errorf("failed to evaluate user-provided javascript: %w", err)
-		}
-	}
-
 	// get cookies
 	var cookies []*network.Cookie
-	if err := chromedp.Run(navigationCtx, chromedp.ActionFunc(func(ctx context.Context) error {
+
+	// grab a screenshot
+	var (
+		img           []byte
+		screenshotErr error
+	)
+
+	// start a tasks set
+	tasks := append(chromedp.Tasks{}, run.baseTasks...)
+
+	// set extra headers, if any
+	if len(run.options.Chrome.Headers) > 0 {
+		headers := make(network.Headers)
+		for _, header := range run.options.Chrome.Headers {
+			kv := strings.SplitN(header, ":", 2)
+			if len(kv) != 2 {
+				logger.Warn("custom header did not parse correctly", "header", header)
+				continue
+			}
+
+			headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
+
+		tasks = append(tasks, network.SetExtraHTTPHeaders(headers))
+	}
+
+	// accumulate tasks to execute in the tab context.
+	tasks = append(tasks,
+		chromedp.Navigate(target),
+		chromedp.WaitReady("body", chromedp.ByQuery),
+	)
+
+	if run.options.Scan.Delay > 0 {
+		tasks = append(tasks, chromedp.Sleep(time.Duration(run.options.Scan.Delay)*time.Second))
+	}
+
+	if run.options.Scan.JavaScript != "" {
+		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+			if err := chromedp.Evaluate(run.options.Scan.JavaScript, nil).Do(ctx); err != nil {
+				return fmt.Errorf("failed to evaluate user-provided javascript: %w", err)
+			}
+			return nil
+		}))
+	}
+
+	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
 		var err error
 		cookies, err = storage.GetCookies().Do(ctx)
-		return err
-	})); err != nil {
-		if run.options.Logging.LogScanErrors {
+		if err != nil && run.options.Logging.LogScanErrors {
 			logger.Error("could not get cookies", "err", err)
 		}
-	} else {
+		return nil
+	}))
+
+	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		if err := chromedp.Title(&result.Title).Do(ctx); err != nil && run.options.Logging.LogScanErrors {
+			logger.Error("could not get page title", "err", err)
+		}
+		return nil
+	}))
+
+	if !run.options.Scan.SkipHTML {
+		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+			if err := chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll).Do(ctx); err != nil && run.options.Logging.LogScanErrors {
+				logger.Error("could not get page html", "err", err)
+			}
+			return nil
+		}))
+	}
+
+	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		params := page.CaptureScreenshot().
+			WithQuality(int64(run.options.Scan.ScreenshotJpegQuality)).
+			WithFormat(page.CaptureScreenshotFormat(run.options.Scan.ScreenshotFormat))
+
+		if run.options.Scan.ScreenshotFullPage {
+			params = params.WithCaptureBeyondViewport(true)
+		}
+
+		var err error
+		img, err = params.Do(ctx)
+		if err != nil {
+			screenshotErr = err
+		}
+
+		return nil
+	}))
+
+	// run the accumulated tasks
+	if err := chromedp.Run(navigationCtx, tasks); err != nil && err != context.DeadlineExceeded {
+		// check if the error is chrome not found related, in which case
+		// we'll return a special error type.
+		var execErr *exec.Error
+		if errors.As(err, &execErr) && execErr.Err == exec.ErrNotFound {
+			return nil, &runner.ChromeNotFoundError{Err: err}
+		}
+
+		return nil, err
+	}
+
+	if len(cookies) > 0 {
 		for _, cookie := range cookies {
 			result.Cookies = append(result.Cookies, models.Cookie{
 				Name:         cookie.Name,
@@ -401,20 +472,11 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		}
 	}
 
-	// grab the title
-	if err := chromedp.Run(navigationCtx, chromedp.Title(&result.Title)); err != nil {
-		if run.options.Logging.LogScanErrors {
-			logger.Error("could not get page title", "err", err)
-		}
-	}
+	// check if the preflight returned a code to filter
+	if (len(run.options.Scan.HttpCodeFilter) > 0) && !islazy.SliceHasInt(run.options.Scan.HttpCodeFilter, result.ResponseCode) {
+		logger.Warn("http response code was filtered", "code", result.ResponseCode)
 
-	// get html
-	if !run.options.Scan.SkipHTML {
-		if err := chromedp.Run(navigationCtx, chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll)); err != nil {
-			if run.options.Logging.LogScanErrors {
-				logger.Error("could not get page html", "err", err)
-			}
-		}
+		return nil, fmt.Errorf("http response code was %d which is filtered", result.ResponseCode)
 	}
 
 	// fingerprint technologies in the first response
@@ -426,34 +488,18 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		}
 	}
 
-	// grab a screenshot
-	var img []byte
-	err = chromedp.Run(navigationCtx,
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			var err error
-			params := page.CaptureScreenshot().
-				WithQuality(int64(run.options.Scan.ScreenshotJpegQuality)).
-				WithFormat(page.CaptureScreenshotFormat(run.options.Scan.ScreenshotFormat))
+	if img == nil && screenshotErr == nil {
+		screenshotErr = errors.New("screenshot not captured")
+	}
 
-			// if fullpage
-			if run.options.Scan.ScreenshotFullPage {
-				params = params.WithCaptureBeyondViewport(true)
-			}
-
-			img, err = params.Do(ctx)
-			return err
-		}),
-	)
-
-	if err != nil {
+	if screenshotErr != nil {
 		if run.options.Logging.LogScanErrors {
-			logger.Error("could not grab screenshot", "err", err)
+			logger.Error("could not grab screenshot", "err", screenshotErr)
 		}
 
 		result.Failed = true
-		result.FailedReason = err.Error()
+		result.FailedReason = screenshotErr.Error()
 	} else {
-
 		// give the writer a screenshot to deal with
 		if run.options.Scan.ScreenshotToWriter {
 			result.Screenshot = base64.StdEncoding.EncodeToString(img)
@@ -489,4 +535,10 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 func (run *Chromedp) Close() {
 	run.log.Debug("closing browser allocation context")
+	if run.browserCancel != nil {
+		run.browserCancel()
+	}
+	if run.allocator != nil {
+		run.allocator.Close()
+	}
 }
