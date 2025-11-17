@@ -25,3 +25,6 @@ screenshots/
 .glide/
 .DS_Store
 .idea/
+
+# profiles
+profiles/
