@@ -24,8 +24,9 @@ jobs:
 
       - name: Install gowitness at specific commit
         run: |
-          apt-get update && apt-get install -y \
-            ca-certificates chromium
+          sudo apt-get update && apt-get install -y \
+            ca-certificates chromium \
+            && \
           go install github.com/sensepost/gowitness@${GITHUB_SHA}
 
       - name: Verify Installation
