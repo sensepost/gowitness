@@ -22,12 +22,14 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Install gowitness at specific commit
+      - name: Install chromium
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
             ca-certificates chromium \
-            && \
+
+      - name: Install gowitness
+        run: |
           go install ./...
 
       - name: Verify Installation
