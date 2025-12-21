@@ -1,7 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import * as api from "@/lib/api/api";
 
-const bookmarkResult = async (id: string): Promise<boolean> => {
+const bookmarkResult = async (id: number): Promise<boolean> => {
     try {
         await api.post('bookmark', { id });
     } catch (error) {
@@ -14,7 +14,7 @@ const bookmarkResult = async (id: string): Promise<boolean> => {
         return false;
     }
     toast({
-        description: "Result bookmark inverted"
+        description: "Result bookmark updated"
     });
 
     return true;
