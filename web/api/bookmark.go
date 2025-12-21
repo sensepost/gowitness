@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sensepost/gowitness/pkg/log"
+	"github.com/sensepost/gowitness/pkg/models"
 )
 
 type bookmarkRequest struct {
@@ -30,16 +31,14 @@ func (h *ApiHandler) BookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var bookmarked bool
-	var err error
-	bookmarkResult := h.DB.Select("bookmarked").Where("id = ?", request.ID).First(&bookmarked)
-	if bookmarkResult.Error != nil {
-		log.Error("failed to get bookmark status", "err", bookmarkResult.Error)
+	if err := h.DB.Model(&models.Result{}).Where("id = ?", request.ID).Select("bookmarked").First(&bookmarked).Error; err != nil {
+		log.Error("failed to get bookmark status", "err", err)
 		http.Error(w, "Error getting result bookmark value", http.StatusInternalServerError)
 		return
 	}
 
 	log.Info("inverting bookmark id", "id", request.ID)
-	if err := h.DB.Update("bookmark", !bookmarked).Where("id = ?", request.ID).Error; err != nil {
+	if err := h.DB.Model(&models.Result{}).Where("id = ?", request.ID).Update("bookmarked", !bookmarked).Error; err != nil {
 		log.Error("failed to update result bookmark", "err", err)
 		http.Error(w, "Error updating result bookmark value", http.StatusInternalServerError)
 		return
