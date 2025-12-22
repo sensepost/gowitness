@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 
 
 const GalleryPage = () => {
-  const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
+  const [gallery, setGallery] = useState<apitypes.galleryResult[]>([]);
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
   const [technology, setTechnology] = useState<apitypes.technologylist>();
   const [totalPages, setTotalPages] = useState(0);
@@ -136,12 +136,11 @@ const GalleryPage = () => {
   const handleBookmarkClick = async (id: number) => {
     const bookmarkUpdated = await bookmarkResult(id)
     if (bookmarkUpdated) {
-      setGallery((prevGallery) => {
-        if (!prevGallery) { return []; }  // Necessary due to the gallery state not being defined on initialization and as such could potentially be undefined
+      setGallery((prevGallery) => 
         prevGallery.map((item) =>
           item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
         )
-      });
+      );
     }
   }
 

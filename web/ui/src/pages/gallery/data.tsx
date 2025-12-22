@@ -24,7 +24,7 @@ const getWappalyzerData = async (
 
 const getData = async (
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  setGallery: React.Dispatch<React.SetStateAction<apitypes.galleryResult[] | undefined>>,
+  setGallery: React.Dispatch<React.SetStateAction<apitypes.galleryResult[]>>,
   setTotalPages: React.Dispatch<React.SetStateAction<number>>,
   page: number,
   limit: number,
