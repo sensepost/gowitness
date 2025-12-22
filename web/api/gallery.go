@@ -158,6 +158,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Screenshot:   result.Screenshot,
 			Failed:       result.Failed,
 			Technologies: technologies,
+			Bookmarked:   result.Bookmarked,
 		})
 	}
 
