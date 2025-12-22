@@ -217,8 +217,8 @@ const GalleryPage = () => {
           </CardContent>
 
           <CardFooter className="p-2 flex flex-col items-start">
-            <div className="flex flex-row" style={{ width: "100%" }}>
-              <div className="w-full mb-2">
+            <div className="flex flex-row items-start gap-2 w-full">
+              <div className="flex-1 min-w-0 mb-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -235,7 +235,7 @@ const GalleryPage = () => {
                   {screenshot.url}
                 </div>
               </div>
-              <div style={{ marginLeft: "auto"}}
+              <div className="flex-shrink-0"
                 onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
