@@ -235,14 +235,14 @@ const GalleryPage = () => {
                   {screenshot.url}
                 </div>
               </div>
-              <div style={{ marginLeft: "auto"}} 
+              <div style={{ marginLeft: "auto"}}
                 onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     handleBookmarkClick(screenshot.id);
                   }}
               >
-                {screenshot.bookmarked ? <BookmarkFilledIcon style={{ width: "24px", height: "24px"}}/>: <BookmarkIcon style={{ width: "24px", height: "24px"}}/>}
+                {screenshot.bookmarked ? <BookmarkFilledIcon className="w-6 h-6"/>: <BookmarkIcon className="w-6 h-6"/>}
               </div>
             </div>
             <div className="w-full flex items-center justify-between mt-2">
@@ -368,7 +368,7 @@ const GalleryPage = () => {
             variant={showBookmarks ? "secondary" : "outline"}
             onClick={handleBookmarkFilter}
           >
-            <BookmarkIcon className="mr-2 h-4 w-4" />
+            {showBookmarks ? <BookmarkFilledIcon className="mr-2 h-4 w-4" /> : <BookmarkIcon className="mr-2 h-4 w-4" />}
             Only Bookmarks
           </Button>
           <div className="flex items-center space-x-2 p-2">
