@@ -8,6 +8,7 @@ import {
   AlertOctagonIcon, BanIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon,
   FilterIcon, GroupIcon, ShieldCheckIcon, XIcon
 } from "lucide-react";
+import { BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { getData, getWappalyzerData } from "./data";
+import { bookmarkResult } from "@/lib/api/bookmark";
 import { getIconUrl, getStatusColor } from "@/lib/common";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -131,6 +133,18 @@ const GalleryPage = () => {
     });
   };
 
+  const handleBookmarkClick = async (id: number) => {
+    const bookmarkUpdated = await bookmarkResult(id)
+    if (bookmarkUpdated) {
+      setGallery((prevGallery) => {
+        if (!prevGallery) { return []; }  // Necessary due to the gallery state not being defined on initialization and as such could potentially be undefined
+        prevGallery.map((item) =>
+          item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
+        )
+      });
+    }
+  }
+
   const sortedTechnologies = useMemo(() => {
     if (!technology) return [];
     const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
@@ -196,21 +210,32 @@ const GalleryPage = () => {
           </CardContent>
 
           <CardFooter className="p-2 flex flex-col items-start">
-            <div className="w-full mb-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-full truncate text-sm font-medium">
-                      {screenshot.title || "Untitled"}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{screenshot.title || "Untitled"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <div className="w-full truncate text-xs text-muted-foreground mt-1">
-                {screenshot.url}
+            <div className="flex flex-row" style={{ width: "100%" }}>
+              <div className="w-full mb-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full truncate text-sm font-medium">
+                        {screenshot.title || "Untitled"}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{screenshot.title || "Untitled"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="w-full truncate text-xs text-muted-foreground mt-1">
+                  {screenshot.url}
+                </div>
+              </div>
+              <div style={{ marginLeft: "auto"}} 
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleBookmarkClick(screenshot.id);
+                  }}
+              >
+                {screenshot.bookmarked ? <BookmarkFilledIcon style={{ width: "24px", height: "24px"}}/>: <BookmarkIcon style={{ width: "24px", height: "24px"}}/>}
               </div>
             </div>
             <div className="w-full flex items-center justify-between mt-2">
