@@ -32,6 +32,7 @@ const getData = async (
   statusFilter: string,
   perceptionGroup: boolean,
   showFailed: boolean,
+  showBookmarks: boolean,
 ) => {
   setLoading(true);
   try {
@@ -42,6 +43,7 @@ const getData = async (
       status: statusFilter,
       perception: perceptionGroup ? 'true' : 'false',
       failed: showFailed ? 'true' : 'false',
+      bookmarked: showBookmarks ? true : false,
     });
     setGallery(s.results);
     setTotalPages(Math.ceil(s.total_count / limit));

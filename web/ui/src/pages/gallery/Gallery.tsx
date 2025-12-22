@@ -40,6 +40,7 @@ const GalleryPage = () => {
   const statusFilter = searchParams.get("status") || "";
   // toggles
   const perceptionGroup = searchParams.get("perception") === "true";
+  const showBookmarks = searchParams.get("bookmarked") === "true";
   const showFailed = searchParams.get("failed") !== "false"; // Default to true
 
   useEffect(() => {
@@ -49,9 +50,9 @@ const GalleryPage = () => {
   useEffect(() => {
     getData(
       setLoading, setGallery, setTotalPages,
-      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed
+      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed, showBookmarks
     );
-  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed, showBookmarks]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -125,6 +126,13 @@ const GalleryPage = () => {
       return prev;
     });
   };
+
+  const handleBookmarkFilter = () => {
+    setSearchParams(prev => {
+      prev.set("bookmarked", (!showBookmarks).toString());
+      return prev
+    })
+  }
 
   const handleToggleShowFailed = () => {
     setSearchParams(prev => {
@@ -355,6 +363,13 @@ const GalleryPage = () => {
           >
             <GroupIcon className="mr-2 h-4 w-4" />
             Group by Similar
+          </Button>
+          <Button
+            variant={showBookmarks ? "secondary" : "outline"}
+            onClick={handleBookmarkFilter}
+          >
+            <BookmarkIcon className="mr-2 h-4 w-4" />
+            Only Bookmarks
           </Button>
           <div className="flex items-center space-x-2 p-2">
             <Switch
