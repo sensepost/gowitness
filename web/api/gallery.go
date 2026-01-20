@@ -28,6 +28,7 @@ type galleryContent struct {
 	Screenshot   string    `json:"screenshot"`
 	Failed       bool      `json:"failed"`
 	Technologies []string  `json:"technologies"`
+	Bookmarked   bool      `json:"bookmarked"`
 }
 
 // GalleryHandler gets a paginated gallery
@@ -43,6 +44,7 @@ type galleryContent struct {
 //	@Param			status			query		string	false	"A comma seperated list of HTTP status codes to filter by."
 //	@Param			perception		query		boolean	false	"Order the results by perception hash."
 //	@Param			failed			query		boolean	false	"Include failed screenshots in the results."
+//	@Param			bookmarked		query		boolean	false	"Only return bookmarked items"
 //	@Success		200				{object}	galleryResponse
 //	@Router			/results/gallery [get]
 func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +100,13 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		showFailed = true
 	}
 
+	// bookmarked filtering
+	var bookmarked bool
+	bookmarked, err = strconv.ParseBool(r.URL.Query().Get("bookmarked"))
+	if err != nil {
+		bookmarked = false
+	}
+
 	// query the db
 	var queryResults []*models.Result
 	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
@@ -119,6 +128,10 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !showFailed {
 		query.Where("failed = ?", showFailed)
+	}
+
+	if bookmarked {
+		query.Where("bookmarked = ?", bookmarked)
 	}
 
 	// run the query
@@ -145,6 +158,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 			Screenshot:   result.Screenshot,
 			Failed:       result.Failed,
 			Technologies: technologies,
+			Bookmarked:   result.Bookmarked,
 		})
 	}
 

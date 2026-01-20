@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowUpDown, XIcon } from "lucide-react";
+import { BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
 import * as apitypes from "@/lib/api/types";
+import { bookmarkResult } from "@/lib/api/bookmark";
 import { copyToClipboard, getStatusColor } from "@/lib/common";
 import { getData } from "./data";
 
@@ -17,7 +19,7 @@ export default function TablePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<keyof apitypes.list>("id");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [filterStatus, setFilterStatus] = useState<"all" | "success" | "error">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "success" | "error" | "bookmarked">("all");
 
   useEffect(() => {
     getData(setLoading, setList);
@@ -42,7 +44,8 @@ export default function TablePage() {
         const matchesStatus =
           filterStatus === "all" ||
           (filterStatus === "success" && item.response_code < 400) ||
-          (filterStatus === "error" && item.response_code >= 400);
+          (filterStatus === "error" && item.response_code >= 400)  ||
+          (filterStatus === "bookmarked" && item.bookmarked === true);
         return matchesSearch && matchesStatus;
       })
       .sort((a, b) => {
@@ -51,6 +54,17 @@ export default function TablePage() {
         return 0;
       });
   }, [list, searchTerm, sortColumn, sortDirection, filterStatus]);
+
+  const handleBookmarkClick = async (id: number) => {
+    const bookmarkUpdated = await bookmarkResult(id)
+    if (bookmarkUpdated) {
+      setList((prevList) =>
+        prevList.map((item) =>
+          item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
+        )
+      );
+    }
+  }
 
   if (loading) return <WideSkeleton />;
 
@@ -69,7 +83,7 @@ export default function TablePage() {
           </Button>
         </div>
         <div className="flex items-center space-x-2 w-full md:w-auto">
-          <Select value={filterStatus} onValueChange={(value: "all" | "success" | "error") => setFilterStatus(value)}>
+          <Select value={filterStatus} onValueChange={(value: "all" | "success" | "error" | "bookmarked") => setFilterStatus(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -77,6 +91,7 @@ export default function TablePage() {
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="success">Success</SelectItem>
               <SelectItem value="error">Error</SelectItem>
+              <SelectItem value="bookmarked">Bookmarked</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -99,6 +114,7 @@ export default function TablePage() {
                 Size {sortColumn === "content_length" && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
               </TableHead>
               <TableHead>Protocol</TableHead>
+              <TableHead className="w-[100px]">Bookmark</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,6 +144,11 @@ export default function TablePage() {
                 </TableCell>
                 <TableCell>{(item.content_length / 1024).toFixed(2)} KB</TableCell>
                 <TableCell>{item.protocol}</TableCell>
+                <TableCell
+                  onClick={() => handleBookmarkClick(item.id)}
+                >
+                  {item.bookmarked ? <BookmarkFilledIcon/>: <BookmarkIcon/>}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
