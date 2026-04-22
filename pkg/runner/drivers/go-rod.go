@@ -83,6 +83,11 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 		// user specified Chrome
 		if opts.Chrome.Path != "" {
 			chrmLauncher.Bin(opts.Chrome.Path)
+		} else if autoBin, has := launcher.LookPath(); has {
+			// If no explicit chrome path was provided, use a discovered system/browser
+			// binary before falling back to rod's downloader.
+			chrmLauncher.Bin(autoBin)
+			logger.Debug("using auto-detected chrome binary", "path", autoBin)
 		}
 
 		// proxy
