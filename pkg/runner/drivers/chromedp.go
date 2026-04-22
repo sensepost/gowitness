@@ -20,7 +20,6 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/storage"
-	targetproto "github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/sensepost/gowitness/internal/islazy"
 	"github.com/sensepost/gowitness/pkg/imagehash"
@@ -44,6 +43,9 @@ type Chromedp struct {
 
 	// shared task template that will be cloned per witness
 	baseTasks chromedp.Tasks
+
+	// pre-parsed custom request headers to avoid per-target parse overhead
+	headers network.Headers
 }
 
 // browserInstance is an instance used by one run of Witness
@@ -86,15 +88,24 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			chromedp.DisableGPU,
 			chromedp.IgnoreCertErrors,
 			chromedp.UserAgent(opts.Chrome.UserAgent),
-			chromedp.Flag("disable-features", "MediaRouter"),
+			chromedp.Flag("disable-features", "MediaRouter,HttpsUpgrades,OptimizationHints,AutofillServerCommunication"),
 			chromedp.Flag("mute-audio", true),
 			chromedp.Flag("hide-scrollbars", true),
 			chromedp.Flag("disable-background-timer-throttling", true),
 			chromedp.Flag("disable-backgrounding-occluded-windows", true),
 			chromedp.Flag("disable-renderer-backgrounding", true),
+			chromedp.Flag("disable-background-networking", true),
+			chromedp.Flag("disable-component-update", true),
+			chromedp.Flag("disable-domain-reliability", true),
+			chromedp.Flag("disable-sync", true),
+			chromedp.Flag("metrics-recording-only", true),
+			chromedp.Flag("no-pings", true),
+			chromedp.Flag("disable-extensions", true),
+			chromedp.Flag("disable-breakpad", true),
+			chromedp.Flag("disable-crash-reporter", true),
+			chromedp.Flag("disable-translate", true),
 			chromedp.Flag("deny-permission-prompts", true),
 			chromedp.Flag("https-upgrades-enabled", false),
-			chromedp.Flag("disable-features", "HttpsUpgrades"),
 			chromedp.Flag("explicitly-allowed-ports", restrictedPorts()),
 			chromedp.Flag("no-sandbox", true),
 			chromedp.WindowSize(opts.Chrome.WindowX, opts.Chrome.WindowY),
@@ -148,6 +159,20 @@ func NewChromedp(logger *slog.Logger, opts runner.Options) (*Chromedp, error) {
 		browserCancel: browserCancel,
 	}
 
+	// pre-parse extra headers once at driver startup
+	if len(opts.Chrome.Headers) > 0 {
+		driver.headers = make(network.Headers)
+		for _, header := range opts.Chrome.Headers {
+			kv := strings.SplitN(header, ":", 2)
+			if len(kv) != 2 {
+				logger.Warn("custom header did not parse correctly", "header", header)
+				continue
+			}
+
+			driver.headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
+	}
+
 	driver.baseTasks = chromedp.Tasks{
 		network.Enable(),
 	}
@@ -163,25 +188,8 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 	// get a tab
 	tabCtx, tabCancel := chromedp.NewContext(run.browserCtx)
-	tabChromedpCtx := chromedp.FromContext(tabCtx)
-
-	// get the tab ID, so we can close it when we are done
-	var tabID targetproto.ID
-	if tabChromedpCtx != nil && tabChromedpCtx.Target != nil {
-		tabID = tabChromedpCtx.Target.TargetID
-	}
 
 	defer func() {
-		if tabID != "" {
-			closeCtx, cancel := context.WithTimeout(run.browserCtx, 5*time.Second)
-			defer cancel()
-			if err := chromedp.Run(closeCtx, chromedp.ActionFunc(func(ctx context.Context) error {
-				return targetproto.CloseTarget(tabID).Do(ctx)
-			})); err != nil && run.options.Logging.LogScanErrors {
-				logger.Error("failed to close tab", "err", err)
-			}
-		}
-
 		tabCancel()
 	}()
 
@@ -374,39 +382,38 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 	tasks := append(chromedp.Tasks{}, run.baseTasks...)
 
 	// set extra headers, if any
-	if len(run.options.Chrome.Headers) > 0 {
-		headers := make(network.Headers)
-		for _, header := range run.options.Chrome.Headers {
-			kv := strings.SplitN(header, ":", 2)
-			if len(kv) != 2 {
-				logger.Warn("custom header did not parse correctly", "header", header)
-				continue
-			}
-
-			headers[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
-		}
-
-		tasks = append(tasks, network.SetExtraHTTPHeaders(headers))
+	if len(run.headers) > 0 {
+		tasks = append(tasks, network.SetExtraHTTPHeaders(run.headers))
 	}
 
 	// accumulate tasks to execute in the tab context.
-	tasks = append(tasks,
-		chromedp.Navigate(target),
-		chromedp.WaitReady("body", chromedp.ByQuery),
-	)
+	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		if err := network.ClearBrowserCookies().Do(ctx); err != nil && run.options.Logging.LogScanErrors {
+			logger.Error("could not clear browser cookies", "err", err)
+		}
 
-	if run.options.Scan.Delay > 0 {
-		tasks = append(tasks, chromedp.Sleep(time.Duration(run.options.Scan.Delay)*time.Second))
-	}
+		if err := chromedp.Navigate(target).Do(ctx); err != nil {
+			return err
+		}
 
-	if run.options.Scan.JavaScript != "" {
-		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		if err := chromedp.WaitReady("body", chromedp.ByQuery).Do(ctx); err != nil {
+			return err
+		}
+
+		if run.options.Scan.Delay > 0 {
+			if err := chromedp.Sleep(time.Duration(run.options.Scan.Delay) * time.Second).Do(ctx); err != nil {
+				return err
+			}
+		}
+
+		if run.options.Scan.JavaScript != "" {
 			if err := chromedp.Evaluate(run.options.Scan.JavaScript, nil).Do(ctx); err != nil {
 				return fmt.Errorf("failed to evaluate user-provided javascript: %w", err)
 			}
-			return nil
-		}))
-	}
+		}
+
+		return nil
+	}))
 
 	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
 		var err error
@@ -421,17 +428,15 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 		if err := chromedp.Title(&result.Title).Do(ctx); err != nil && run.options.Logging.LogScanErrors {
 			logger.Error("could not get page title", "err", err)
 		}
-		return nil
-	}))
 
-	if !run.options.Scan.SkipHTML {
-		tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
+		if !run.options.Scan.SkipHTML {
 			if err := chromedp.OuterHTML(":root", &result.HTML, chromedp.ByQueryAll).Do(ctx); err != nil && run.options.Logging.LogScanErrors {
 				logger.Error("could not get page html", "err", err)
 			}
-			return nil
-		}))
-	}
+		}
+
+		return nil
+	}))
 
 	tasks = append(tasks, chromedp.ActionFunc(func(ctx context.Context) error {
 		params := page.CaptureScreenshot().
@@ -545,6 +550,7 @@ func (run *Chromedp) Witness(target string, thisRunner *runner.Runner) (*models.
 
 func (run *Chromedp) Close() {
 	run.log.Debug("closing browser allocation context")
+
 	if run.browserCancel != nil {
 		run.browserCancel()
 	}
