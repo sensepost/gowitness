@@ -19,13 +19,21 @@ RUN go install github.com/swaggo/swag/cmd/swag@latest && \
 	-X=github.com/sensepost/gowitness/internal/version.GoBuildTime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
 	-o gowitness
 
-FROM ghcr.io/go-rod/rod
+FROM docker.io/chromedp/headless-shell:stable
 
 COPY --from=build /src/gowitness /usr/local/bin/gowitness
+
+RUN apt-get update && \
+	apt-get install -y --no-install-recommends tini ca-certificates && \
+	rm -rf /var/lib/apt/lists/*
+
+RUN ln -sf /headless-shell/headless-shell /usr/bin/google-chrome && \
+	ln -sf /headless-shell/headless-shell /usr/bin/chromium && \
+	ln -sf /headless-shell/headless-shell /usr/bin/chromium-browser
 
 EXPOSE 7171
 
 VOLUME ["/data"]
 WORKDIR /data
 
-ENTRYPOINT ["dumb-init", "--"]
+ENTRYPOINT ["tini", "--", "gowitness"]
