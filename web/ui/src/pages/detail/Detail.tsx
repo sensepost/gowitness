@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, CopyIcon } from 'lucide-react';
+import { BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
 import { Form, Link, useNavigate, useParams } from 'react-router-dom';
@@ -14,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { copyToClipboard, getIconUrl, getStatusColor } from '@/lib/common';
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
+import { bookmarkResult } from "@/lib/api/bookmark";
 import { getData } from './data';
 
 
@@ -93,6 +95,21 @@ const ScreenshotDetailPage = () => {
     }
   };
 
+  const handleBookmarkClick = async () => {
+    const bookmarkUpdated = await bookmarkResult(currentId)
+    if (bookmarkUpdated) {
+      setDetail(prevDetail => {
+         if (!prevDetail) {
+           return prevDetail;
+         }
+         return {
+           ...prevDetail,
+           bookmarked: !prevDetail.bookmarked
+         };
+       });
+    }
+  }
+
   if (loading) return <WideSkeleton />;
   if (!detail) return;
 
@@ -132,6 +149,23 @@ const ScreenshotDetailPage = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Find visually similar screenshots</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBookmarkClick}
+                >
+                  {detail.bookmarked ? <BookmarkFilledIcon className="mr-2 h-4 w-4" />: <BookmarkIcon className="mr-2 h-4 w-4" />}
+                  Bookmark
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Bookmark result</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

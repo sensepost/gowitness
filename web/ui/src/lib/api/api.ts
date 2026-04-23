@@ -47,6 +47,10 @@ const endpoints = {
     path: `/search`,
     returnas: {} as searchresult
   },
+  bookmark: {
+    path: `/results/bookmark`,
+    returnas: "" as string
+  },
   delete: {
     path: `/results/delete`,
     returnas: "" as string

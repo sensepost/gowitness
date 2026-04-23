@@ -18,6 +18,7 @@ type listResponse struct {
 	Protocol       string `json:"protocol"`
 	ContentLength  int64  `json:"content_length"`
 	Title          string `json:"title"`
+	Bookmarked     bool   `json:"bookmarked"`
 
 	// Failed flag set if the result should be considered failed
 	Failed       bool   `json:"failed"`

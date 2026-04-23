@@ -29,12 +29,13 @@ type searchResult struct {
 	FailedReason   string   `json:"failed_reason"`
 	Filename       string   `json:"file_name"`
 	Screenshot     string   `json:"screenshot"`
+	Bookmarked     bool     `json:"bookmarked"`
 	MatchedFields  []string `json:"matched_fields"`
 }
 
 // searchOperators are the operators we support. everything else is
 // "free text"
-var searchOperators = []string{"title", "body", "tech", "header", "p"}
+var searchOperators = []string{"title", "body", "tech", "header", "p", "bookmarked"}
 
 // SearchHandler handles search
 //

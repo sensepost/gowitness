@@ -28,6 +28,7 @@ type Result struct {
 	PerceptionHash        string    `json:"perception_hash" gorm:"index"`
 	PerceptionHashGroupId uint      `json:"perception_hash_group_id" gorm:"index"`
 	Screenshot            string    `json:"screenshot"`
+	Bookmarked            bool      `json:"bookmarked"`
 
 	// Name of the screenshot file
 	Filename string `json:"file_name"`
