@@ -117,6 +117,11 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 			allocOpts = append(allocOpts, chromedp.ProxyServer(opts.Chrome.Proxy))
 		}
 
+		// Add resolver rules if specified
+		if opts.Chrome.HostResolverRules != "" {
+			allocOpts = append(allocOpts, chromedp.Flag("host-resolver-rules", opts.Chrome.HostResolverRules))
+		}
+
 		// Use specific Chrome binary if provided
 		if opts.Chrome.Path != "" {
 			allocOpts = append(allocOpts, chromedp.ExecPath(opts.Chrome.Path))

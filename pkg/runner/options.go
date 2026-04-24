@@ -33,6 +33,8 @@ type Chrome struct {
 	WSS string
 	// Proxy server to use
 	Proxy string
+	// Host resolver rules to pass to --host-resolver-rules
+	HostResolverRules string
 	// UserAgent is the user-agent string to set for Chrome
 	UserAgent string
 	// Headers to add to every request
