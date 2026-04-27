@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { WideSkeleton } from "@/components/loading";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,6 +30,7 @@ const GalleryPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   // pagination
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "24");
@@ -168,7 +169,7 @@ const GalleryPage = () => {
     const rawDate = format(probedDate, "PPpp"); // Formats the date in a readable format
 
     return (
-      <Link to={`/screenshot/${screenshot.id}`} key={screenshot.id}>
+      <div key={screenshot.id}>
         <Card className="group overflow-hidden transition-all hover:shadow-lg flex flex-col h-full">
           <CardContent className="p-0 relative flex-grow">
             {screenshot.failed ? (
@@ -182,7 +183,15 @@ const GalleryPage = () => {
                   : api.endpoints.screenshot.path + "/" + screenshot.file_name}
                 alt={screenshot.url}
                 loading="lazy"
-                className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105"
+                className="w-full h-48 object-cover transition-all duration-300 filter group-hover:scale-105 cursor-pointer"
+                onClick={() => navigate(`/screenshot/${screenshot.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    navigate(`/screenshot/${screenshot.id}`);
+                  }
+                }}
+                tabIndex={0}
+                role="link"
               />
             )}
             <div className="absolute top-2 right-2">
@@ -190,71 +199,78 @@ const GalleryPage = () => {
                 {screenshot.response_code}
               </Badge>
             </div>
-            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <ExternalLinkIcon className="text-white drop-shadow-lg" />
-            </div>
-          </CardContent>
+              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ExternalLinkIcon className="text-white drop-shadow-lg" />
+              </div>
+            </CardContent>
 
-          <CardFooter className="p-2 flex flex-col items-start">
-            <div className="w-full mb-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-full truncate text-sm font-medium">
-                      {screenshot.title || "Untitled"}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{screenshot.title || "Untitled"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <div className="w-full truncate text-xs text-muted-foreground mt-1">
-                {screenshot.url}
+            <CardFooter className="p-2 flex flex-col items-start">
+              <div className="w-full mb-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full truncate text-sm font-medium">
+                        {screenshot.title || "Untitled"}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{screenshot.title || "Untitled"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <a
+                  href={screenshot.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center gap-1 truncate text-xs text-muted-foreground mt-1 hover:underline hover:text-foreground underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="truncate">{screenshot.url}</span>
+                  <ExternalLinkIcon className="w-3 h-3 text-muted-foreground transition-colors" aria-hidden="true" />
+                </a>
               </div>
-            </div>
-            <div className="w-full flex items-center justify-between mt-2">
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                      <ClockIcon className="w-3 h-3" />
-                      <span className="text-nowrap">{timeAgo}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    <p>{rawDate}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <div className="flex flex-wrap justify-end gap-1">
-                {screenshot.technologies?.map(tech => {
-                  const iconUrl = getIconUrl(tech, wappalyzer);
-                  return iconUrl ? (
-                    <TooltipProvider key={tech} delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="w-6 h-6 flex items-center justify-center">
-                            <img
-                              src={iconUrl}
-                              alt={tech}
-                              loading="lazy"
-                              className="w-5 h-5 object-contain"
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{tech}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : null;
-                })}
+              <div className="w-full flex items-center justify-between mt-2">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <ClockIcon className="w-3 h-3" />
+                        <span className="text-nowrap">{timeAgo}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      <p>{rawDate}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="flex flex-wrap justify-end gap-1">
+                  {screenshot.technologies?.map(tech => {
+                    const iconUrl = getIconUrl(tech, wappalyzer);
+                    return iconUrl ? (
+                      <TooltipProvider key={tech} delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <img
+                                src={iconUrl}
+                                alt={tech}
+                                loading="lazy"
+                                className="w-5 h-5 object-contain"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{tech}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : null;
+                  })}
+                </div>
               </div>
-            </div>
-          </CardFooter>
+            </CardFooter>
         </Card>
-      </Link>
+      </div>
     );
   };
 
