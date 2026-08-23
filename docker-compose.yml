@@ -4,7 +4,7 @@ services:
   gowitness:
     image: ghcr.io/sensepost/gowitness:latest
     restart: unless-stopped
-    command: gowitness report server --host 0.0.0.0 --screenshot-path /data/screenshots --db-uri sqlite:///data/gowitness.sqlite3
+    command: report server --host 0.0.0.0 --screenshot-path /data/screenshots --db-uri sqlite:///data/gowitness.sqlite3
     volumes:
       - ./gowitness.sqlite3:/data/gowitness.sqlite3
       - ./screenshots:/data/screenshots
@@ -12,7 +12,7 @@ services:
       traefik.enable: true
       traefik.http.routers.gowitness.rule: Host(`gowitness.local`)
       traefik.http.routers.gowitness.entryPoints: web-secure
-      traefik.http.routers.gowitness.tls.certResolver: default
+      traefik.http.routers.gowitness.tls: true
       traefik.http.routers.gowitness.middlewares: basic-auth
 
   traefik:
