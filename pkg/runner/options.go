@@ -33,6 +33,12 @@ type Chrome struct {
 	WSS string
 	// Proxy server to use
 	Proxy string
+	// UserDataDir is a Chrome user data directory to use instead of a
+	// throwaway temporary one. Point this at an existing profile (for
+	// example ~/.config/google-chrome) to reuse logged in sessions.
+	// When empty, a fresh temporary directory is created per run and
+	// removed on exit.
+	UserDataDir string
 	// UserAgent is the user-agent string to set for Chrome
 	UserAgent string
 	// Headers to add to every request
