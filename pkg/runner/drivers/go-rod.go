@@ -29,6 +29,9 @@ type Gorod struct {
 	browser *rod.Browser
 	// user data directory
 	userData string
+	// ephemeralUserData is true when gowitness created the user data
+	// directory itself. A user supplied directory is left in place.
+	ephemeralUserData bool
 	// options for the Runner to consider
 	options runner.Options
 	// logger
@@ -39,13 +42,14 @@ type Gorod struct {
 // It's up to the caller to call Close() on the instance.
 func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 	var (
-		url      string
-		userData string
-		err      error
+		url       string
+		userData  string
+		ephemeral bool
+		err       error
 	)
 
 	if opts.Chrome.WSS == "" {
-		userData, err = os.MkdirTemp("", "gowitness-v3-gorod-*")
+		userData, ephemeral, err = resolveUserDataDir(opts.Chrome.UserDataDir, "gowitness-v3-gorod-*")
 		if err != nil {
 			return nil, err
 		}
@@ -117,10 +121,11 @@ func NewGorod(logger *slog.Logger, opts runner.Options) (*Gorod, error) {
 	}
 
 	return &Gorod{
-		browser:  browser,
-		userData: userData,
-		options:  opts,
-		log:      logger,
+		browser:           browser,
+		userData:          userData,
+		ephemeralUserData: ephemeral,
+		options:           opts,
+		log:               logger,
 	}, nil
 }
 
@@ -500,8 +505,8 @@ func (run *Gorod) Close() {
 		return
 	}
 
-	// cleaning user data
-	if run.userData != "" {
+	// cleaning user data, but only if we created it
+	if run.ephemeralUserData && run.userData != "" {
 		// wait a sec for the browser process to go away
 		time.Sleep(time.Second * 1)
 
