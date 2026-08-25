@@ -464,8 +464,9 @@ func (run *Gorod) Witness(target string, runner *runner.Runner) (*models.Result,
 
 		// write the screenshot to disk if we have a path
 		if !run.options.Scan.ScreenshotSkipSave {
-			result.Filename = islazy.SafeFileName(target) + "." + run.options.Scan.ScreenshotFormat
-			result.Filename = islazy.LeftTrucate(result.Filename, 200)
+			// bound the name only, so that the extension always survives
+			result.Filename = islazy.Truncate(islazy.SafeFileName(target), 200) +
+				"." + run.options.Scan.ScreenshotFormat
 			if err := os.WriteFile(
 				filepath.Join(run.options.Scan.ScreenshotPath, result.Filename),
 				img, os.FileMode(0664),
