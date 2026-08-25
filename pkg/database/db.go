@@ -52,11 +52,10 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		}
 		c.Exec("PRAGMA foreign_keys = ON")
 	case "postgres":
-		dsn, err := convertPostgresURItoDSN(uri)
-		if err != nil {
-			return nil, err
-		}
-		c, err = gorm.Open(postgres.Open(dsn), config)
+		// pgx parses URI-style DSNs natively, including percent-encoded
+		// credentials and query parameters such as sslmode, so hand it the
+		// URI unchanged rather than rebuilding it.
+		c, err = gorm.Open(postgres.Open(uri), config)
 		if err != nil {
 			return nil, err
 		}
@@ -116,38 +115,6 @@ func convertMySQLURItoDSN(uri string) (string, error) {
 		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user, pass, host, dbname,
 	)
-
-	return dsn, nil
-}
-
-func convertPostgresURItoDSN(uri string) (string, error) {
-	parsed, err := url.Parse(uri)
-	if err != nil {
-		return "", err
-	}
-
-	user := parsed.User.Username()
-	pass, _ := parsed.User.Password()
-	host := parsed.Hostname()
-	port := parsed.Port()
-	if port == "" {
-		port = "5432"
-	}
-
-	dbname := strings.TrimPrefix(parsed.Path, "/")
-
-	// Start building the DSN
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s",
-		host, user, pass, dbname, port,
-	)
-
-	// Add query params from URI
-	query := parsed.Query()
-	for key, values := range query {
-		// Only take the first value per key
-		dsn += fmt.Sprintf(" %s=%s", key, values[0])
-	}
 
 	return dsn, nil
 }
