@@ -7,8 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/glebarez/sqlite"
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"github.com/sensepost/gowitness/pkg/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -95,26 +97,35 @@ func convertMySQLURItoDSN(uri string) (string, error) {
 		return "", err
 	}
 
-	user := parsed.User.Username()
-	pass, _ := parsed.User.Password()
-	host := parsed.Host
-	dbname := strings.TrimPrefix(parsed.Path, "/")
+	addr := parsed.Host
 
-	// Handle "tcp(...)"
-	if strings.HasPrefix(host, "tcp(") && strings.HasSuffix(host, ")") {
-		host = strings.TrimPrefix(host, "tcp(")
-		host = strings.TrimSuffix(host, ")")
+	// some users copy the tcp(...) form straight out of the driver's own dsn
+	// documentation, so keep accepting it
+	if strings.HasPrefix(addr, "tcp(") && strings.HasSuffix(addr, ")") {
+		addr = strings.TrimSuffix(strings.TrimPrefix(addr, "tcp("), ")")
 	}
 
-	// Default port
-	if !strings.Contains(host, ":") {
-		host = host + ":3306"
+	if !strings.Contains(addr, ":") {
+		addr += ":3306"
 	}
 
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		user, pass, host, dbname,
-	)
+	password, _ := parsed.User.Password()
 
-	return dsn, nil
+	cfg := mysqldriver.NewConfig()
+	cfg.User = parsed.User.Username()
+	cfg.Passwd = password
+	cfg.Net = "tcp"
+	cfg.Addr = addr
+	cfg.DBName = strings.TrimPrefix(parsed.Path, "/")
+	cfg.ParseTime = true
+	cfg.Loc = time.Local
+	cfg.Params = map[string]string{"charset": "utf8mb4"}
+
+	// carry any parameters the user set on the uri, taking the first value
+	// per key. these may override the defaults set above.
+	for key, values := range parsed.Query() {
+		cfg.Params[key] = values[0]
+	}
+
+	return cfg.FormatDSN(), nil
 }
