@@ -50,7 +50,6 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		c.Exec("PRAGMA foreign_keys = ON")
 	case "postgres":
 		dsn, err := convertPostgresURItoDSN(uri)
 		if err != nil {
@@ -84,9 +83,35 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		&models.ConsoleLog{},
 		&models.Cookie{},
 	); err != nil {
-		return nil, err
+		if db.Scheme == "sqlite" {
+			_ = c.Exec("PRAGMA foreign_keys = ON").Error
+		}
+		return nil, fmt.Errorf("database migration failed: %w", err)
 	}
 
+	if db.Scheme == "sqlite" {
+		if err := c.Exec("PRAGMA foreign_keys = ON").Error; err != nil {
+			return nil, fmt.Errorf("failed to re-enable sqlite foreign keys: %w", err)
+		}
+
+		var violations []struct {
+			Table  string
+			RowID  int
+			Parent string
+			FKID   int
+		}
+
+		if err := c.Raw("PRAGMA foreign_key_check").Scan(&violations).Error; err != nil {
+			return nil, fmt.Errorf("failed to validate sqlite foreign keys: %w", err)
+		}
+
+		if len(violations) > 0 {
+			return nil, fmt.Errorf(
+				"sqlite foreign-key integrity check failed: %d violation(s)",
+				len(violations),
+			)
+		}
+	}
 	return c, nil
 }
 
