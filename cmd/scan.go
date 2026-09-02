@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"log/slog"
+	"runtime"
 
 	"github.com/sensepost/gowitness/internal/ascii"
 	"github.com/sensepost/gowitness/pkg/log"
@@ -135,7 +136,11 @@ func init() {
 	scanCmd.PersistentFlags().BoolVar(&opts.Logging.LogScanErrors, "log-scan-errors", false, "Log scan errors (timeouts, DNS errors, etc.) to stderr (warning: can be verbose!)")
 
 	// "Threads" & other
-	scanCmd.PersistentFlags().StringVarP(&opts.Scan.Driver, "driver", "", "chromedp", "The scan driver to use. Can be one of [gorod, chromedp]")
+	defaultDriver := "chromedp"
+	if runtime.GOOS == "windows" {
+		defaultDriver = "gorod"
+	}
+	scanCmd.PersistentFlags().StringVarP(&opts.Scan.Driver, "driver", "", defaultDriver, "The scan driver to use. Can be one of [gorod, chromedp]")
 	scanCmd.PersistentFlags().IntVarP(&opts.Scan.Threads, "threads", "t", 6, "Number of concurrent threads (goroutines) to use")
 	scanCmd.PersistentFlags().IntVarP(&opts.Scan.Timeout, "timeout", "T", 60, "Number of seconds before considering a page timed out")
 	scanCmd.PersistentFlags().IntVar(&opts.Scan.Delay, "delay", 3, "Number of seconds delay between navigation and screenshotting")
