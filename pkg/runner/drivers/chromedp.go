@@ -53,6 +53,9 @@ type browserInstance struct {
 	allocCtx    context.Context
 	allocCancel context.CancelFunc
 	userData    string
+	// ephemeralUserData is true when gowitness created the user data
+	// directory itself. A user supplied directory is left in place.
+	ephemeralUserData bool
 }
 
 // Close closes the allocator, and cleans up the user dir.
@@ -60,8 +63,8 @@ func (b *browserInstance) Close() {
 	b.allocCancel()
 	<-b.allocCtx.Done()
 
-	// cleanup the user data directory
-	if b.userData != "" {
+	// cleanup the user data directory, but only if we created it
+	if b.ephemeralUserData && b.userData != "" {
 		os.RemoveAll(b.userData)
 	}
 }
@@ -72,11 +75,12 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 		allocCtx    context.Context
 		allocCancel context.CancelFunc
 		userData    string
+		ephemeral   bool
 		err         error
 	)
 
 	if opts.Chrome.WSS == "" {
-		userData, err = os.MkdirTemp("", "gowitness-v3-chromedp-*")
+		userData, ephemeral, err = resolveUserDataDir(opts.Chrome.UserDataDir, "gowitness-v3-chromedp-*")
 		if err != nil {
 			return nil, err
 		}
@@ -129,9 +133,10 @@ func getChromedpAllocator(opts runner.Options) (*browserInstance, error) {
 	}
 
 	return &browserInstance{
-		allocCtx:    allocCtx,
-		allocCancel: allocCancel,
-		userData:    userData,
+		allocCtx:          allocCtx,
+		allocCancel:       allocCancel,
+		userData:          userData,
+		ephemeralUserData: ephemeral,
 	}, nil
 }
 

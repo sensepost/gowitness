@@ -156,6 +156,7 @@ func init() {
 	// Chrome options
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Path, "chrome-path", "", "The path to a Google Chrome binary to use (downloads a platform-appropriate binary by default)")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.Proxy, "chrome-proxy", "", "An HTTP/SOCKS5 proxy server to use. Specify the proxy using this format: proto://address:port")
+	scanCmd.PersistentFlags().StringVar(&opts.Chrome.UserDataDir, "chrome-user-data-dir", "", "A Chrome user data directory to use instead of a temporary one. Point this at an existing profile (e.g. ~/.config/google-chrome) to reuse logged in sessions. The directory is left in place after the scan")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.WSS, "chrome-wss-url", "", "A websocket URL to connect to a remote, already running Chrome DevTools instance (i.e., Chrome started with --remote-debugging-port)")
 	scanCmd.PersistentFlags().StringVar(&opts.Chrome.UserAgent, "chrome-user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36", "The user-agent string to use")
 	scanCmd.PersistentFlags().IntVar(&opts.Chrome.WindowX, "chrome-window-x", 1280, "The Chrome browser window width, in pixels")
