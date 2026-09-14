@@ -1,16 +1,20 @@
+FROM node:24-bookworm-slim AS frontend
+
+WORKDIR /src/web/ui
+
+COPY web/ui/package*.json ./
+RUN npm ci
+
+COPY web/ui/ ./
+RUN npm run build
+
 FROM golang:1-bookworm AS build
 
-RUN apt-get update && \
-	apt-get install -y npm
-
-ADD . /src
+COPY . /src
 WORKDIR /src
 
-RUN cd web/ui && \
-	rm -Rf node_modules && \
-	npm i && \
-	npm run build && \
-	cd ../..
+COPY --from=frontend /src/web/ui/dist ./web/ui/dist
+
 RUN go install github.com/swaggo/swag/cmd/swag@latest && \
 	swag i --exclude ./web/ui --output web/docs && \
 	go build -trimpath -ldflags="-s -w \
