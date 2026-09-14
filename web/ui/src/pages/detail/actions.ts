@@ -1,4 +1,4 @@
-import { ActionFunction, redirect } from "react-router-dom";
+import { ActionFunction, redirect } from "react-router";
 import { toast } from "@/hooks/use-toast";
 import * as api from "@/lib/api/api";
 

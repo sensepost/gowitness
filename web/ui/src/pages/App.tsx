@@ -1,7 +1,7 @@
 import Navigation from "@/components/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 
 const App = () => {
   return (

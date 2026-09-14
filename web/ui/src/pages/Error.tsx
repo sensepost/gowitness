@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "@/components/ui/card";
 import { CircleXIcon, RefreshCcwIcon } from "lucide-react";
-import { isRouteErrorResponse, useNavigate, useRouteError } from "react-router-dom";
+import { isRouteErrorResponse, useNavigate, useRouteError } from "react-router";
 
 const ErrorPage = () => {
   const error = useRouteError();

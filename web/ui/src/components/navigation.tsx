@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ImageIcon, ImagePlusIcon, LayoutDashboardIcon, ScanIcon, SearchIcon, TableIcon } from "lucide-react";
-import { Form, NavLink, useSubmit } from "react-router-dom";
+import { Form, NavLink, useSubmit } from "react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ModeToggle } from "./mode-toggle";

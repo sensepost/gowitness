@@ -1,6 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import * as api from "@/lib/api/api";
-import { redirect } from "react-router-dom";
+import { redirect } from "react-router";
 
 const submitJobAction = async ({ formData }: { formData: FormData; }) => {
 

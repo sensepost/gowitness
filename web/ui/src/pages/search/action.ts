@@ -1,4 +1,4 @@
-import { redirect } from "react-router-dom";
+import { redirect } from "react-router";
 
 // searchAction grabs the form to search, encodes the data and
 // redirects to the search URI that will trigger the loader
