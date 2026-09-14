@@ -16,6 +16,8 @@ type Options struct {
 type Logging struct {
 	// Debug display debug level logging
 	Debug bool
+	// NoLogColor disables colors in log output
+	NoLogColor bool
 	// LogScanErrors log errors related to scanning
 	LogScanErrors bool
 	// Silence all logging

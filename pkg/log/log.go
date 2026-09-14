@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/muesli/termenv"
 )
 
 // LLogger is a charmbracelet logger type redefinition
@@ -34,6 +35,11 @@ func EnableDebug() {
 // EnableSilence will silence most logs, except this written with Print
 func EnableSilence() {
 	Logger.SetLevel(log.FatalLevel + 100)
+}
+
+// DisableColor disables colors and other ANSI styling in log output.
+func DisableColor() {
+	Logger.SetColorProfile(termenv.Ascii)
 }
 
 // Debug logs debug messages

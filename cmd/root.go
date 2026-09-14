@@ -31,6 +31,10 @@ var rootCmd = &cobra.Command{
 	Short: "A web screenshot and information gathering tool",
 	Long:  ascii.Logo(),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if opts.Logging.NoLogColor {
+			log.DisableColor()
+		}
+
 		if opts.Logging.Silence {
 			log.EnableSilence()
 		}
@@ -141,6 +145,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Debug, "debug-log", "D", false, "Enable debug logging")
+	rootCmd.PersistentFlags().BoolVar(&opts.Logging.NoLogColor, "no-log-color", false, "Disable colors in log output")
 	rootCmd.PersistentFlags().BoolVarP(&opts.Logging.Silence, "quiet", "q", false, "Silence (almost all) logging")
 	rootCmd.PersistentFlags().BoolVar(&enableProfiling, "profile", false, "Enable CPU, memory, and trace profiling (writes to profiles/<timestamp>/)")
 }

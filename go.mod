@@ -17,6 +17,7 @@ require (
 	github.com/go-chi/cors v1.2.2
 	github.com/go-rod/rod v0.116.2
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
+	github.com/muesli/termenv v0.16.0
 	github.com/projectdiscovery/wappalyzergo v0.3.1
 	github.com/spf13/cobra v1.10.2
 	github.com/swaggo/http-swagger v1.3.4
@@ -73,7 +74,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.30 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
