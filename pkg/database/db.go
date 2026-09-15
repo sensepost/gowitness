@@ -87,6 +87,27 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// remove indexes older versions declared on large text columns. AutoMigrate
+	// only adds indexes, it never drops ones that are no longer part of the
+	// model, so existing databases keep them forever. On PostgreSQL they also
+	// make every insert of a page larger than ~2704 bytes fail.
+	for _, stale := range []struct {
+		model any
+		index string
+	}{
+		{&models.Result{}, "idx_results_html"},
+		{&models.Header{}, "idx_headers_value"},
+		{&models.ConsoleLog{}, "idx_console_logs_value"},
+	} {
+		if !c.Migrator().HasIndex(stale.model, stale.index) {
+			continue
+		}
+
+		if err := c.Migrator().DropIndex(stale.model, stale.index); err != nil {
+			return nil, fmt.Errorf("failed to drop stale index %s: %w", stale.index, err)
+		}
+	}
+
 	return c, nil
 }
 

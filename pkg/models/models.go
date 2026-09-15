@@ -23,7 +23,7 @@ type Result struct {
 	ResponseReason        string    `json:"response_reason"`
 	Protocol              string    `json:"protocol"`
 	ContentLength         int64     `json:"content_length"`
-	HTML                  string    `json:"html" gorm:"type:longtext;index:,length:191"`
+	HTML                  string    `json:"html"`
 	Title                 string    `json:"title" gorm:"index"`
 	PerceptionHash        string    `json:"perception_hash" gorm:"index"`
 	PerceptionHashGroupId uint      `json:"perception_hash_group_id" gorm:"index"`
@@ -91,7 +91,7 @@ type Header struct {
 	ResultID uint `json:"result_id"`
 
 	Key   string `json:"key"`
-	Value string `json:"value" gorm:"type:longtext;index:,length:191"`
+	Value string `json:"value"`
 }
 
 type NetworkLog struct {
@@ -113,7 +113,7 @@ type ConsoleLog struct {
 	ResultID uint `json:"result_id"`
 
 	Type  string `json:"type"`
-	Value string `json:"value" gorm:"type:longtext;index:,length:191"`
+	Value string `json:"value"`
 }
 
 type Cookie struct {
