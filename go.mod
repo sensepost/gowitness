@@ -2,8 +2,6 @@ module github.com/sensepost/gowitness
 
 go 1.26.0
 
-replace github.com/ysmood/fetchup => github.com/ysmood/fetchup v0.3.0
-
 require (
 	github.com/charmbracelet/glamour v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834
@@ -81,7 +79,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/xo/terminfo v1.2.0 // indirect
-	github.com/ysmood/fetchup v0.5.3 // indirect
+	github.com/ysmood/fetchup v0.3.0 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/got v0.42.4 // indirect
 	github.com/ysmood/leakless v0.9.0 // indirect
