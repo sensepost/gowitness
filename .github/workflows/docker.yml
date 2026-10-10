@@ -7,60 +7,180 @@ on:
     types: [published]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
+permissions: {}
 
 jobs:
-  build:
+  get_tags:
     runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.tags.outputs.tags }}
+    steps:
+      - name: Get image tags
+        id: tags
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/master" ]]; then
+            tags="latest"
+          elif [[ "$EVENT_NAME" == "release" ]]; then
+            version="${RELEASE_TAG#v}"
+            tags="$version"
+
+            if [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              tags="$version,${BASH_REMATCH[1]}.${BASH_REMATCH[2]},${BASH_REMATCH[1]}"
+            fi
+          else
+            tags=""
+          fi
+
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: get_tags
+    if: needs.get_tags.outputs.tags != ''
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+            artifact: ghcr
+            registry: ghcr.io
+            image: ghcr.io/${{ github.repository }}
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+            artifact: ghcr
+            registry: ghcr.io
+            image: ghcr.io/${{ github.repository }}
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+            artifact: dockerhub
+            registry: docker.io
+            image: leonjza/gowitness
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: arm64
+            artifact: dockerhub
+            registry: docker.io
+            image: leonjza/gowitness
     steps:
       - uses: actions/checkout@v7
-
-      - name: Get version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-
-      - uses: mr-smithers-excellent/docker-build-push@v7
-        name: Publish latest tag to Github Repo (only on master branch push)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
-          image: gowitness
-          addLatest: true
-          tags: latest
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        if: matrix.registry == 'ghcr.io'
+        uses: docker/login-action@v4
+        with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: mr-smithers-excellent/docker-build-push@v7
-        name: Publish latest and version tag to Github Repo (only on tag event)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      - name: Log in to Docker Hub
+        if: matrix.registry == 'docker.io'
+        uses: docker/login-action@v4
         with:
-          image: gowitness
-          addLatest: true
-          tags: ${{ steps.get_version.outputs.VERSION }}, latest
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push ${{ matrix.platform }} image by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export image digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.artifact }}-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: [get_tags, build]
+    if: needs.get_tags.outputs.tags != ''
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - registry: ghcr.io
+            artifact: ghcr
+            image: ghcr.io/${{ github.repository }}
+          - registry: docker.io
+            artifact: dockerhub
+            image: leonjza/gowitness
+    steps:
+      - name: Download architecture digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: digests-${{ matrix.artifact }}-*
+          path: /tmp/digests
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        if: matrix.registry == 'ghcr.io'
+        uses: docker/login-action@v4
+        with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: mr-smithers-excellent/docker-build-push@v7
-        name: Publish latest tag to Docker Repo (only on master branch push)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      - name: Log in to Docker Hub
+        if: matrix.registry == 'docker.io'
+        uses: docker/login-action@v4
         with:
-          image: leonjza/gowitness
-          addLatest: true
-          tags: latest
-          registry: docker.io
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: mr-smithers-excellent/docker-build-push@v7
-        name: Publish latest and version tag to Docker Repo (only on tag event)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        with:
-          image: leonjza/gowitness
-          addLatest: true
-          tags: ${{ steps.get_version.outputs.VERSION }}, latest
-          registry: docker.io
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Create and push multi-platform tags
+        env:
+          IMAGE: ${{ matrix.image }}
+          BASE_TAGS: ${{ needs.get_tags.outputs.tags }}
+        run: |
+          digests=()
+          for digest_file in /tmp/digests/*; do
+            digest="${digest_file##*/}"
+            if [[ ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "Invalid image digest: $digest" >&2
+              exit 1
+            fi
+            digests+=("${IMAGE}@sha256:${digest}")
+          done
+
+          if [[ "${#digests[@]}" -ne 2 ]]; then
+            echo "Expected 2 architecture digests, found ${#digests[@]}" >&2
+            exit 1
+          fi
+
+          IFS=',' read -ra tags <<< "$BASE_TAGS"
+          for tag in "${tags[@]}"; do
+            docker buildx imagetools create \
+              --tag "${IMAGE}:${tag}" \
+              "${digests[@]}"
+          done
