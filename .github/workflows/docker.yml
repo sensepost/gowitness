@@ -51,27 +51,9 @@ jobs:
           - runner: ubuntu-24.04
             platform: linux/amd64
             arch: amd64
-            artifact: ghcr
-            registry: ghcr.io
-            image: ghcr.io/${{ github.repository }}
           - runner: ubuntu-24.04-arm
             platform: linux/arm64
             arch: arm64
-            artifact: ghcr
-            registry: ghcr.io
-            image: ghcr.io/${{ github.repository }}
-          - runner: ubuntu-24.04
-            platform: linux/amd64
-            arch: amd64
-            artifact: dockerhub
-            registry: docker.io
-            image: leonjza/gowitness
-          - runner: ubuntu-24.04-arm
-            platform: linux/arm64
-            arch: arm64
-            artifact: dockerhub
-            registry: docker.io
-            image: leonjza/gowitness
     steps:
       - uses: actions/checkout@v7
         with:
@@ -80,7 +62,6 @@ jobs:
       - uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
-        if: matrix.registry == 'ghcr.io'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -88,7 +69,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
-        if: matrix.registry == 'docker.io'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -100,7 +80,8 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          outputs: type=image,name=${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          tags: docker.io/leonjza/gowitness,ghcr.io/${{ github.repository }}
+          outputs: type=image,name=${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export image digest
         env:
@@ -112,7 +93,7 @@ jobs:
       - name: Upload image digest
         uses: actions/upload-artifact@v7
         with:
-          name: digests-${{ matrix.artifact }}-${{ matrix.arch }}
+          name: digests-${{ matrix.arch }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -128,23 +109,20 @@ jobs:
       matrix:
         include:
           - registry: ghcr.io
-            artifact: ghcr
             image: ghcr.io/${{ github.repository }}
           - registry: docker.io
-            artifact: dockerhub
             image: leonjza/gowitness
     steps:
       - name: Download architecture digests
         uses: actions/download-artifact@v8
         with:
-          pattern: digests-${{ matrix.artifact }}-*
+          pattern: digests-*
           path: /tmp/digests
           merge-multiple: true
 
       - uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
-        if: matrix.registry == 'ghcr.io'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -152,7 +130,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
-        if: matrix.registry == 'docker.io'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
