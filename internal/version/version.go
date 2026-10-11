@@ -1,7 +1,7 @@
 package version
 
 var (
-	Version = "3.2.1"
+	Version = "3.2.2"
 
 	GitHash     = "dev"
 	GoBuildEnv  = "dev"
