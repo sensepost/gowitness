@@ -16,7 +16,7 @@ require (
 	github.com/go-rod/rod v0.116.2
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/muesli/termenv v0.16.0
-	github.com/projectdiscovery/wappalyzergo v0.3.1
+	github.com/projectdiscovery/wappalyzergo v0.3.5
 	github.com/spf13/cobra v1.10.2
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
