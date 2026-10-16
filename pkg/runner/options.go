@@ -95,6 +95,8 @@ type Scan struct {
 	ScreenshotToWriter bool
 	// ScreenshotSkipSave skips saving screenshots to disk
 	ScreenshotSkipSave bool
+	// SkipExisting skips targets whose screenshot file already exists in ScreenshotPath
+	SkipExisting bool
 	// JavaScript to evaluate on every page
 	JavaScript     string
 	JavaScriptFile string

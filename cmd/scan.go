@@ -145,6 +145,7 @@ func init() {
 	scanCmd.PersistentFlags().IntVar(&opts.Scan.ScreenshotJpegQuality, "screenshot-jpeg-quality", 60, "The quality of JPEG screenshots (1-100)")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotFullPage, "screenshot-fullpage", false, "Do full-page screenshots, instead of just the viewport")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.ScreenshotSkipSave, "screenshot-skip-save", false, "Do not save screenshots to the screenshot-path (useful together with --write-screenshots)")
+	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SkipExisting, "skip-existing", false, "Skip targets that already have a screenshot in the screenshot-path (useful to resume a scan)")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScript, "javascript", "", "A JavaScript function to evaluate on every page, before a screenshot. Note: It must be a JavaScript function! e.g., () => console.log('gowitness');")
 	scanCmd.PersistentFlags().StringVar(&opts.Scan.JavaScriptFile, "javascript-file", "", "A file containing a JavaScript function to evaluate on every page, before a screenshot. See --javascript")
 	scanCmd.PersistentFlags().BoolVar(&opts.Scan.SaveContent, "save-content", false, "Save content from network requests to the configured writers. WARNING: This flag has the potential to make your storage explode in size")
