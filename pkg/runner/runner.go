@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sync"
 
 	wappalyzer "github.com/projectdiscovery/wappalyzergo"
@@ -137,6 +138,15 @@ func (run *Runner) Run() {
 							run.log.Error("invalid target to scan", "target", target, "err", err)
 						}
 						continue
+					}
+
+					// skip targets that already have a screenshot on disk
+					if run.options.Scan.SkipExisting && !run.options.Scan.ScreenshotSkipSave {
+						name := islazy.Truncate(islazy.SafeFileName(target), 200) + "." + run.options.Scan.ScreenshotFormat
+						if islazy.FileExists(filepath.Join(run.options.Scan.ScreenshotPath, name)) {
+							run.log.Info("skipping, screenshot exists", "target", target)
+							continue
+						}
 					}
 
 					result, err := run.Driver.Witness(target, run)
