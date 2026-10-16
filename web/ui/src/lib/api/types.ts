@@ -36,6 +36,7 @@ type galleryResult = {
   screenshot: string;
   failed: boolean;
   technologies: string[];
+  bookmarked: boolean;
 };
 
 // list
@@ -48,6 +49,7 @@ type list = {
   protocol: string;
   content_length: number;
   title: string;
+  bookmarked: boolean;
   failed: boolean;
   failed_reason: string;
 };
@@ -136,6 +138,7 @@ interface detail {
   html: string;
   title: string;
   perception_hash: string;
+  bookmarked: boolean;
   file_name: string;
   is_pdf: boolean;
   failed: boolean;
@@ -159,6 +162,7 @@ interface searchresult {
   matched_fields: string[];
   file_name: string;
   screenshot: string;
+  bookmarked: boolean;
 }
 
 interface technologylist {

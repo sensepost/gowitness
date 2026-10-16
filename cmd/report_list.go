@@ -20,8 +20,9 @@ import (
 )
 
 var listCmdFlags = struct {
-	DbURI    string
-	JsonFile string
+	DbURI     string
+	JsonFile  string
+	Bookmarks bool
 }{}
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -87,7 +88,13 @@ lines file.`)),
 			return
 		}
 
-		if err := conn.Model(&models.Result{}).Preload(clause.Associations).Find(&results).Error; err != nil {
+		if listCmdFlags.Bookmarks {
+			err = conn.Model(&models.Result{}).Preload(clause.Associations).Where("bookmarked = true").Find(&results).Error
+		} else {
+			err = conn.Model(&models.Result{}).Preload(clause.Associations).Find(&results).Error
+		}
+
+		if err != nil {
 			log.Error("could not get list", "err", err)
 			return
 		}
@@ -101,6 +108,7 @@ func init() {
 
 	listCmd.Flags().StringVar(&listCmdFlags.DbURI, "db-uri", "sqlite://gowitness.sqlite3", "The location of a gowitness database")
 	listCmd.Flags().StringVar(&listCmdFlags.JsonFile, "json-file", "", "The location of a JSON Lines results file (e.g., ./gowitness.jsonl). This flag takes precedence over --db-uri")
+	listCmd.Flags().BoolVar(&listCmdFlags.Bookmarks, "bookmarks", false, "Only list bookmarked results")
 }
 
 func renderTable(results []*models.Result) {

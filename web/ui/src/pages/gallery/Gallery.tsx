@@ -8,6 +8,7 @@ import {
   AlertOctagonIcon, BanIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon,
   FilterIcon, GroupIcon, ShieldCheckIcon, XIcon
 } from "lucide-react";
+import { BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,13 +18,14 @@ import { cn } from "@/lib/utils";
 import * as api from "@/lib/api/api";
 import * as apitypes from "@/lib/api/types";
 import { getData, getWappalyzerData } from "./data";
+import { bookmarkResult } from "@/lib/api/bookmark";
 import { getIconUrl, getStatusColor } from "@/lib/common";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 
 const GalleryPage = () => {
-  const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
+  const [gallery, setGallery] = useState<apitypes.galleryResult[]>([]);
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
   const [technology, setTechnology] = useState<apitypes.technologylist>();
   const [totalPages, setTotalPages] = useState(0);
@@ -38,6 +40,7 @@ const GalleryPage = () => {
   const statusFilter = searchParams.get("status") || "";
   // toggles
   const perceptionGroup = searchParams.get("perception") === "true";
+  const showBookmarks = searchParams.get("bookmarked") === "true";
   const showFailed = searchParams.get("failed") !== "false"; // Default to true
 
   useEffect(() => {
@@ -47,9 +50,9 @@ const GalleryPage = () => {
   useEffect(() => {
     getData(
       setLoading, setGallery, setTotalPages,
-      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed
+      page, limit, technologyFilter, statusFilter, perceptionGroup, showFailed, showBookmarks
     );
-  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed]);
+  }, [page, limit, perceptionGroup, statusFilter, technologyFilter, showFailed, showBookmarks]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -124,12 +127,30 @@ const GalleryPage = () => {
     });
   };
 
+  const handleBookmarkFilter = () => {
+    setSearchParams(prev => {
+      prev.set("bookmarked", (!showBookmarks).toString());
+      return prev
+    })
+  }
+
   const handleToggleShowFailed = () => {
     setSearchParams(prev => {
       prev.set("failed", (!showFailed).toString());
       return prev;
     });
   };
+
+  const handleBookmarkClick = async (id: number) => {
+    const bookmarkUpdated = await bookmarkResult(id)
+    if (bookmarkUpdated) {
+      setGallery((prevGallery) => 
+        prevGallery.map((item) =>
+          item.id === id ? { ...item, bookmarked: !item.bookmarked } : item
+        )
+      );
+    }
+  }
 
   const sortedTechnologies = useMemo(() => {
     if (!technology) return [];
@@ -196,21 +217,32 @@ const GalleryPage = () => {
           </CardContent>
 
           <CardFooter className="p-2 flex flex-col items-start">
-            <div className="w-full mb-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-full truncate text-sm font-medium">
-                      {screenshot.title || "Untitled"}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{screenshot.title || "Untitled"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <div className="w-full truncate text-xs text-muted-foreground mt-1">
-                {screenshot.url}
+            <div className="flex flex-row items-start gap-2 w-full">
+              <div className="flex-1 min-w-0 mb-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full truncate text-sm font-medium">
+                        {screenshot.title || "Untitled"}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{screenshot.title || "Untitled"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="w-full truncate text-xs text-muted-foreground mt-1">
+                  {screenshot.url}
+                </div>
+              </div>
+              <div className="flex-shrink-0"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleBookmarkClick(screenshot.id);
+                  }}
+              >
+                {screenshot.bookmarked ? <BookmarkFilledIcon className="w-6 h-6"/>: <BookmarkIcon className="w-6 h-6"/>}
               </div>
             </div>
             <div className="w-full flex items-center justify-between mt-2">
@@ -331,6 +363,13 @@ const GalleryPage = () => {
           >
             <GroupIcon className="mr-2 h-4 w-4" />
             Group by Similar
+          </Button>
+          <Button
+            variant={showBookmarks ? "secondary" : "outline"}
+            onClick={handleBookmarkFilter}
+          >
+            {showBookmarks ? <BookmarkFilledIcon className="mr-2 h-4 w-4" /> : <BookmarkIcon className="mr-2 h-4 w-4" />}
+            Only Bookmarks
           </Button>
           <div className="flex items-center space-x-2 p-2">
             <Switch
