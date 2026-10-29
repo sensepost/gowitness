@@ -11,7 +11,7 @@ require (
 	github.com/chromedp/chromedp v0.16.0
 	github.com/corona10/goimagehash v1.1.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-chi/chi/v5 v5.3.2
+	github.com/go-chi/chi/v5 v5.4.0
 	github.com/go-chi/cors v1.2.2
 	github.com/go-rod/rod v0.116.2
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
