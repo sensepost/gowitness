@@ -1,17 +1,20 @@
 import { toast } from "@/hooks/use-toast";
 import * as api from "@/lib/api/api";
+import { parseTargets } from "@/lib/targets";
 import { redirect } from "react-router";
 
 const submitJobAction = async ({ formData }: { formData: FormData; }) => {
 
-  // grab submitted urls
-  const urls = Array.from(formData.entries())
-    .filter(([key]) => key.startsWith('url-'))
-    .map(([, value]) => value as string)
-    .filter(url => url.trim() !== '');
+  // grab submitted urls (newline separated)
+  const { urls } = parseTargets((formData.get('urls') as string | null) ?? '');
 
   if (urls.length === 0) {
-    return { error: "Please enter at least one URL" };
+    toast({
+      title: "Error",
+      description: "Please enter at least one valid URL",
+      variant: "destructive"
+    });
+    return null;
   }
 
   const options = {
@@ -36,7 +39,7 @@ const submitJobAction = async ({ formData }: { formData: FormData; }) => {
 
   toast({
     title: "Success!",
-    description: "Probe has been submitted"
+    description: `Probe has been submitted for ${urls.length} target${urls.length === 1 ? "" : "s"}`
   });
 
   return redirect("/submit");
