@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Form, useActionData, useNavigation } from 'react-router';
-import { PlusCircle, Trash2, Send, Settings, GlobeIcon, ExternalLinkIcon, ServerIcon, FileTypeIcon, ClockIcon } from 'lucide-react';
+import { Send, Settings, GlobeIcon, ExternalLinkIcon, ServerIcon, FileTypeIcon, ClockIcon, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as apitypes from "@/lib/api/types";
+import { parseTargets } from "@/lib/targets";
 
 export default function JobSubmissionPage() {
-  const [urls, setUrls] = useState<string[]>(['']);
+  const [urls, setUrls] = useState<string>('');
   const [advancedOptions, setAdvancedOptions] = useState(false);
   const [immediateUrl, setImmediateUrl] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -28,22 +29,12 @@ export default function JobSubmissionPage() {
       : setIsModalOpen(false);
   }, [probeResult]);
 
-  const handleUrlChange = (index: number, value: string) => {
-    const newUrls = [...urls];
-    newUrls[index] = value;
-    setUrls(newUrls);
-  };
+  const parsedTargets = useMemo(() => parseTargets(urls), [urls]);
+  const targetCount = parsedTargets.urls.length;
 
-  const addUrl = () => {
-    setUrls([...urls, '']);
-  };
-
-  const removeUrl = (index: number) => {
-    const newUrls = urls.filter((_, i) => i !== index);
-    setUrls(newUrls);
-  };
-
-  const ProbeOptions = () => (
+  // rendered as a plain function (not a component) so the accordion state and
+  // option values are not reset every time this page re-renders
+  const renderProbeOptions = () => (
     <Accordion type="single" collapsible>
       <AccordionItem value="options">
         <AccordionTrigger>
@@ -158,32 +149,38 @@ export default function JobSubmissionPage() {
             <TabsContent value="job">
               <Form method="post" className="space-y-6">
                 <input type="hidden" name="action" value="job" />
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">URLs</h3>
-                  {urls.map((url, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Input
-                        type="url"
-                        name={`url-${index}`}
-                        placeholder="https://sensepost.com"
-                        value={url}
-                        onChange={(e) => handleUrlChange(index, e.target.value)}
-                        className="flex-grow"
-                      />
-                      {index === urls.length - 1 ? (
-                        <Button type="button" variant="outline" size="icon" onClick={addUrl}>
-                          <PlusCircle className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button type="button" variant="outline" size="icon" onClick={() => removeUrl(index)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                <div className="space-y-2">
+                  <Label htmlFor="urls" className="text-lg font-semibold">URLs</Label>
+                  <p className="text-sm text-muted-foreground">
+                    One URL per line. Targets without a scheme (e.g. sensepost.com) are probed over both http:// and https://.
+                  </p>
+                  <textarea
+                    id="urls"
+                    name="urls"
+                    rows={6}
+                    spellCheck={false}
+                    placeholder={"https://sensepost.com\nhttps://example.com:8443\n192.168.0.1"}
+                    value={urls}
+                    onChange={(e) => setUrls(e.target.value)}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {targetCount} target{targetCount === 1 ? '' : 's'}
+                    {parsedTargets.duplicates > 0 && `, ${parsedTargets.duplicates} duplicate${parsedTargets.duplicates === 1 ? '' : 's'} ignored`}
+                  </p>
+                  {parsedTargets.invalid.length > 0 && (
+                    <div className="flex items-start gap-2 rounded-md border border-yellow-500/50 p-2 text-sm text-yellow-600 dark:text-yellow-500">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span className="break-all">
+                        {parsedTargets.invalid.length} invalid entr{parsedTargets.invalid.length === 1 ? 'y' : 'ies'} will be skipped:{' '}
+                        {parsedTargets.invalid.slice(0, 5).join(', ')}
+                        {parsedTargets.invalid.length > 5 && ', ...'}
+                      </span>
                     </div>
-                  ))}
+                  )}
                 </div>
 
-                <ProbeOptions />
+                {renderProbeOptions()}
 
                 {!advancedOptions && (
                   <>
@@ -199,9 +196,9 @@ export default function JobSubmissionPage() {
                 <input type="hidden" name="action" value="job" />
 
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={navigation.state === "submitting"}>
+                  <Button type="submit" disabled={navigation.state === "submitting" || targetCount === 0}>
                     <Send className="mr-2 h-4 w-4" />
-                    {navigation.state === "submitting" ? "Submitting..." : `Submit ${urls.length} Target${urls.length > 1 ? "s" : ""}`}
+                    {navigation.state === "submitting" ? "Submitting..." : `Submit ${targetCount} Target${targetCount === 1 ? "" : "s"}`}
                   </Button>
                 </div>
               </Form>
@@ -220,7 +217,7 @@ export default function JobSubmissionPage() {
                   />
                 </div>
 
-                <ProbeOptions />
+                {renderProbeOptions()}
 
                 {!advancedOptions && (
                   <>
