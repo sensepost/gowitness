@@ -61,6 +61,10 @@ func (h *ApiHandler) SubmitSingleHandler(w http.ResponseWriter, r *http.Request)
 			options.Scan.Delay = request.Options.Delay
 		}
 		if request.Options.Format != "" {
+			if !isValidScreenshotFormat(request.Options.Format) {
+				http.Error(w, "Invalid screenshot format, valid formats are: jpeg, png", http.StatusBadRequest)
+				return
+			}
 			options.Scan.ScreenshotFormat = request.Options.Format
 		}
 	}
