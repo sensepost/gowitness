@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"slices"
 
 	"github.com/sensepost/gowitness/pkg/log"
 	"github.com/sensepost/gowitness/pkg/runner"
@@ -23,6 +24,14 @@ type submitRequestOptions struct {
 	Timeout   int    `json:"timeout"`
 	Delay     int    `json:"delay"`
 	Format    string `json:"format"`
+}
+
+// validScreenshotFormats are the screenshot formats the runner supports.
+var validScreenshotFormats = []string{"jpeg", "png"}
+
+// isValidScreenshotFormat checks if format is a supported screenshot format.
+func isValidScreenshotFormat(format string) bool {
+	return slices.Contains(validScreenshotFormats, format)
 }
 
 // SubmitHandler submits URL's for scans, writing them to the database.
@@ -69,6 +78,10 @@ func (h *ApiHandler) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 			options.Scan.Delay = request.Options.Delay
 		}
 		if request.Options.Format != "" {
+			if !isValidScreenshotFormat(request.Options.Format) {
+				http.Error(w, "Invalid screenshot format, valid formats are: jpeg, png", http.StatusBadRequest)
+				return
+			}
 			options.Scan.ScreenshotFormat = request.Options.Format
 		}
 	}

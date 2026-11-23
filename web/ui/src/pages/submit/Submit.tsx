@@ -64,7 +64,6 @@ export default function JobSubmissionPage() {
                   <SelectContent>
                     <SelectItem value="png">PNG</SelectItem>
                     <SelectItem value="jpeg">JPEG</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
